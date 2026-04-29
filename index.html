@@ -2045,8 +2045,22 @@ const Predict = {
     const volMAv = ind.volMA[idx];
     const obvMAv = ind.obvMA[idx];
     if(!ma20v || !boll || !volMAv) return null;
-    // ADX 趨勢強度（第10特徵：趨勢 vs 震盪市場的市場情境）
+    // ADX 趨勢強度（第10特徵）
     const adxVal = (ind.adx && ind.adx[idx] != null) ? ind.adx[idx] : 20;
+
+    // ✦ 新增：回調深度特徵（Task 10）
+    // 第11特徵：連跌天數（0~10）— 區分「剛開始跌」與「連跌宣洩後」
+    let consecutiveDn = 0;
+    for(let j = idx; j > Math.max(0, idx - 10); j--){
+      if(rows[j].close < rows[j-1]?.close) consecutiveDn++; else break;
+    }
+    // 第12特徵：距20日高點的跌幅（%）— 反映超賣深度
+    let high20 = last;
+    for(let j = Math.max(0, idx - 20); j <= idx; j++){
+      if(rows[j].high > high20) high20 = rows[j].high;
+    }
+    const dropFromHigh20 = (last - high20) / high20 * 100;  // 負值，越負越超賣
+
     return {
       psy: ind.psy[idx],
       kdK: ind.K[idx],
@@ -2057,7 +2071,9 @@ const Predict = {
       volRatio: rows[idx].vol / volMAv,
       obvDiv: obvMAv ? (ind.obv[idx] - obvMAv) / Math.abs(obvMAv || 1) : 0,
       chgPrev: (last - prev) / prev * 100,
-      adxStr: adxVal   // ADX 趨勢強度（典型範圍 10~50）
+      adxStr: adxVal,
+      consecutiveDn,       // ✦ 新增：連跌天數（0~10）
+      dropFromHigh20       // ✦ 新增：距20日高點跌幅%（負值）
     };
   },
 
@@ -2066,11 +2082,12 @@ const Predict = {
     if(!f1 || !f2) return Infinity;
     const norm = {
       psy: 30, kdK: 30, rsi: 25,
-      // ✦ 修正：macdHist 改用動態標準差正規化（由 knn() 預先計算並存入 _macdNorm）
-      // 原硬編碼 5 對台積電不同價格區間失準（600元與1000元區間的 MACD 振幅差異達3~5倍）
       macdHist: this._macdNorm || 5,
       maPos: 5, bollPos: 0.3, volRatio: 0.5, obvDiv: 0.3, chgPrev: 2,
-      adxStr: 20  // ADX 典型波動範圍 ~20（10~30 最常見）
+      adxStr: 20,
+      // ✦ 回調深度特徵正規化（Task 10）
+      consecutiveDn: 4,    // 典型連跌天數範圍 0~8，以 4 為正規化基準
+      dropFromHigh20: 8    // 典型回調幅度 -8%（台積電常見的中等回調）
     };
     let sum = 0, count = 0;
     for(const k of Object.keys(norm)){
@@ -3331,16 +3348,76 @@ function renderBuySellPanel(ctx){
   sellW += sellEarlyN * 0.12;
   sellW = Math.min(10, +sellW.toFixed(2));
 
+  // ══════════════════════════════════════════════
+  // ✦ ADX 市場情境模式切換（Task 8）
+  // 核心邏輯：震盪盤用反轉策略，趨勢盤用順勢策略，兩種模式的指標可信度截然不同
+  // ══════════════════════════════════════════════
+  let adxModeNote = 'neutral';
+  if(cADX != null){
+    const reversalBuyCnt  = [rsiBuy,  kdBuy,  psyBuy,  bollBuy ].filter(Boolean).length;
+    const reversalSellCnt = [rsiSell, kdSell, psySell, bollSell].filter(Boolean).length;
+    if(adxRegime === 'range'){
+      // 震盪盤（ADX<18）：反轉指標加成，每個觸發的反轉指標額外 +0.3
+      // 理由：震盪盤中 RSI/KD/PSY 超賣後反彈的歷史勝率顯著高於趨勢盤
+      buyW  = Math.min(10, +(buyW  + reversalBuyCnt  * 0.3).toFixed(2));
+      sellW = Math.min(10, +(sellW + reversalSellCnt * 0.3).toFixed(2));
+      adxModeNote = 'range_boost';
+    } else if(adxRegime === 'trend'){
+      // 趨勢盤（ADX≥25）：逆勢反轉無 MACD 支撐 → 折扣（只是趨勢中的短暫回調）
+      const counterTrendBuy  = reversalBuyCnt  > 0 && !macdBuy  && !hasBullDiv;
+      const counterTrendSell = reversalSellCnt > 0 && !macdSell && !hasBearDiv;
+      if(counterTrendBuy  && buyW  > sellW) { buyW  = Math.max(0, +(buyW  * 0.80).toFixed(2)); adxModeNote = 'trend_counter_buy'; }
+      if(counterTrendSell && sellW > buyW)  { sellW = Math.max(0, +(sellW * 0.80).toFixed(2)); adxModeNote = 'trend_counter_sell'; }
+      // 趨勢盤順勢：MACD 確認 + 均線排列一致 → 加成
+      if(dirRatio > 0.25 && macdBuy)  { buyW  = Math.min(10, +(buyW  + 0.6).toFixed(2)); adxModeNote = 'trend_follow_buy'; }
+      if(dirRatio < -0.25 && macdSell){ sellW = Math.min(10, +(sellW + 0.6).toFixed(2)); adxModeNote = 'trend_follow_sell'; }
+    }
+  }
+
   // ✦ 大盤逆風調整（Task 6）：依 0050 ETF 代理判斷市場環境
-  // 大盤空頭時多單評分打折 → 提示用戶逆風操作需降低部位
   const twiiDir     = twii?.direction || 'neutral';
   const twiiTrend5  = twii?.trend5 ?? 0;
   const twiiChg1    = twii?.chg1 ?? 0;
-  const hasHeadwind = twiiDir === 'bear' && buyW > sellW;   // 想做多 but 大盤空頭
-  const hasTailwind = twiiDir === 'bull' && sellW > buyW;   // 想做空 but 大盤多頭
-  // 輕度折扣（非強制），僅作警示用途，保留操作彈性
-  if(hasHeadwind) buyW  = Math.max(0, +(buyW  * 0.85).toFixed(2));  // 逆風多單 -15%
-  if(hasTailwind) sellW = Math.max(0, +(sellW * 0.85).toFixed(2));  // 逆風空單 -15%
+  const hasHeadwind = twiiDir === 'bear' && buyW > sellW;
+  const hasTailwind = twiiDir === 'bull' && sellW > buyW;
+  if(hasHeadwind) buyW  = Math.max(0, +(buyW  * 0.85).toFixed(2));
+  if(hasTailwind) sellW = Math.max(0, +(sellW * 0.85).toFixed(2));
+
+  // ══════════════════════════════════════════════
+  // ✦ SOX 前夜硬性閘門（Task 11）
+  // SOX 跌逾 2%：外資當日必然砍倉，買進訊號強制打 0.80 折
+  // ══════════════════════════════════════════════
+  const soxVal = ctx.prob?._sox ?? null;
+  const soxGateActive = soxVal != null && soxVal < -2;
+  const soxTailActive = soxVal != null && soxVal > 2;
+  if(soxGateActive) buyW  = Math.max(0, +(buyW  * 0.80).toFixed(2));
+  if(soxTailActive) buyW  = Math.min(10, +(buyW  + 0.5 ).toFixed(2));  // SOX 大漲順風加分
+
+  // ══════════════════════════════════════════════
+  // ✦ K-NN 機率守門員（Task 9）
+  // K-NN 加權上漲機率 < 52% 時：買進訊號降一級強度
+  // K-NN 加權上漲機率 > 48% 才維持賣出訊號強度
+  // ══════════════════════════════════════════════
+  const knnProb = ctx.prob?.wUpProb ?? null;
+  let knnGateNote = '';
+  if(knnProb != null){
+    if(buyW > sellW && knnProb < 0.52){
+      // 想做多，但 K-NN 歷史相似日不支持 → 折扣 12%
+      buyW = Math.max(0, +(buyW * 0.88).toFixed(2));
+      knnGateNote = `K-NN 機率 ${(knnProb*100).toFixed(0)}% 偏低，買進訊號折扣`;
+    } else if(buyW > sellW && knnProb >= 0.62){
+      // K-NN 強烈支持 → 加成 0.3
+      buyW = Math.min(10, +(buyW + 0.3).toFixed(2));
+      knnGateNote = `K-NN 機率 ${(knnProb*100).toFixed(0)}% 支持買進`;
+    }
+    if(sellW > buyW && knnProb > 0.48){
+      sellW = Math.max(0, +(sellW * 0.88).toFixed(2));
+      knnGateNote = `K-NN 機率 ${(knnProb*100).toFixed(0)}% 偏高，賣出訊號折扣`;
+    } else if(sellW > buyW && knnProb <= 0.38){
+      sellW = Math.min(10, +(sellW + 0.3).toFixed(2));
+      knnGateNote = `K-NN 機率 ${(knnProb*100).toFixed(0)}% 支持賣出`;
+    }
+  }
 
   // ══════════════════════════════════════════════
   //  輔助標籤
@@ -3682,6 +3759,28 @@ function renderBuySellPanel(ctx){
           : `<span style="background:rgba(148,163,184,.12);color:var(--t2);font-size:0.72rem;font-weight:700;padding:4px 12px;border-radius:20px">🌐 大盤中性｜0050 五日 ${twiiTrend5.toFixed(1)}%</span>`
       ) : ''}
     </div>
+    ${/* ── SOX 硬性閘門警示 ── */ soxGateActive ? `
+    <div style="background:rgba(249,115,22,.12);border:1.5px solid rgba(249,115,22,.5);border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:0.78rem;color:#f97316">
+      🚨 <b>費半逆風閘門啟動（SOX ${soxVal > 0?'+':''}${soxVal.toFixed(2)}%）</b>：費城半導體指數昨夜重挫超過 2%，外資今日早盤大概率砍倉台積電。買進評分已強制打 80 折至 <b>${buyW}/10</b>。<br>
+      建議：等盤中台積電站穩昨收附近且量縮後，再考慮進場；否則今日買進的勝率比平均日低約 15~20 個百分點。
+    </div>` : (soxTailActive ? `
+    <div style="background:rgba(16,185,129,.10);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:10px 16px;margin-bottom:14px;font-size:0.78rem;color:var(--green)">
+      🚀 <b>費半順風加成（SOX +${soxVal.toFixed(2)}%）</b>：費半大漲，外資今日偏向買超台積電，買進訊號信心度提升。
+    </div>` : '')}
+    ${adxModeNote.startsWith('range') ? `
+    <div style="background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.25);border-radius:10px;padding:10px 16px;margin-bottom:14px;font-size:0.78rem;color:var(--cyan)">
+      🔄 <b>震盪盤模式（ADX ${cADX?.toFixed(1)}）</b>：反轉策略適用，KD/RSI/PSY 超賣訊號可信度高，反轉指標評分已加成 +0.3/個。建議採「逢低買，逢高賣」策略，不追漲。
+    </div>` : (adxModeNote.includes('trend_counter') ? `
+    <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:10px 16px;margin-bottom:14px;font-size:0.78rem;color:var(--yellow)">
+      📈 <b>趨勢盤逆勢警示（ADX ${cADX?.toFixed(1)}）</b>：趨勢盤中逆勢抄底勝率偏低（MACD 未確認），買進評分已折扣 20%。建議等 MACD 由負翻正再進場，成功率顯著提升。
+    </div>` : (adxModeNote.includes('trend_follow') ? `
+    <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:10px 16px;margin-bottom:14px;font-size:0.78rem;color:var(--blue)">
+      🚀 <b>趨勢盤順勢加成（ADX ${cADX?.toFixed(1)}）</b>：趨勢明確且 MACD 確認，順勢進場勝率高，評分加成 +0.6。
+    </div>` : ''))}
+    ${knnGateNote ? `
+    <div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);border-radius:10px;padding:9px 14px;margin-bottom:14px;font-size:0.75rem;color:var(--purple)">
+      🤖 <b>K-NN 歷史機率修正</b>：${knnGateNote}。基於 ${ctx.prob?.n ?? '--'} 個歷史相似日的實際走勢統計。
+    </div>` : ''}
     ${hasHeadwind ? `
     <div style="background:rgba(239,68,68,.10);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:10px 16px;margin-bottom:14px;font-size:0.78rem;color:var(--red2)">
       ⚠️ <b>大盤逆風警示</b>：大盤（0050）近五日下跌 ${Math.abs(twiiTrend5).toFixed(1)}%，屬於空頭環境。當前買進評分已自動打 85 折至 <b>${buyW}/10</b>。逆勢做多風險較高，建議降低部位或等大盤止跌再進場。
@@ -5823,6 +5922,7 @@ let App = {
         '個人化','personal') +
       renderPosCalc(ctx) +
       renderJournal(ctx) +
+      renderComboBacktest(ctx) +
       renderFalseSignals() +
 
       renderExportBar(ctx) +
@@ -8486,6 +8586,134 @@ function renderSOXCorr(ctx){
 /* ═══════════════════════════════════════════════════════════════
    FEATURE 9: 假訊號過濾器 (renderFalseSignals)
    ═══════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════
+   ✦ FEATURE 10: 多條件組合勝率回測（Task 12）
+   核心理念：不同指標組合的歷史勝率差距可達 20% 以上
+   讓用戶一眼看到哪個組合最值得信任
+   ═══════════════════════════════════════════════════════════════ */
+function renderComboBacktest(ctx){
+  const rows = ctx?.rows;
+  const I = App.ind;
+  if(!rows || !I || rows.length < 80) return '';
+
+  const n = rows.length;
+
+  // ── 8 個預設高頻條件組合 ──
+  const COMBOS = [
+    {
+      name: 'KD 黃金交叉 + RSI<40',
+      icon: '🥇',
+      test(i){ const K=I.K[i],D=I.D[i],pK=I.K[i-1],pD=I.D[i-1],rsi=I.rsi[i];
+        return K!=null&&D!=null&&pK!=null&&pD!=null&&rsi!=null&&pK<=pD&&K>D&&rsi<40; }
+    },
+    {
+      name: 'PSY<25 + MACD 翻正',
+      icon: '🥈',
+      test(i){ const psy=I.psy[i],h=I.hist[i],ph=I.hist[i-1];
+        return psy!=null&&psy<25&&h!=null&&ph!=null&&ph<0&&h>0; }
+    },
+    {
+      name: 'RSI<30 + 布林下軌',
+      icon: '🥉',
+      test(i){ const rsi=I.rsi[i],b=I.boll[i],c=I.closes[i];
+        return rsi!=null&&rsi<30&&b!=null&&c<b.lower+(b.upper-b.lower)*0.15; }
+    },
+    {
+      name: 'KD<20 + PSY<30 + 放量',
+      icon: '💥',
+      test(i){ const K=I.K[i],psy=I.psy[i],v=I.vols[i],vm=I.volMA[i];
+        return K!=null&&K<20&&psy!=null&&psy<30&&vm&&v>vm*1.2; }
+    },
+    {
+      name: '多頭排列 + MACD 零軸上',
+      icon: '🚀',
+      test(i){ const m5=I.ma5[i],m20=I.ma20[i],m60=I.ma60[i],dif=I.dif[i],dea=I.dea[i];
+        return m5&&m20&&m60&&m5>m20&&m20>m60&&dif!=null&&dea!=null&&dif>0&&dif>dea; }
+    },
+    {
+      name: 'RSI 50 上穿 + OBV 創高',
+      icon: '📈',
+      test(i){ const rsi=I.rsi[i],pr=I.rsi[i-1],obv=I.obv[i],om=I.obvMA[i];
+        return rsi!=null&&pr!=null&&pr<50&&rsi>=50&&obv!=null&&om!=null&&obv>om; }
+    },
+    {
+      name: 'KD 死亡交叉 + RSI>60',
+      icon: '📉',
+      test(i){ const K=I.K[i],D=I.D[i],pK=I.K[i-1],pD=I.D[i-1],rsi=I.rsi[i];
+        return K!=null&&D!=null&&pK!=null&&pD!=null&&rsi!=null&&pK>=pD&&K<D&&rsi>60; },
+      isBear: true
+    },
+    {
+      name: 'PSY>75 + MACD 翻負 + 爆量',
+      icon: '🔴',
+      test(i){ const psy=I.psy[i],h=I.hist[i],ph=I.hist[i-1],v=I.vols[i],vm=I.volMA[i];
+        return psy!=null&&psy>75&&h!=null&&ph!=null&&ph>0&&h<0&&vm&&v>vm*1.3; },
+      isBear: true
+    }
+  ];
+
+  // ── 對每個組合計算歷史統計 ──
+  const results = COMBOS.map(combo => {
+    let hits = 0, wins = 0, totalRet = 0, rets = [];
+    for(let i = 25; i < n - 1; i++){
+      try{
+        if(!combo.test(i)) continue;
+      }catch{ continue; }
+      hits++;
+      const ret = (rows[i+1].close - rows[i].close) / rows[i].close * 100;
+      const win = combo.isBear ? ret < 0 : ret > 0;
+      if(win) wins++;
+      totalRet += combo.isBear ? -ret : ret;
+      rets.push(combo.isBear ? -ret : ret);
+    }
+    const winRate = hits > 0 ? wins / hits * 100 : 0;
+    const avgRet  = hits > 0 ? totalRet / hits : 0;
+    // 排除觸發次數太少的組合（< 5 次無統計意義）
+    return { ...combo, hits, wins, winRate, avgRet, valid: hits >= 5 };
+  }).filter(r => r.valid).sort((a, b) => b.winRate - a.winRate);
+
+  if(!results.length) return '';
+
+  const rowHtml = results.map((r,i) => {
+    const wr = r.winRate.toFixed(0);
+    const ar = r.avgRet.toFixed(2);
+    const wrColor = r.winRate >= 65 ? 'var(--green)' : r.winRate >= 55 ? 'var(--green2)' : r.winRate >= 45 ? 'var(--yellow)' : 'var(--red2)';
+    const rank = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);font-size:.78rem;flex-wrap:wrap">
+      <span style="min-width:24px;font-size:.85rem">${rank}</span>
+      <span style="flex:1;min-width:150px;font-weight:600">${r.icon} ${r.name}</span>
+      <span style="min-width:60px;font-weight:800;color:${wrColor};text-align:center">${wr}%</span>
+      <span style="min-width:60px;color:${parseFloat(ar)>=0?'var(--green)':'var(--red)'};text-align:right;font-variant-numeric:tabular-nums">${parseFloat(ar)>=0?'+':''}${ar}%</span>
+      <span style="min-width:50px;color:var(--t3);text-align:right">${r.hits}次</span>
+    </div>`;
+  }).join('');
+
+  const best = results[0];
+  return `
+  <div class="false-signal-card ic" style="margin-top:14px">
+    <div class="fs-header" style="margin-bottom:0">
+      <span class="fs-title">🏆 條件組合勝率排行（歷史回測）</span>
+      <span style="font-size:.7rem;color:var(--t3);margin-left:auto">基於 ${n} 個交易日實際數據</span>
+    </div>
+    <div style="font-size:.72rem;color:var(--t2);padding:10px 14px 6px;border-bottom:1px solid var(--border)">
+      📌 <b>最高勝率組合：${best.icon} ${best.name}</b>
+      — 歷史觸發 <b>${best.hits}</b> 次，次日勝率 <b style="color:var(--green)">${best.winRate.toFixed(0)}%</b>，平均報酬 <b style="color:var(--green)">+${best.avgRet.toFixed(2)}%</b>
+    </div>
+    <div style="display:flex;align-items:center;gap:0;padding:7px 14px;background:var(--card2);font-size:.68rem;color:var(--t3)">
+      <span style="min-width:24px"></span>
+      <span style="flex:1;min-width:150px">條件組合</span>
+      <span style="min-width:60px;text-align:center">次日勝率</span>
+      <span style="min-width:60px;text-align:right">平均報酬</span>
+      <span style="min-width:50px;text-align:right">觸發次數</span>
+    </div>
+    ${rowHtml}
+    <div style="padding:8px 14px;font-size:.65rem;color:var(--t3)">
+      ⚠️ 回測基於歷史資料，未來勝率不代表過去績效的延伸。觸發次數越多（>20次）統計越可靠。看多組合計算次日收紅，看空組合計算次日收黑。
+    </div>
+  </div>`;
+}
+
 function renderFalseSignals(){
   const trades = Journal.state.trades || [];
   if(trades.length === 0) return `
