@@ -1538,6 +1538,100 @@ body.light .zone-header{background:linear-gradient(135deg,rgba(59,130,246,.06),r
   .mob-nav-btn .mn-icon{font-size:1.1rem}
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   📱 MOBILE PATCH — 補全手機友善細節
+   ─ Mode pill 觸控目標、Alert panel 防溢出、新功能卡片 RWD
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── 1. Mode Pill 觸控目標 ≥ 44px（Apple/Google HIG 要求） ── */
+.mode-pill-btn{
+  min-width:40px;
+  min-height:40px;
+  /* 確保 emoji 在中央 */
+  display:flex;align-items:center;justify-content:center;
+}
+@media(max-width:700px){
+  .mode-pill{padding:4px}
+  .mode-pill-btn{min-width:44px;min-height:44px;font-size:1rem}
+}
+
+/* ── 2. Alert Panel — 窄螢幕改為 fixed 底部抽屜 ── */
+@media(max-width:560px){
+  .alert-panel{
+    position:fixed !important;
+    bottom:60px !important;   /* 底部 nav 之上 */
+    left:12px !important;
+    right:12px !important;
+    top:auto !important;
+    max-width:none !important;
+    width:auto !important;
+    border-radius:14px !important;
+    box-shadow:0 -4px 24px rgba(0,0,0,.4) !important;
+  }
+}
+
+/* ── 3. Radar 信號格 — 480px 以下改單欄 ── */
+@media(max-width:480px){
+  #radar-signals{grid-template-columns:1fr !important}
+  #intraday-radar-card{padding:14px !important}
+}
+
+/* ── 4. 量能進度條 / S/R 距離 — 防止文字溢出 ── */
+@media(max-width:480px){
+  #vol-pace-wrap,
+  #sr-dist-wrap{padding:6px 10px !important}
+  #sr-dist-wrap{gap:8px !important;font-size:.72rem !important}
+  #sr-dist-sup,#sr-dist-res,#sr-dist-boll{font-size:.75rem !important}
+}
+
+/* ── 5. KD 矩陣表格 — 小手機上壓縮 cell ── */
+@media(max-width:480px){
+  /* 表格有 overflow-x:auto 包裹，但極窄時還是縮字 */
+  .kd-matrix-table td,
+  .kd-matrix-table th{padding:5px 6px !important;font-size:.68rem !important}
+}
+@media(max-width:380px){
+  /* 直接捲動，不縮字 */
+  .kd-matrix-table{font-size:.65rem}
+}
+
+/* ── 6. Pattern Match 日期文字 — 防止行溢出 ── */
+@media(max-width:480px){
+  .pattern-row{flex-wrap:wrap !important}
+  .pattern-row .pr-date{min-width:0 !important;font-size:.7rem}
+  .pattern-row .pr-bar{flex:1 1 100% !important;margin-top:4px}
+}
+
+/* ── 7. 週報 Modal 內容 — 小螢幕 padding 縮小 ── */
+@media(max-width:480px){
+  .modal{padding:16px 14px !important;border-radius:12px !important}
+  .weekly-chips{gap:5px !important}
+  .weekly-chips > div{padding:5px 8px !important}
+}
+
+/* ── 8. 匯出列按鈕換行 ── */
+@media(max-width:560px){
+  /* 匯出列：讓按鈕自動換行，每個最低 44px 高 */
+  [data-export-bar]{flex-wrap:wrap !important}
+}
+@media(max-width:480px){
+  /* btn-sm 在手機上放大觸控面積 */
+  .btn-sm{min-height:40px !important;padding:8px 12px !important;font-size:.76rem !important}
+}
+
+/* ── 9. Conflu Score 雙欄 → 窄螢幕已被 [style*="grid-template-columns"] 處理 ──
+   額外補強：480px 以下的卡片 padding ── */
+@media(max-width:480px){
+  #anchor-confl{padding:14px !important}
+}
+
+/* ── 10. 走勢圖 B/S 標記文字在 Canvas 中由 JS 控制，無 CSS 可調；
+    但確保 canvas 不會在小螢幕被裁切 ── */
+@media(max-width:380px){
+  .chart-wrap,#pc{height:160px !important}
+  .intraday-chart-wrap{height:140px !important}
+}
+
 </style>
 </head>
 <body>
@@ -7040,7 +7134,7 @@ let App = {
         </div>
       </div>
       <!-- 週統計 chips -->
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <div class="weekly-chips" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
         ${[
           ['週高', wHigh?.toFixed(1), 'var(--green)'],
           ['週低', wLow?.toFixed(1),  'var(--red)'],
@@ -9450,16 +9544,16 @@ function renderPatternMatch(ctx){
     const clr = t.fwdRet >= 0 ? 'var(--green)' : 'var(--red)';
     const sim = Math.max(0, 100 - t.d * 200).toFixed(0);
     return `
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border);font-size:.75rem;flex-wrap:wrap">
+    <div class="pattern-row" style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border);font-size:.75rem;flex-wrap:wrap">
       <span style="min-width:18px;color:var(--t3);font-size:.7rem">${idx+1}.</span>
-      <span style="min-width:80px;color:var(--t2);font-variant-numeric:tabular-nums">${t.endDate}</span>
-      <div style="flex:1;min-width:80px">
+      <span class="pr-date" style="min-width:72px;color:var(--t2);font-variant-numeric:tabular-nums">${t.endDate}</span>
+      <div class="pr-bar" style="flex:1;min-width:70px">
         <div style="height:4px;border-radius:2px;background:var(--border);overflow:hidden">
           <div style="height:100%;width:${sim}%;background:var(--accent);border-radius:2px"></div>
         </div>
         <span style="font-size:.62rem;color:var(--t3)">相似度 ${sim}%</span>
       </div>
-      <span style="min-width:70px;font-weight:700;color:${clr};text-align:right">${t.fwdRet>=0?'+':''}${t.fwdRet.toFixed(2)}% <span style="font-size:.65rem;color:var(--t3)">後${FWD}日</span></span>
+      <span style="min-width:65px;font-weight:700;color:${clr};text-align:right">${t.fwdRet>=0?'+':''}${t.fwdRet.toFixed(2)}% <span style="font-size:.65rem;color:var(--t3)">後${FWD}日</span></span>
     </div>`;
   }).join('');
 
@@ -10673,7 +10767,7 @@ function renderKDMatrix(rows, I){
       KD 同時 ≤ N 時買進，持有指定天數後勝率。格內：勝率 / 平均報酬 / 觸發次數
     </div>
     <div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse">
+      <table class="kd-matrix-table" style="width:100%;border-collapse:collapse">
         <thead style="background:var(--card2)">${headerRow}</thead>
         <tbody>${bodyRows}</tbody>
       </table>
