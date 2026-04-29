@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>台積電 (2330) 多空追蹤 + 明日機率預估儀表板 v2</title>
+<meta name="description" content="台積電 2330 多空追蹤儀表板：KD、RSI、MACD、布林通道、明日漲跌機率預估、進出場評分、法人籌碼，每日自動更新。">
+<meta property="og:title" content="台積電 (2330) 多空追蹤儀表板 v2">
+<meta property="og:description" content="整合 KD、RSI、MACD、布林、K-NN 明日機率預估、法人籌碼、進出場評分，技術分析一頁掌握。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://vividmarketingtw-create.github.io/stock-dashboard/">
+<meta property="og:image" content="https://vividmarketingtw-create.github.io/stock-dashboard/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="台積電 (2330) 多空追蹤儀表板">
+<meta name="twitter:description" content="KD、RSI、MACD、布林、K-NN 明日機率預估 — 技術分析一頁掌握">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"
         integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi"
         crossorigin="anonymous"></script>
@@ -2849,6 +2859,16 @@ function renderPredictionPanel(ctx){
         <div class="bt-item">命中率 <span class="${btBucket.hitRate>=0.55?'hl-g':btBucket.hitRate<=0.45?'hl-r':'hl-y'}">${(btBucket.hitRate*100).toFixed(0)}%</span></div>
         <div class="bt-item c-t2" style="margin-left:auto">系統整體命中率：${(backtest.overallHitRate*100).toFixed(0)}% (${backtest.overallN} 次有方向預測)</div>
       </div>
+      ${btBucket.hitRate <= 0.45 ? `
+      <div style="margin-top:8px;padding:8px 12px;background:rgba(245,158,11,.12);border-left:3px solid var(--yellow);border-radius:6px;font-size:.78rem;color:var(--yellow)">
+        ⚠️ <strong>低信心度警示：</strong>當前狀態的歷史命中率僅 ${(btBucket.hitRate*100).toFixed(0)}%，低於隨機水準（50%）。
+        代表此時指標訊號分歧，模型預估可靠性較低。建議縮小倉位、等待更明確方向，切勿重倉操作。
+        <span style="margin-left:6px;opacity:.8">（P25–P75 區間：${F.pct(prob.p25)} ～ ${F.pct(prob.p75)}，震盪幅度寬廣）</span>
+      </div>` : ''}
+      ${backtest.overallHitRate <= 0.45 ? `
+      <div style="margin-top:6px;padding:6px 12px;background:rgba(239,68,68,.10);border-left:3px solid var(--red);border-radius:6px;font-size:.75rem;color:var(--red2)">
+        🔴 系統整體命中率 ${(backtest.overallHitRate*100).toFixed(0)}% 偏低，建議將此儀表板訊號作為輔助參考，而非主要決策依據。
+      </div>` : ''}
     </div>` : ''}
 
     <div class="predict-disclaimer">
@@ -4135,10 +4155,12 @@ function renderExportBar(ctx){
   return `
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;padding:12px 16px;
     background:var(--card);border-radius:10px;border:1px solid var(--border)">
-    <span style="font-size:.8rem;color:var(--t2);flex:1">📁 資料匯出</span>
+    <span style="font-size:.8rem;color:var(--t2);flex:1">📁 資料匯出 / 匯入</span>
     ${Notifier.renderBtn()}
     <button class="btn btn-sm" onclick="App.exportCSV()">⬇ 匯出 CSV</button>
     <button class="btn btn-sm" onclick="App.exportJSON()">⬇ 匯出 JSON</button>
+    <button class="btn btn-sm" style="border-color:var(--purple);color:var(--purple)" onclick="App.exportJournalBackup()" title="備份交易日誌、規則與評分歷史">💾 備份日誌</button>
+    <button class="btn btn-sm" style="border-color:var(--cyan);color:var(--cyan)" onclick="App.importJournalBackup()" title="還原已備份的交易日誌">📥 匯入日誌</button>
   </div>`;
 }
 
@@ -4220,7 +4242,41 @@ function renderMTF(ctx){
     <div class="mr-title">🎯 共振判讀</div>
     <span style="color:${mtfRes.color};font-weight:800;font-size:0.875rem">${mtfRes.label}</span>
     　${mtfRes.advice}
-  </div>`;
+  </div>
+  ${(()=>{
+    // 訊號衝突偵測：短線偏空 vs 中長線偏多
+    const daily   = mtfResult.daily;
+    const weekly  = mtfResult.weekly;
+    const monthly = mtfResult.monthly;
+    const dailyBear  = daily  && daily.ratio  < -0.2;
+    const midLongBull = (weekly && weekly.ratio > 0.3) || (monthly && monthly.ratio > 0.3);
+    // 中長線偏多 vs 短線偏空
+    if(dailyBear && midLongBull){
+      return `<div style="margin-top:10px;padding:10px 14px;background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.3);border-radius:8px;font-size:.8rem;line-height:1.7">
+        <div style="color:var(--yellow);font-weight:700;margin-bottom:4px">⚡ 訊號衝突警示 — 短空 vs 中長多</div>
+        <div style="color:var(--t1)">
+          <strong>短線（日線）偏空</strong>，但<strong>中長線（週/月線）仍維持多頭結構</strong>。<br>
+          這種情況通常是 <span style="color:var(--green)">多頭趨勢中的短線回調</span>，而非趨勢反轉。<br>
+          <strong>操作建議：</strong>以中長線為主、短線為輔。不要因短線賣出訊號而出清多頭部位，
+          可考慮縮小倉位至 50–70% 等待短線回穩，出現日線買進訊號後再加回。
+        </div>
+      </div>`;
+    }
+    // 短線偏多 vs 中長線偏空（危險的逆勢）
+    const dailyBull   = daily  && daily.ratio  > 0.3;
+    const midLongBear = (weekly && weekly.ratio < -0.3) && (monthly && monthly.ratio < -0.1);
+    if(dailyBull && midLongBear){
+      return `<div style="margin-top:10px;padding:10px 14px;background:rgba(239,68,68,.10);border:1px solid rgba(239,68,68,.3);border-radius:8px;font-size:.8rem;line-height:1.7">
+        <div style="color:var(--red);font-weight:700;margin-bottom:4px">⚡ 訊號衝突警示 — 短多 vs 中長空</div>
+        <div style="color:var(--t1)">
+          <strong>短線（日線）出現多頭訊號</strong>，但<strong>中長線（週/月線）仍偏空</strong>。<br>
+          這種情況通常是 <span style="color:var(--red)">空頭趨勢中的短線反彈</span>（dead cat bounce），反彈力道有限。<br>
+          <strong>操作建議：</strong>以中長線為主，短線多頭訊號可信度低。不建議追漲，若持有多單應設嚴格停損。
+        </div>
+      </div>`;
+    }
+    return '';
+  })()}`;
 }
 
 /* ── 杜金龍功能 1：週/月 KD 共振卡片 ── */
@@ -5158,6 +5214,61 @@ let App = {
     a.href = URL.createObjectURL(blob);
     a.download = `TSMC_2330_${new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Taipei'})}.json`;
     a.click();
+  },
+
+  // ─── 匯出交易日誌備份 ───
+  exportJournalBackup(){
+    const backup = {
+      _version: 2,
+      _exportedAt: new Date().toISOString(),
+      _source: 'TSMC-2330-Dashboard',
+      journal: Journal.state,
+      scoreHistory: ScoreHistory.load()
+    };
+    const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `TSMC_Journal_Backup_${new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Taipei'})}.json`;
+    a.click();
+  },
+
+  // ─── 匯入交易日誌備份 ───
+  importJournalBackup(){
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try{
+          const data = JSON.parse(ev.target.result);
+          // 支援兩種格式：備份格式（有 _source）或舊版純 journal
+          if(data._source === 'TSMC-2330-Dashboard' && data.journal){
+            if(!confirm(`確定要匯入備份嗎？\n匯出時間：${data._exportedAt || '未知'}\n這將覆蓋現有的交易日誌與規則。`)) return;
+            Journal.state = {
+              trades: data.journal.trades || [],
+              positions: data.journal.positions || [],
+              rules: data.journal.rules || [],
+              settings: { ...Journal.default().settings, ...(data.journal.settings || {}) }
+            };
+            Journal.save();
+            if(data.scoreHistory && Array.isArray(data.scoreHistory)){
+              ScoreHistory.save(data.scoreHistory);
+            }
+            alert(`✅ 匯入成功！已還原 ${data.journal.trades?.length || 0} 筆交易記錄。`);
+            App.render();
+          } else {
+            alert('❌ 不支援的檔案格式。請選擇由本儀表板匯出的 JSON 備份檔。');
+          }
+        } catch(err){
+          alert('❌ 檔案解析失敗：' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
   },
 
   // ─── Modal: 買進 / 賣出 ───
@@ -6744,11 +6855,14 @@ const ScoreHistory = {
   save(a){ try{ localStorage.setItem(this.KEY, JSON.stringify(a.slice(-this.MAX))); }catch{} },
   push(score, dateLabel){
     const a = this.load();
-    // deduplicate by date label
-    if(a.length && a[a.length-1].label === dateLabel){
-      a[a.length-1].score = score;
+    // 使用日期為 key，全域去重（防止中途載入造成重複）
+    const safeLabel = dateLabel || new Date().toLocaleDateString('zh-TW',{timeZone:'Asia/Taipei'});
+    const idx = a.findIndex(e => e.label === safeLabel);
+    if(idx !== -1){
+      // 已有當天紀錄 → 更新分數（例如盤中多次重新整理）
+      a[idx].score = Math.round(score * 10) / 10;
     } else {
-      a.push({ label: dateLabel, score: Math.round(score * 10) / 10 });
+      a.push({ label: safeLabel, score: Math.round(score * 10) / 10, ts: Date.now() });
     }
     this.save(a);
     return a;
@@ -7038,9 +7152,13 @@ const IndicatorAlerts = {
       newAlerts.push({ level:'warn', icon:'🤩', title:`PSY 過度樂觀 (${ctx.cPSY.toFixed(0)}%)`, desc:'市場情緒過熱，注意高點賣出', time: timeStr });
     }
 
-    // 將本次新警報插入最前面（保留最多20筆）
+    // 將本次新警報插入最前面（保留最多20筆），並去除同時間＋同標題的重複項
     if(newAlerts.length > 0){
-      this._alerts = [...newAlerts, ...this._alerts].slice(0, 20);
+      const existing = new Set(this._alerts.map(a => `${a.title}|${a.time}`));
+      const deduped = newAlerts.filter(a => !existing.has(`${a.title}|${a.time}`));
+      if(deduped.length > 0){
+        this._alerts = [...deduped, ...this._alerts].slice(0, 20);
+      }
     }
     this._lastCheck = timeStr;
     return this._alerts;
@@ -7123,6 +7241,17 @@ function renderSignalLight(ctx){
           <span class="sl-bar-count">${sellHit}/8</span>
         </div>
       </div>
+    </div>
+    <div style="font-size:.75rem;color:var(--t2);margin-bottom:10px;padding:6px 10px;background:var(--card2);border-radius:6px;line-height:1.6">
+      ${buyHit >= 5
+        ? `<span style="color:var(--green)">💡 買入訊號強（${buyHit}/8 條件達標）</span>：多頭動能充足，可考慮進場，但仍需確認量能配合。`
+        : buyHit >= 3
+        ? `<span style="color:var(--green2)">💡 買入訊號偏多（${buyHit}/8）</span>：訊號尚未全面共振，建議小倉試探，勿重押。`
+        : sellHit >= 5
+        ? `<span style="color:var(--red)">⚠️ 賣出訊號強（${sellHit}/8 條件達標）</span>：超買風險高，建議減碼或等待回調確認。`
+        : sellHit >= 3
+        ? `<span style="color:var(--red2)">⚠️ 賣出訊號偏多（${sellHit}/8）</span>：短線偏空，現有多單注意停損，暫不追高。`
+        : `<span style="color:var(--yellow)">🔄 買賣訊號均衡（買 ${buyHit} / 賣 ${sellHit}）</span>：市場多空拉鋸，建議靜待方向確認再行動。`}
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px">
       <div>
