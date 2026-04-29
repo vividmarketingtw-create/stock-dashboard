@@ -6664,6 +6664,7 @@ let App = {
       renderBuySellPanel(ctx) +
       // ✦ 指標白話解讀（Task 16，新手友善）
       renderIndicatorMeaning(ctx) +
+      renderConflScore(ctx) +
       renderEntryPanel(ctx) +
       renderDailyBrief(ctx) +
 
@@ -7331,6 +7332,207 @@ let App = {
       }
     };
 
+    // ══════════════════════════════════════════════════
+    // Task B：背離偵測箭頭標記
+    // ══════════════════════════════════════════════════
+    const allRSI   = I.rsi.slice(-N);
+    const allClose = I.closes.slice(-N);
+    const allLow   = I.lows.slice(-N);
+    const allHigh  = I.highs.slice(-N);
+
+    // 找局部極值（4 bar 左右各對稱）
+    function localMins(arr, lb = 4){
+      const out = [];
+      for(let i = lb; i < arr.length - lb; i++){
+        if(arr[i] == null) continue;
+        let ok = true;
+        for(let j = 1; j <= lb; j++) if(arr[i-j] == null || arr[i] >= arr[i-j]){ ok=false; break; }
+        if(ok) for(let j = 1; j <= lb; j++) if(arr[i+j] == null || arr[i] >= arr[i+j]){ ok=false; break; }
+        if(ok) out.push(i);
+      }
+      return out;
+    }
+    function localMaxes(arr, lb = 4){
+      const out = [];
+      for(let i = lb; i < arr.length - lb; i++){
+        if(arr[i] == null) continue;
+        let ok = true;
+        for(let j = 1; j <= lb; j++) if(arr[i-j] == null || arr[i] <= arr[i-j]){ ok=false; break; }
+        if(ok) for(let j = 1; j <= lb; j++) if(arr[i+j] == null || arr[i] <= arr[i+j]){ ok=false; break; }
+        if(ok) out.push(i);
+      }
+      return out;
+    }
+
+    // 背離點收集（只保留最近 2 個）
+    const divergenceMarkers = [];
+    const priceLows  = localMins(allLow);
+    const priceHighs = localMaxes(allHigh);
+
+    // Bullish divergence：價格創新低但 RSI 未創新低
+    for(let k = 1; k < priceLows.length; k++){
+      const i1 = priceLows[k-1], i2 = priceLows[k];
+      if(i2 - i1 < 5) continue;
+      const rsi1 = allRSI[i1], rsi2 = allRSI[i2];
+      if(rsi1 == null || rsi2 == null) continue;
+      if(allLow[i2] < allLow[i1] && rsi2 > rsi1 + 2){
+        divergenceMarkers.push({ type:'bull', idx: i2, price: allLow[i2] });
+      }
+    }
+    // Bearish divergence：價格創新高但 RSI 未創新高
+    for(let k = 1; k < priceHighs.length; k++){
+      const i1 = priceHighs[k-1], i2 = priceHighs[k];
+      if(i2 - i1 < 5) continue;
+      const rsi1 = allRSI[i1], rsi2 = allRSI[i2];
+      if(rsi1 == null || rsi2 == null) continue;
+      if(allHigh[i2] > allHigh[i1] && rsi2 < rsi1 - 2){
+        divergenceMarkers.push({ type:'bear', idx: i2, price: allHigh[i2] });
+      }
+    }
+    // 只保留最近 4 個背離標記
+    const recentDiv = divergenceMarkers.slice(-4);
+
+    const divergencePlugin = {
+      id: 'divergence',
+      afterDatasetsDraw(chart){
+        const c2  = chart.ctx;
+        const yAx = chart.scales.y;
+        const xAx = chart.scales.x;
+        if(!yAx || !xAx) return;
+        c2.save();
+        recentDiv.forEach(d => {
+          const x = xAx.getPixelForValue(d.idx);
+          const y = yAx.getPixelForValue(d.price);
+          if(x < xAx.left || x > xAx.right) return;
+
+          const isBull = d.type === 'bull';
+          const color  = isBull ? '#10b981' : '#ef4444';
+          const label  = isBull ? '底背離' : '頂背離';
+          const arrowH = 14;
+          const tipY   = isBull ? y - arrowH - 20 : y + arrowH + 20;
+          const arrowTipY = isBull ? y - 8 : y + 8;
+
+          // 豎線
+          c2.beginPath();
+          c2.strokeStyle = color;
+          c2.lineWidth = 1.5;
+          c2.setLineDash([4, 3]);
+          c2.moveTo(x, isBull ? y - 4 : y + 4);
+          c2.lineTo(x, tipY + (isBull ? 4 : -4));
+          c2.stroke();
+          c2.setLineDash([]);
+
+          // 箭頭三角
+          c2.beginPath();
+          c2.fillStyle = color;
+          if(isBull){
+            c2.moveTo(x, arrowTipY);
+            c2.lineTo(x - 6, arrowTipY + 10);
+            c2.lineTo(x + 6, arrowTipY + 10);
+          } else {
+            c2.moveTo(x, arrowTipY);
+            c2.lineTo(x - 6, arrowTipY - 10);
+            c2.lineTo(x + 6, arrowTipY - 10);
+          }
+          c2.closePath();
+          c2.fill();
+
+          // 標籤文字
+          c2.fillStyle = color;
+          c2.font = 'bold 10px sans-serif';
+          c2.textAlign = 'center';
+          c2.fillText(label, x, tipY + (isBull ? -3 : 12));
+        });
+        c2.restore();
+      }
+    };
+
+    // ══════════════════════════════════════════════════
+    // Task C：歷史支撐阻力帶
+    // ══════════════════════════════════════════════════
+    // 用全部歷史資料（不只顯示的 N 根）找 pivot，再聚集成帶
+    const fullHighs = I.highs, fullLows = I.lows, fullCloses = I.closes;
+    const srLookback = Math.min(fullHighs.length, 252); // 最近一年
+    const srStart = fullHighs.length - srLookback;
+    const lb5 = 5; // 每側 5 根確認 pivot
+    const rawSup = [], rawRes = [];
+    for(let i = srStart + lb5; i < fullHighs.length - lb5; i++){
+      const h = fullHighs[i], l = fullLows[i];
+      if(h == null || l == null) continue;
+      // pivot high
+      let isHigh = true;
+      for(let j = 1; j <= lb5; j++) if(fullHighs[i-j] >= h || fullHighs[i+j] >= h){ isHigh=false; break; }
+      if(isHigh) rawRes.push(h);
+      // pivot low
+      let isLow = true;
+      for(let j = 1; j <= lb5; j++) if(fullLows[i-j] <= l || fullLows[i+j] <= l){ isLow=false; break; }
+      if(isLow) rawSup.push(l);
+    }
+
+    // 聚集成帶（同一 1.5% 範圍內算同一帶）
+    function clusterPivots(arr, pct = 0.015){
+      if(!arr.length) return [];
+      const sorted = [...arr].sort((a,b) => a-b);
+      const zones = [];
+      let cur = [sorted[0]];
+      for(let i = 1; i < sorted.length; i++){
+        if((sorted[i] - cur[0]) / cur[0] <= pct) cur.push(sorted[i]);
+        else { zones.push(cur); cur = [sorted[i]]; }
+      }
+      if(cur.length) zones.push(cur);
+      return zones.filter(z => z.length >= 2).map(z => ({
+        lo: z[0], hi: z[z.length-1],
+        center: z.reduce((a,b)=>a+b,0)/z.length,
+        strength: z.length
+      }));
+    }
+
+    const supZones = clusterPivots(rawSup).slice(-5);
+    const resZones = clusterPivots(rawRes).slice(-5);
+    const curPrice = I.closes[I.closes.length-1];
+
+    const srZonePlugin = {
+      id: 'srZones',
+      beforeDatasetsDraw(chart){
+        const c2  = chart.ctx;
+        const yAx = chart.scales.y;
+        const xAx = chart.scales.x;
+        if(!yAx || !xAx) return;
+        const yMin = yAx.min, yMax = yAx.max;
+        c2.save();
+
+        // 支撐帶（綠）
+        supZones.forEach(z => {
+          if(z.center > yMax || z.center < yMin) return;
+          const y1 = yAx.getPixelForValue(Math.min(z.hi, yMax));
+          const y2 = yAx.getPixelForValue(Math.max(z.lo, yMin));
+          c2.fillStyle = `rgba(16,185,129,${z.center < curPrice ? 0.07 : 0.04})`;
+          c2.fillRect(xAx.left, y1, xAx.right - xAx.left, y2 - y1);
+          // 標籤
+          c2.fillStyle = 'rgba(16,185,129,0.7)';
+          c2.font = '9px monospace';
+          c2.textAlign = 'left';
+          c2.fillText(`S ${Math.round(z.center)}`, xAx.left + 4, y2 - 2);
+        });
+
+        // 壓力帶（紅）
+        resZones.forEach(z => {
+          if(z.center > yMax || z.center < yMin) return;
+          const y1 = yAx.getPixelForValue(Math.min(z.hi, yMax));
+          const y2 = yAx.getPixelForValue(Math.max(z.lo, yMin));
+          c2.fillStyle = `rgba(239,68,68,${z.center > curPrice ? 0.07 : 0.04})`;
+          c2.fillRect(xAx.left, y1, xAx.right - xAx.left, y2 - y1);
+          // 標籤
+          c2.fillStyle = 'rgba(239,68,68,0.7)';
+          c2.font = '9px monospace';
+          c2.textAlign = 'left';
+          c2.fillText(`R ${Math.round(z.center)}`, xAx.left + 4, y1 + 10);
+        });
+
+        c2.restore();
+      }
+    };
+
     // ── 彩色量能柱（放量紅=漲、放量綠=跌、縮量灰）──
     const volMA20 = I.volMA.slice(-N);
     const volColors = I.vols.slice(-N).map((v, i) => {
@@ -7342,7 +7544,7 @@ let App = {
 
     pchart = new Chart(ctx, {
       type: 'line',
-      plugins: [roundLevelPlugin],
+      plugins: [srZonePlugin, roundLevelPlugin, divergencePlugin],
       data: {
         labels: I.labels.slice(-N),
         datasets: [
@@ -9198,6 +9400,132 @@ function renderSignalLight(ctx){
         <div style="font-size:.72rem;color:var(--red);font-weight:700;margin-bottom:4px">❌ 賣出觸發</div>
         <div class="sl-conds">${condHtml(sellConds, true)}</div>
       </div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FEATURE: 超賣/超買共振計分器 (renderConflScore)
+   同時滿足的極端條件越多，低點/高點訊號越可靠
+   ═══════════════════════════════════════════════════════════════ */
+function renderConflScore(ctx){
+  const { cK, cRSI, cPSY, cBoll, last, cMA20, cOBV, pOBV, cOBVMA } = ctx;
+
+  // 判斷各指標是否觸發低點/高點條件
+  const bollPct = cBoll ? ((last - cBoll.lower) / (cBoll.upper - cBoll.lower)) * 100 : 50;
+  const distMA20 = cMA20 ? (last - cMA20) / cMA20 * 100 : 0;
+  const obvAcc   = (cOBV != null && cOBVMA != null) ? cOBV > cOBVMA : null; // OBV 在均線之上
+
+  // ─── 低點信號（買進共振）───
+  const bottomSigs = [
+    { name: 'RSI 超賣',   hit: cRSI != null && cRSI < 30,  val: cRSI != null ? cRSI.toFixed(0) : '--',    threshold: '< 30'  },
+    { name: 'KD 超賣',    hit: cK   != null && cK   < 20,  val: cK   != null ? cK.toFixed(0)   : '--',    threshold: '< 20'  },
+    { name: 'PSY 悲觀',   hit: cPSY != null && cPSY < 25,  val: cPSY != null ? cPSY.toFixed(0) : '--',    threshold: '< 25%' },
+    { name: '布林下緣外', hit: bollPct < 5,                  val: bollPct.toFixed(0) + '%',                 threshold: '< 5%'  },
+    { name: '均線深度偏空',hit: distMA20 < -5,               val: distMA20.toFixed(1) + '%',               threshold: '< -5%' },
+  ];
+  // ─── 高點信號（賣出共振）───
+  const topSigs = [
+    { name: 'RSI 超買',   hit: cRSI != null && cRSI > 70,  val: cRSI != null ? cRSI.toFixed(0) : '--',    threshold: '> 70'  },
+    { name: 'KD 超買',    hit: cK   != null && cK   > 80,  val: cK   != null ? cK.toFixed(0)   : '--',    threshold: '> 80'  },
+    { name: 'PSY 樂觀',   hit: cPSY != null && cPSY > 75,  val: cPSY != null ? cPSY.toFixed(0) : '--',    threshold: '> 75%' },
+    { name: '布林上緣外', hit: bollPct > 95,                 val: bollPct.toFixed(0) + '%',                 threshold: '> 95%' },
+    { name: '均線深度偏多',hit: distMA20 > 5,                val: distMA20.toFixed(1) + '%',               threshold: '> +5%' },
+  ];
+
+  const bScore = bottomSigs.filter(s => s.hit).length;
+  const tScore = topSigs.filter(s => s.hit).length;
+
+  const bVerdict = bScore >= 4 ? { txt:'⚡ 極度超賣，歷史級低點', cls:'confl-alert-bottom' }
+                : bScore >= 3 ? { txt:'🟢 多項底部訊號共振，留意反彈', cls:'confl-warn-bottom' }
+                : bScore >= 2 ? { txt:'📉 部分超賣，需更多確認', cls:'confl-weak' }
+                : null;
+
+  const tVerdict = tScore >= 4 ? { txt:'⚡ 極度超買，歷史級高點', cls:'confl-alert-top' }
+                : tScore >= 3 ? { txt:'🔴 多項頂部訊號共振，留意回落', cls:'confl-warn-top' }
+                : tScore >= 2 ? { txt:'📈 部分超買，需更多確認', cls:'confl-weak' }
+                : null;
+
+  const verdict = tVerdict || bVerdict;
+  const borderColor = tScore >= 3 ? 'rgba(239,68,68,.5)' : bScore >= 3 ? 'rgba(16,185,129,.5)' : 'var(--border)';
+
+  const dot = (hit) =>
+    `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;flex-shrink:0;
+      background:${hit ? (tScore > bScore ? 'var(--red)' : 'var(--green)') : 'var(--card2)'};
+      border:1px solid var(--border)"></span>`;
+
+  const sigRow = (s, isTop) =>
+    `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;
+       border-bottom:1px solid rgba(255,255,255,.04);opacity:${s.hit ? 1 : .45}">
+      ${dot(s.hit)}
+      <span style="flex:1;font-size:.76rem;color:var(--t1)">${s.name}</span>
+      <span style="font-size:.72rem;color:${s.hit ? (isTop ? 'var(--red)' : 'var(--green)') : 'var(--t3)'};
+        font-variant-numeric:tabular-nums">${s.val}</span>
+      <span style="font-size:.65rem;color:var(--t3);min-width:40px;text-align:right">${s.threshold}</span>
+    </div>`;
+
+  const scoreBar = (score, isTop) => {
+    const color = isTop ? 'var(--red)' : 'var(--green)';
+    return Array.from({length:5},(_,i) =>
+      `<span style="display:inline-block;width:18px;height:18px;border-radius:4px;
+        background:${i < score ? color : 'var(--card2)'};border:1px solid var(--border)"></span>`
+    ).join('');
+  };
+
+  return `
+  <div class="sec">🎯 低點/高點共振偵測 <span class="sec-cnt">多項指標同時達到極端值，訊號可靠度大幅提升 — 單一指標超賣不代表低點，需要共振確認</span></div>
+  <div style="background:var(--card);border:2px solid ${borderColor};border-radius:14px;padding:20px 24px;
+    margin-bottom:14px;${(bScore>=3||tScore>=3)?'box-shadow:0 0 20px '+borderColor+';':''}"
+    id="anchor-confl">
+
+    ${verdict ? `<div style="padding:10px 14px;border-radius:9px;font-size:.85rem;font-weight:800;
+      margin-bottom:16px;text-align:center;
+      background:${tScore>=3?'rgba(239,68,68,.12)':'rgba(16,185,129,.12)'};
+      border:1.5px solid ${tScore>=3?'rgba(239,68,68,.4)':'rgba(16,185,129,.4)'};
+      color:${tScore>=3?'var(--red)':'var(--green)'}">
+      ${verdict.txt}
+    </div>` : `<div style="padding:10px 14px;border-radius:9px;font-size:.82rem;
+      margin-bottom:16px;text-align:center;background:var(--card2);color:var(--t2)">
+      目前各指標均在正常區間，無明顯極端訊號
+    </div>`}
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+      <!-- 低點偵測 -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:.8rem;font-weight:700;color:var(--green)">🟢 低點偵測（買進共振）</span>
+          <div style="display:flex;gap:3px;align-items:center">
+            ${scoreBar(bScore, false)}
+            <span style="font-size:1rem;font-weight:800;color:var(--green);margin-left:6px">${bScore}/5</span>
+          </div>
+        </div>
+        ${bottomSigs.map(s => sigRow(s, false)).join('')}
+        <div style="margin-top:8px;font-size:.68rem;color:var(--t3);line-height:1.6">
+          ${bScore>=3?'<span style="color:var(--green);font-weight:700">✅ 建議：等量能縮減後反彈再進場</span>':'3 個以上同時觸發才考慮買進'}
+        </div>
+      </div>
+
+      <!-- 高點偵測 -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:.8rem;font-weight:700;color:var(--red)">🔴 高點偵測（賣出共振）</span>
+          <div style="display:flex;gap:3px;align-items:center">
+            ${scoreBar(tScore, true)}
+            <span style="font-size:1rem;font-weight:800;color:var(--red);margin-left:6px">${tScore}/5</span>
+          </div>
+        </div>
+        ${topSigs.map(s => sigRow(s, true)).join('')}
+        <div style="margin-top:8px;font-size:.68rem;color:var(--t3);line-height:1.6">
+          ${tScore>=3?'<span style="color:var(--red);font-weight:700">⚠️ 建議：減碼或設緊停利，留意回落</span>':'3 個以上同時觸發才考慮減碼'}
+        </div>
+      </div>
+
+    </div>
+    <div style="margin-top:12px;font-size:.68rem;color:var(--t3);line-height:1.7;
+      background:var(--card2);padding:10px 14px;border-radius:8px;border-left:3px solid var(--purple)">
+      💡 <b>使用方式：</b>等多項指標同時觸發（≥3 格亮起），再搭配成交量縮減確認，成功率遠高於單一指標。
+      高點偵測亮起時不代表立刻反轉，但代表風險報酬比變差，應考慮縮減部位或移高停利點。
     </div>
   </div>`;
 }
