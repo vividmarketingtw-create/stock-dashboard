@@ -4298,9 +4298,22 @@ function renderVolPriceDivAlert(ctx){
   }
   const cols = { alert:'var(--red)', warn:'var(--yellow)', ok:'var(--green)', neutral:'var(--t3)' };
   const col = cols[level];
+
+  // 白話學習：解釋量價訊號對新手的意義
+  const learnMap = {
+    alert: `<strong style="color:var(--red)">量增價跌 = 最危險的賣壓訊號。</strong>代表「成交越來越熱鬧，但都在賣」——主動賣盤沉重，機構可能在出貨。逆勢硬接往往越套越深；等止跌再評估。`,
+    warn:  detail.includes('背離')
+      ? `<strong style="color:var(--yellow)">空頭背離 = 漲勢後勁不足的預警。</strong>就像跑步選手速度雖然沒慢，但步伐越來越重。不需要立即出場，但要把停損設好、降低追高意願。`
+      : `<strong style="color:var(--yellow)">量縮上漲 = 漲勢缺乏說服力。</strong>量能是趨勢的引擎，沒有量就沒有持續力。此時不追高，等量能放大才確認方向。`,
+    ok:    detail.includes('背離')
+      ? `<strong style="color:var(--green)">多頭背離 = 跌勢力道衰竭的好訊號。</strong>代表賣方已精疲力竭，逢量縮止跌後可分批試單。`
+      : `<strong style="color:var(--green)">量增價漲 = 最健康的上漲型態。</strong>有量有價，代表市場積極參與這波上漲，趨勢可信度高。`,
+    neutral: `<strong>量縮整理 = 多空都在等待。</strong>成交量低代表市場沒有方向共識，此時不宜大倉操作，等量能放大才確認突破或跌破的方向。`,
+  };
+
   return `
   <div style="background:var(--card2);border-left:4px solid ${col};border-radius:10px;
-    padding:11px 18px;margin-bottom:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    padding:11px 18px;margin-bottom:6px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
     <div style="font-size:1.6rem;line-height:1">${icon}</div>
     <div style="flex:1;min-width:180px">
       <div style="font-size:0.9rem;font-weight:800;color:${col}">${title}</div>
@@ -4312,6 +4325,9 @@ function renderVolPriceDivAlert(ctx){
       日變動 <span style="color:${chg>=0?'var(--green)':'var(--red)'}">
         ${chg>=0?'▲':'▼'}${Math.abs(chg).toFixed(0)}</span>
     </div>
+  </div>
+  <div style="background:rgba(99,102,241,.05);border-left:3px solid rgba(99,102,241,.3);border-radius:8px;padding:9px 14px;margin-bottom:12px;font-size:.77rem;color:var(--t2);line-height:1.75">
+    💡 ${learnMap[level] || learnMap.neutral}
   </div>`;
 }
 
@@ -4994,6 +5010,26 @@ function renderDuForeignStreak(ctx){
       </div>
       <div style="font-size:.75rem;color:${streakColor};font-weight:700">${duVerdict}</div>
     </div>
+    <!-- 白話學習：今日外資狀況解讀 -->
+    <div style="background:rgba(99,102,241,.05);border:1px solid rgba(99,102,241,.18);border-radius:9px;padding:11px 14px;margin-top:10px;font-size:.77rem;color:var(--t2);line-height:1.8">
+      <strong style="color:var(--t1)">💡 今日外資狀況白話解讀</strong><br>
+      ${fc >= 10
+        ? `外資已連買超 <strong style="color:var(--green)">${abs} 天</strong>。這是<strong>主力建倉訊號</strong>——大機構需要很多天才能把大量資金買完，連續這麼多天代表他們正在有計劃地吸籌。<br>👉 此時跟著持有多單，停損設在近期低點，等外資連買中斷才評估出場。`
+        : fc >= 5
+        ? `外資已連買超 <strong style="color:var(--green)">${abs} 天</strong>。根據杜金龍法則，連買 5 天以上代表<strong>波段行情啟動</strong>，市場需要較多買盤才能推動台積電上漲。<br>👉 可積極持有多單，每次拉回都是加碼機會，停損設最近的籌碼支撐。`
+        : fc >= 3
+        ? `外資連買超 <strong style="color:var(--green)">${abs} 天</strong>，達到杜老師認定的<strong>「有效買超」標準</strong>。代表外資對台積電看法轉正，不只是短線操作。<br>👉 可以考慮持有多單，觀察是否延續到第 5 天，延續越久訊號越強。`
+        : fc >= 1
+        ? `外資買超 <strong style="color:var(--green)">${abs} 天</strong>，剛開始。還需要觀察是否是<strong>連續買超的開始</strong>，還是單日操作。<br>👉 暫不追漲，等連買確認到第 3 天再評估是否跟進。`
+        : fc === 0
+        ? `今日外資方向不明，先<strong>觀察明日動向</strong>再決定。`
+        : fc >= -2
+        ? `外資短暫賣超 <strong style="color:var(--red)">${abs} 天</strong>，量不算大，可能只是短線獲利了結。<br>👉 不需恐慌，但要<strong>把停損移到合理位置保護獲利</strong>，若連賣超過 3 天再考慮減碼。`
+        : fc >= -5
+        ? `外資已連賣超 <strong style="color:var(--red)">${abs} 天</strong>，籌碼鬆動。代表外資正在有計劃地減少持有台積電。<br>👉 建議<strong>降低倉位至 30～50%</strong>，等外資轉買超才考慮重新加碼。`
+        : `外資連賣超 <strong style="color:var(--red)">${abs} 天</strong>，持續大量撤出。按杜老師法則，此時<strong>清倉觀望</strong>是最保守也最安全的做法。`
+      }
+    </div>
     <div class="du-foreign-rule">
       <strong>📌 杜金龍外資法則</strong>
       連續 3 天以上買超 → 有效多頭籌碼<br>
@@ -5046,6 +5082,11 @@ function renderPosCalc(ctx){
           <input type="number" id="pc-risk" value="${set.riskPct}" step="0.1" min="0.1" max="5">
           <span class="c-t2" style="font-size:0.6875rem">%</span>
         </div>
+        <div style="font-size:.72rem;color:var(--t2);margin:-4px 0 10px 0;padding:7px 10px;background:rgba(99,102,241,.06);border-radius:7px;line-height:1.6">
+          💡 <strong style="color:var(--t1)">新手建議填 1%</strong>：代表這筆最多虧掉總資金的1%。<br>
+          例如 100萬 × 1% = <strong style="color:var(--t1)">單筆最多虧 1萬元</strong>。<br>
+          填太高（如5%）遇到連續虧損會很快傷到本金。
+        </div>
         <div class="pf-row">
           <label>進場價</label>
           <input type="number" id="pc-entry" value="${F.int(last)}" step="1">
@@ -5056,10 +5097,20 @@ function renderPosCalc(ctx){
           <input type="number" id="pc-atrx" value="${set.atrStopMult}" step="0.5" min="1" max="5">
           <span class="c-t2" style="font-size:0.6875rem">當前 ATR=${F.num(cATR,2)}</span>
         </div>
+        <div style="font-size:.72rem;color:var(--t2);margin:-4px 0 10px 0;padding:7px 10px;background:rgba(99,102,241,.06);border-radius:7px;line-height:1.6">
+          💡 <strong style="color:var(--t1)">ATR 是每日平均波動幅度</strong>，乘數決定停損的寬緊。<br>
+          乘數 2.5 = 停損 = 進場價 − (ATR × 2.5)。<br>
+          <strong style="color:var(--yellow)">乘數太小容易被正常震盪停損</strong>，新手建議 2～3。
+        </div>
         <div class="pf-row">
           <label>R:R 比</label>
           <input type="number" id="pc-rr" value="${set.rrRatio}" step="0.5" min="1" max="5">
           <span class="c-t2" style="font-size:0.6875rem">1 :</span>
+        </div>
+        <div style="font-size:.72rem;color:var(--t2);margin:-4px 0 10px 0;padding:7px 10px;background:rgba(99,102,241,.06);border-radius:7px;line-height:1.6">
+          💡 <strong style="color:var(--t1)">R:R = 風險報酬比</strong>，代表「賺的要是虧的幾倍」。<br>
+          R:R 2.5 = 願意虧 1，目標賺 2.5。<br>
+          <strong style="color:var(--green)">新手至少填 2</strong>：就算只有4成勝率，長期也不虧。
         </div>
         <div class="pf-row">
           <button class="btn btn-sm" style="margin-left:auto" onclick="App.recalcPos()">↻ 重新計算 + 儲存</button>
@@ -7992,6 +8043,24 @@ function renderDailyBrief(ctx){
         ${bullets.map(b => `<li>${b}</li>`).join('')}
       </ul>
     </div>
+    <!-- 白話學習：今日最值得注意的事 -->
+    <div style="margin-top:12px;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.2);border-radius:9px;padding:11px 14px;font-size:.77rem;color:var(--t2);line-height:1.8">
+      <strong style="color:var(--t1)">💡 今日一句話重點</strong><br>
+      ${cRSI > 70 && cK > 70
+        ? `RSI ${cRSI.toFixed(1)} 且 KD K值 ${cK.toFixed(1)} 同時過熱——<strong style="color:var(--red)">雙重超買！</strong>此時追漲風險最高，等兩者都降至 60 以下再評估進場。`
+        : cRSI < 30 && cK < 30
+        ? `RSI ${cRSI.toFixed(1)} 且 KD K值 ${cK.toFixed(1)} 同時超賣——<strong style="color:var(--green)">雙重超賣，底部訊號強！</strong>等出現止跌K線（如錘子線、收紅）再考慮進場，不要過早接刀。`
+        : cRSI > 70
+        ? `RSI ${cRSI.toFixed(1)} 已過熱。<strong style="color:var(--yellow)">短線高點風險升高</strong>，現在進場的安全邊際低。如已持有多單，可考慮把停損往上移保護獲利。`
+        : cRSI < 30
+        ? `RSI ${cRSI.toFixed(1)} 超賣。<strong style="color:var(--green)">反彈機率提升</strong>，但仍需等 RSI 由下往上穿越 30，才是較安全的進場時機。`
+        : last > cMA60
+        ? `股價站在季線（MA60）之上，<strong style="color:var(--green)">多頭結構完整</strong>。拉回測試均線是加碼機會，不必過度恐慌短線震盪。`
+        : last < cMA60
+        ? `股價跌破季線（MA60）。<strong style="color:var(--red)">中線轉為偏空</strong>，逆勢做多的風險較高；建議縮減倉位，等股價重新站回 MA60 再考慮布局。`
+        : `今日各指標處於中性位置，無明顯極端訊號。<strong>耐心等待方向選擇</strong>，不必急著操作。`
+      }
+    </div>
   </div>`;
 }
 
@@ -8011,13 +8080,64 @@ function renderCandlePatterns(ctx){
           ${p.name}
         </div>`).join('');
 
+  // K線型態詳細學習資料
+  const patternWR = {
+    '錘子線':   { wr:58, h:'3-5日', action:'等明日收紅且量能放大再進場，停損設今日低點之下' },
+    '倒錘子線': { wr:55, h:'3-5日', action:'等確認收紅，量能配合才是有效反轉' },
+    '射擊之星': { wr:60, h:'3-5日', action:'不追高，觀察是否跌破今日低點，破低即空頭確認' },
+    '上吊線':   { wr:57, h:'3-5日', action:'下方失去支撐的警訊，持有多單要小心' },
+    '多頭吞噬': { wr:65, h:'5-10日', action:'可隔日分批試買，停損設今日低點，目標昨日高點' },
+    '空頭吞噬': { wr:63, h:'5-10日', action:'出現在高點是明確出場訊號，持有多單設好停損' },
+    '早晨之星': { wr:72, h:'5-10日', action:'三日底部反轉，可積極分批布局，勝率最高的K線型態之一' },
+    '黃昏之星': { wr:70, h:'5-10日', action:'三日頂部反轉，高點出現即是減倉警報，逐步出場' },
+    '十字星':   { wr:52, h:'1-3日', action:'方向待確認，等次日收紅就多、收黑就空，不要搶先' },
+    '長腿十字': { wr:54, h:'1-3日', action:'多空激烈拉鋸，次日收盤方向為關鍵，耐心等確認' },
+    '墓碑十字': { wr:60, h:'3-5日', action:'空頭力道強，不追高；等確認下跌再考慮放空或減碼' },
+  };
+
+  const patternLearnHtml = patterns.length > 0 ? (() => {
+    const p = patterns[0];
+    const isBull = p.dir === 'bull' || p.dir === 'neutral';
+    const detail = patternWR[p.name] || { wr: isBull?57:60, h:'3-5日', action: isBull?'等次日量能確認後再進場':'謹慎應對，注意停損位' };
+    const col = p.dir === 'bull' ? 'var(--green)' : p.dir === 'bear' ? 'var(--red)' : 'var(--yellow)';
+    const bg  = p.dir === 'bull' ? 'rgba(16,185,129,.07)' : p.dir === 'bear' ? 'rgba(239,68,68,.07)' : 'rgba(245,158,11,.07)';
+    const bdr = p.dir === 'bull' ? 'rgba(16,185,129,.28)' : p.dir === 'bear' ? 'rgba(239,68,68,.28)' : 'rgba(245,158,11,.28)';
+    return `
+    <div style="margin-top:10px;background:${bg};border:1px solid ${bdr};border-radius:10px;padding:12px 14px">
+      <div style="font-size:.72rem;font-weight:800;color:${col};margin-bottom:8px">📚 今日型態學習｜${p.icon} ${p.name}</div>
+      <div style="font-size:.78rem;color:var(--t2);line-height:1.8">
+        <strong style="color:var(--t1)">這個型態代表什麼？</strong><br>
+        ${p.desc}<br>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;margin:8px 0">
+          <span style="background:${bg};border:1px solid ${bdr};border-radius:6px;padding:3px 10px;font-size:.7rem;color:${col};font-weight:700">
+            📊 歷史勝率 ~${detail.wr}%
+          </span>
+          <span style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:6px;padding:3px 10px;font-size:.7rem;color:var(--yellow);font-weight:700">
+            ⏱ 有效期限：${detail.h}
+          </span>
+          <span style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.3);border-radius:6px;padding:3px 10px;font-size:.7rem;color:var(--purple);font-weight:700">
+            ${p.dir==='bull'?'🟢 偏多反轉訊號':p.dir==='bear'?'🔴 偏空反轉訊號':'🟡 方向待確認'}
+          </span>
+        </div>
+        <div style="padding:8px 10px;background:rgba(99,102,241,.06);border-radius:7px;font-size:.75rem">
+          <strong style="color:var(--t1)">👉 建議動作：</strong>${detail.action}
+        </div>
+        ${patterns.length > 1 ? `<div style="margin-top:6px;font-size:.7rem;color:var(--t3)">另偵測到：${patterns.slice(1).map(pp=>`${pp.icon} ${pp.name}`).join('、')}</div>` : ''}
+      </div>
+    </div>`;
+  })() : `
+    <div style="margin-top:8px;padding:10px 14px;background:var(--card2);border-radius:8px;font-size:.77rem;color:var(--t2);line-height:1.7">
+      💡 <strong>今日無明顯K線型態</strong>，代表市場走勢平穩，沒有明確的反轉或加速訊號。<br>
+      觀盤重點：留意明日是否出現型態，搭配量能判斷方向選擇。
+    </div>`;
+
   return `
   <div class="candle-patterns-card ic">
     <div class="cp-header">
       <span class="cp-title">🕯️ 今日K線型態偵測</span>
     </div>
     <div class="cp-badges">${badgeHtml}</div>
-    ${patterns.length > 0 ? `<div style="margin-top:8px;font-size:.73rem;color:var(--t3)">${patterns.map(p=>`<b>${p.name}</b>：${p.desc}`).join('；')}</div>` : ''}
+    ${patternLearnHtml}
   </div>`;
 }
 
@@ -8039,12 +8159,43 @@ function renderAlertPanel(ctx){
           <div class="ial-time">${a.time}</div>
         </div>`).join('');
 
+  // 學習提示：依警報數量和等級給出白話解讀
+  const critAlerts = alerts.filter(a => a.level === 'critical' || a.level === 'high');
+  const warnAlerts = alerts.filter(a => a.level === 'warn' || a.level === 'warning');
+  let alertLearnHtml = '';
+  if(critAlerts.length > 0){
+    alertLearnHtml = `
+    <div style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.25);border-radius:9px;padding:10px 13px;margin-bottom:10px;font-size:.77rem;color:var(--t2);line-height:1.75">
+      🚨 <strong style="color:var(--red)">今日有 ${critAlerts.length} 個高優先警報</strong>：<em>${critAlerts[0].title}</em>${critAlerts.length > 1 ? `、<em>${critAlerts[1].title}</em>` : ''}。<br>
+      高優先警報代表指標數值已達到「極端區域」（如 RSI > 70、KD 死亡交叉），歷史上在這種情況下繼續追漲（或追跌）的勝率會下降。<br>
+      <strong style="color:var(--t1)">建議：</strong>先不要加碼，確認是否有其他指標同步確認，再決定下一步行動。
+    </div>`;
+  } else if(warnAlerts.length > 0){
+    alertLearnHtml = `
+    <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.22);border-radius:9px;padding:10px 13px;margin-bottom:10px;font-size:.77rem;color:var(--t2);line-height:1.75">
+      ⚠️ <strong style="color:var(--yellow)">今日有 ${warnAlerts.length} 個注意警報</strong>：指標進入警戒區但尚未達極端。<br>
+      這是「早期警示」，代表需要提高關注，但不一定需要立即行動。<strong>建議把停損往合理位置移動</strong>，並密切觀察後續發展。
+    </div>`;
+  } else if(alerts.length === 0){
+    alertLearnHtml = `
+    <div style="background:var(--card2);border-radius:9px;padding:10px 13px;margin-bottom:10px;font-size:.77rem;color:var(--t2);line-height:1.75">
+      ✅ <strong>今日無觸發警報</strong>，各指標均在正常範圍內運行。<br>
+      💡 <em>什麼情況會觸發警報？</em> 當 RSI 超過 70 或低於 30、KD 出現交叉、MACD 翻轉、或量價出現背離時，系統會自動記錄。
+    </div>`;
+  } else {
+    alertLearnHtml = `
+    <div style="background:var(--card2);border-radius:9px;padding:10px 13px;margin-bottom:10px;font-size:.77rem;color:var(--t2);line-height:1.75">
+      ℹ️ <strong>${alerts.length} 筆一般提示</strong>，屬於正常指標變動。可搭配上方買賣訊號總覽的加權分數一起判斷方向。
+    </div>`;
+  }
+
   return `
   <div class="ind-alert-panel ic">
     <div class="ial-header">
       <span class="ial-title">🔔 指標觸發紀錄</span>
       <span style="font-size:.72rem;color:var(--t3)">最近 ${alerts.length} 筆</span>
     </div>
+    ${alertLearnHtml}
     <div class="ial-list">${listHtml}</div>
   </div>`;
 }
@@ -8101,6 +8252,36 @@ function renderSOXCorr(ctx){
   }
   const acCls = autoCorr > 0.1 ? 'pos' : autoCorr < -0.1 ? 'neg' : '';
 
+  // ── 白話解讀（contextual learning）──
+  const volNum = parseFloat(annualVol);
+  const sharpeNum = parseFloat(sharpe);
+  const acNum = parseFloat(autoCorr);
+
+  const volLearnIcon  = volNum > 40 ? '⚡' : volNum > 25 ? '🌊' : '😴';
+  const volLearnColor = volNum > 40 ? 'var(--red)' : volNum > 25 ? 'var(--yellow)' : 'var(--green2)';
+  const volLearnTitle = volNum > 40 ? '高波動期' : volNum > 25 ? '正常波動' : '低波動盤整';
+  const volLearnMsg   = volNum > 40
+    ? `年化波動率 <strong>${annualVol}%</strong>，台積電近30日每天漲跌幅明顯偏大。<strong style="color:var(--red)">停損點建議設在 ATR × 3 以上</strong>，否則容易被正常日內震盪洗出場；倉位建議縮至平常的一半。`
+    : volNum > 25
+    ? `年化波動率 <strong>${annualVol}%</strong>，波動在正常健康範圍內。<strong>停損設 ATR × 2～2.5</strong> 合理，不需特別調整操作策略。`
+    : `年化波動率 <strong>${annualVol}%</strong>，台積電近期走勢相當平穩。<strong>停損可設 ATR × 1.5～2</strong>；但要注意低波動往往是大行情啟動前的蟄伏，留意量能放大與突破訊號。`;
+
+  const sharpeLearnMsg = isNaN(sharpeNum)
+    ? `資料不足，無法計算。`
+    : sharpeNum > 1.5
+    ? `夏普比率 <strong>${sharpe}</strong>，表現<strong style="color:var(--green)">優秀</strong>：近30日每承受1份風險，獲得超過1.5倍報酬。波段持有效益高。`
+    : sharpeNum > 0.5
+    ? `夏普比率 <strong>${sharpe}</strong>，屬<strong style="color:var(--green2)">正常水準</strong>，風險報酬尚可，持股策略無需大改。`
+    : sharpeNum > 0
+    ? `夏普比率 <strong>${sharpe}</strong> 偏低（0~0.5），持股效率不高。建議提高進場標準，等更明確訊號再操作。`
+    : `夏普比率 <strong>${sharpe}</strong> 為<strong style="color:var(--red)">負值</strong>：近30日風險調整後為虧損。此時嚴控倉位，不宜重押。`;
+
+  const acLearnMsg = acNum > 0.1
+    ? `<strong style="color:var(--green)">動能效應</strong>（自相關 ${autoCorr}）：近期台積電有「漲繼續漲、跌繼續跌」傾向。建議<strong>順勢操作</strong>，不要逆勢摸頂摸底。`
+    : acNum < -0.1
+    ? `<strong style="color:var(--purple)">均值回歸</strong>（自相關 ${autoCorr}）：近期台積電有「大漲後反跌、大跌後反彈」傾向。建議<strong>逢急漲減碼、逢急跌試探</strong>，不要追漲追跌。`
+    : `<strong>隨機漫步</strong>（自相關 ${autoCorr} ≈ 0）：漲跌方向與昨日相關性低，需要多個指標共振才能確認方向，避免只看單一訊號就出手。`;
+
   return `
   <div class="sox-corr ic">
     <div class="sc-header">
@@ -8134,6 +8315,19 @@ function renderSOXCorr(ctx){
       <div class="sc-stat">
         <div class="sc-stat-val ${acCls}">${autoCorr}</div>
         <div class="sc-stat-label">自相關(lag-1)</div>
+      </div>
+    </div>
+    <!-- 💬 今日白話解讀 -->
+    <div style="margin:12px 0 8px;display:flex;flex-direction:column;gap:7px">
+      <div style="font-size:.68rem;font-weight:800;color:var(--t3);letter-spacing:.06em;margin-bottom:1px">💬 今日數字白話解讀</div>
+      <div style="background:rgba(16,185,129,.06);border-left:3px solid ${volLearnColor};border-radius:8px;padding:9px 13px;font-size:.77rem;color:var(--t2);line-height:1.75">
+        ${volLearnIcon} <strong style="color:${volLearnColor}">${volLearnTitle}</strong>：${volLearnMsg}
+      </div>
+      <div style="background:rgba(99,102,241,.05);border-left:3px solid rgba(99,102,241,.35);border-radius:8px;padding:9px 13px;font-size:.77rem;color:var(--t2);line-height:1.75">
+        📈 <strong>夏普比率解讀</strong>：${sharpeLearnMsg}
+      </div>
+      <div style="background:rgba(99,102,241,.04);border-left:3px solid rgba(99,102,241,.25);border-radius:8px;padding:9px 13px;font-size:.77rem;color:var(--t2);line-height:1.75">
+        🔄 <strong>趨勢延續性</strong>：${acLearnMsg}
       </div>
     </div>
     <div class="sc-note">
@@ -8235,6 +8429,17 @@ function renderPyramidVis(ctx){
   return `
   <div class="pyramid-vis">
     <div class="pv-title">📐 分批進場規劃</div>
+    <!-- 白話概念說明 -->
+    <div style="background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.2);border-radius:9px;padding:11px 14px;margin-bottom:12px;font-size:.77rem;color:var(--t2);line-height:1.8">
+      <strong style="color:var(--t1)">💡 什麼是分批進場（金字塔式建倉）？</strong><br>
+      把要投入的資金分成 3 批，不一次全押，是新手最重要的風控技巧：<br>
+      <strong style="color:var(--green)">第一批（30%）試探</strong>：確認訊號後先用小部位試水溫，萬一看錯最多損失 30%。<br>
+      <strong style="color:var(--green2)">第二批（40%）加碼</strong>：股價回調至支撐又確認止跌，代表訊號可靠，加碼至 70%。<br>
+      <strong style="color:var(--yellow)">第三批（30%）重押</strong>：跌到更強支撐才用最後一批，極端買點才動用。<br>
+      <div style="margin-top:7px;padding:7px 10px;background:rgba(245,158,11,.07);border-radius:6px;font-size:.73rem;color:var(--yellow)">
+        ⚠️ 三批都押的情況極少見。多數交易只會用到第一批或前兩批，這才是正確的做法。
+      </div>
+    </div>
     <div class="pv-timeline">${stepsHtml}</div>
     <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
       <span class="pv-stop">🛑 停損 $${stop.toFixed(1)}</span>
@@ -8282,6 +8487,32 @@ function renderWinRateDetail(){
 
   if(!cellHtml.trim()) return '';
 
+  // ── 個人勝率白話解讀 ──
+  const allWins = trades.filter(t => parseFloat(t.profit || t.pnl || 0) > 0).length;
+  const overallWR = trades.length > 0 ? (allWins / trades.length * 100).toFixed(0) : 0;
+  const overallWRNum = parseInt(overallWR);
+  const rsiGroup30 = groups['超賣(<30)'];
+  const rsiGroup70 = groups['超買(>70)'];
+  const rsiLearnHtml = (rsiGroup30.length >= 2 && rsiGroup70.length >= 2) ? (() => {
+    const wr30 = (rsiGroup30.filter(p=>p>0).length / rsiGroup30.length * 100).toFixed(0);
+    const wr70 = (rsiGroup70.filter(p=>p>0).length / rsiGroup70.length * 100).toFixed(0);
+    const better = parseInt(wr30) > parseInt(wr70) ? 'RSI 超賣時進場' : 'RSI 超買時進場';
+    return `你的最高勝率出現在 <strong>${better}</strong>（${Math.max(parseInt(wr30), parseInt(wr70))}%），代表你在「${parseInt(wr30)>parseInt(wr70)?'超賣低點布局':'高位進場'}」的操作最有把握。`;
+  })() : `累積更多筆數後，這裡會顯示你最擅長哪個 RSI 區間進場。`;
+
+  const winRateLearningHtml = `
+  <div style="background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.2);border-radius:9px;padding:11px 14px;margin-bottom:14px;font-size:.77rem;color:var(--t2);line-height:1.8">
+    <strong style="color:var(--t1)">💡 你的個人交易洞察（${trades.length} 筆）</strong><br>
+    整體勝率 <strong style="color:${overallWRNum >= 55 ? 'var(--green)' : overallWRNum >= 40 ? 'var(--yellow)' : 'var(--red)'}">${overallWR}%</strong>
+    ${overallWRNum >= 55
+      ? '——超過 55%，整體策略正向！繼續保持進場紀律，重點是控制虧損的每一筆金額不要太大。'
+      : overallWRNum >= 40
+      ? '——在 40～55% 之間，屬於正常範圍。要達到長期獲利，需確保「每次賺的 > 每次虧的」（R:R 比至少 2:1）。'
+      : '——低於 40%，代表進場時機需要改善。建議增加進場條件的嚴格程度，只在 3 個以上指標同向時才行動。'
+    }
+    <br>${rsiLearnHtml}
+  </div>`;
+
   // 持有天數分析
   const byDays = { '≤3天':[], '4-10天':[], '>10天':[] };
   trades.forEach(t => {
@@ -8306,6 +8537,7 @@ function renderWinRateDetail(){
   }).join('');
 
   return `
+    ${winRateLearningHtml}
     <div class="wr-section-title">📊 按入場時 RSI 分析勝率</div>
     <div class="wr-grid">${cellHtml}</div>
     ${dayHtml ? `<div class="wr-section-title">⏱ 按持有天數分析勝率</div><div class="wr-grid">${dayHtml}</div>` : ''}
