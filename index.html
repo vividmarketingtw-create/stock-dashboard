@@ -884,6 +884,10 @@ body.light .candle-patterns-card,body.light .sox-corr,body.light .false-signal-c
 }
 .hint-tag:hover{background:rgba(59,130,246,.2)}
 
+/* ── 日誌快照 V2 ── */
+.pc-snapshot{font-size:.68rem;color:var(--t3);margin:-4px 0 8px;padding:5px 8px;
+  background:rgba(59,130,246,.06);border-radius:6px;line-height:1.6}
+
 /* ── 杜金龍功能：KD 共振卡片 ── */
 .du-kd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:10px;margin-bottom:12px}
 .du-kd-card{background:var(--card);border-radius:10px;padding:14px 16px;border:1px solid var(--border)}
@@ -905,6 +909,63 @@ body.light .candle-patterns-card,body.light .sox-corr,body.light .false-signal-c
 body.light .du-kd-card,body.light .du-resonance-bar,body.light .du-foreign-card{background:#fff;border-color:#e2e8f0}
 
 body.light .zone-header{background:linear-gradient(135deg,rgba(59,130,246,.06),rgba(139,92,246,.03))}
+
+/* ═══ 優化 6：手機版 RWD ═══ */
+@media (max-width: 768px){
+  body{ font-size: 14px; }
+  .header{ padding: 12px 14px; gap: 10px; flex-direction: column; align-items: flex-start; }
+  .hd-left{ min-width: unset; width: 100%; }
+  .hd-right{ width: 100%; justify-content: flex-start; flex-wrap: wrap; }
+  .price-big{ font-size: 2rem; }
+
+  .zone-header{ padding: 10px 14px; flex-wrap: wrap; gap: 6px; }
+  .zh-letter{ width: 28px; height: 28px; font-size: .8rem; }
+  .zh-title{ font-size: .85rem; }
+  .zh-desc{ font-size: .68rem; }
+
+  /* 卡片網格：手機上強制單欄 */
+  .grid-2,.grid-3,.grid-4,
+  [style*="grid-template-columns"]{
+    grid-template-columns: 1fr !important;
+  }
+  .ic-grid, .wr-grid, .du-kd-grid, .mtf-grid{
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* 訊號燈卡片 */
+  .signal-light-card{ flex-direction: column; }
+  .sl-bars{ flex-direction: column; gap: 6px; }
+
+  /* 走勢圖容器 */
+  #pc{ height: 220px !important; }
+  .chart-wrap{ height: 240px !important; }
+
+  /* 部位計算機 */
+  .poscalc-grid{ grid-template-columns: 1fr !important; }
+
+  /* 日誌表格：手機上縮小欄位 */
+  .trade-table th, .trade-table td{ padding: 5px 4px; font-size: .68rem; }
+  .trade-table th:nth-child(n+6), .trade-table td:nth-child(n+6){ display: none; }
+
+  /* MTF 卡片 */
+  .mtf-grid{ grid-template-columns: 1fr !important; }
+
+  /* 外資連續天數卡片 */
+  .du-foreign-card{ flex-direction: column; }
+  .du-foreign-rule{ border-left: none; border-top: 1px solid var(--border); padding-left: 0; padding-top: 10px; margin-top: 6px; }
+
+  /* 籌碼卡片橫向排列改縱排 */
+  .pyramid-table{ font-size: .72rem; }
+  .pf-row label{ min-width: 60px; font-size: .75rem; }
+
+  /* 按鈕區 */
+  .j-buttons{ flex-wrap: wrap; gap: 6px; }
+  .btn{ padding: 7px 12px; font-size: .78rem; }
+
+  /* 底部工具列 */
+  .foot{ font-size: .68rem; }
+  .legend{ font-size: .72rem; line-height: 1.7; }
+}
 </style>
 </head>
 <body>
@@ -1262,6 +1323,21 @@ const Ind = {
       out.push(prev);
     }
     return out;
+  },
+
+  // ── VWAP（20日量加權平均價）──
+  // 反映過去 20 個交易日法人的平均持倉成本
+  // 價格在 VWAP 上方 = 多方佔優；下方 = 空方佔優
+  vwap(h, l, c, v, period = 20){
+    const tp = c.map((ci, i) => (h[i] + l[i] + ci) / 3); // Typical Price
+    return tp.map((_, i) => {
+      if(i < period - 1) return null;
+      const tpSl = tp.slice(i - period + 1, i + 1);
+      const vSl  = v.slice(i - period + 1, i + 1);
+      const num  = tpSl.reduce((s, t, j) => s + t * (vSl[j] || 0), 0);
+      const den  = vSl.reduce((s, vi) => s + (vi || 0), 0);
+      return den > 0 ? num / den : null;
+    });
   }
 };
 
@@ -1398,6 +1474,140 @@ const ForeignHistory = {
       latest,
       history: a
     };
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   MODULE: NOTIFIER（Browser Push 通知）
+   ═══════════════════════════════════════════════════════════════ */
+const Notifier = {
+  _last: {},  // { tag: timestamp } 避免同條件短時間重複推送
+
+  isSupported(){ return 'Notification' in window; },
+  isGranted(){ return this.isSupported() && Notification.permission === 'granted'; },
+
+  async requestPermission(){
+    if(!this.isSupported()) return false;
+    const p = await Notification.requestPermission();
+    return p === 'granted';
+  },
+
+  send(title, body, tag){
+    if(!this.isGranted()) return;
+    const now = Date.now();
+    // 同一個 tag 30 分鐘內只推一次
+    if(this._last[tag] && now - this._last[tag] < 30 * 60 * 1000) return;
+    this._last[tag] = now;
+    try{
+      new Notification(title, {
+        body, tag,
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/TSMC_logo.svg/64px-TSMC_logo.svg.png'
+      });
+    }catch(e){ console.warn('Notifier error', e); }
+  },
+
+  // 檢查是否有任何條件觸發，並發送通知
+  check(ctx){
+    if(!this.isGranted()) return;
+    const { cK, cD, pK, pD, cRSI, chipStats, cPSY } = ctx;
+
+    // KD 黃金交叉
+    if(pK != null && pD != null && cK != null && cD != null && pK <= pD && cK > cD)
+      this.send('🟢 台積電 KD 黃金交叉', `K=${cK.toFixed(1)} 穿越 D=${cD.toFixed(1)}，技術面買點出現`, 'kd-golden');
+
+    // KD 死亡交叉
+    if(pK != null && pD != null && cK != null && cD != null && pK >= pD && cK < cD)
+      this.send('🔴 台積電 KD 死亡交叉', `K=${cK.toFixed(1)} 下穿 D=${cD.toFixed(1)}，注意出場訊號`, 'kd-dead');
+
+    // RSI 超賣（< 30）
+    if(cRSI != null && cRSI < 30)
+      this.send('⭐ RSI 超賣警報', `RSI=${cRSI.toFixed(1)}，歷史低檔區，留意反彈買點`, 'rsi-oversold');
+
+    // RSI 超買（> 70）
+    if(cRSI != null && cRSI > 70)
+      this.send('⚠️ RSI 超買警報', `RSI=${cRSI.toFixed(1)}，高檔區注意過熱風險`, 'rsi-overbought');
+
+    // 外資連買 3 天
+    if(chipStats?.foreignConsec >= 3)
+      this.send('📈 外資連續買超 ' + chipStats.foreignConsec + ' 天', '法人籌碼持續流入，多頭格局明確', 'foreign-buy');
+
+    // 外資連賣 3 天
+    if(chipStats?.foreignConsec <= -3)
+      this.send('📉 外資連續賣超 ' + Math.abs(chipStats.foreignConsec) + ' 天', '法人籌碼外流，注意下行風險', 'foreign-sell');
+
+    // PSY 超賣
+    if(cPSY != null && cPSY < 25)
+      this.send('🔵 PSY 心理指標超賣', `PSY=${cPSY.toFixed(0)}%，市場極度悲觀，歷史上是好的買點`, 'psy-low');
+  },
+
+  renderBtn(){
+    const granted = this.isGranted();
+    const sup = this.isSupported();
+    if(!sup) return '';
+    return granted
+      ? `<button class="btn btn-sm" style="background:rgba(16,185,129,.15);color:var(--green);border:1px solid var(--green)"
+           onclick="App.showToast('🔔 通知已啟用，條件觸發時自動推送')">🔔 通知已啟用</button>`
+      : `<button class="btn btn-sm" onclick="Notifier.requestPermission().then(ok=>{ if(ok) App.render(); App.showToast(ok?'✅ 通知已啟用':'❌ 瀏覽器拒絕通知授權'); })">
+           🔕 啟用桌面通知</button>`;
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   MODULE: EVENTS（除息 / 財報 / 法說會 重大事件）
+   ═══════════════════════════════════════════════════════════════ */
+const Events = {
+  // 台積電 2025~2026 已知重大事件（日期以台灣時間，部分為預估，以官方公告為準）
+  LIST: [
+    { date:'2025-06-19', type:'div',      label:'Q2 除息',    note:'現金股利 5.0 元/股（預估）' },
+    { date:'2025-07-17', type:'earnings', label:'Q2 法說會',  note:'揭露 Q2 財報＋Q3 展望' },
+    { date:'2025-09-18', type:'div',      label:'Q3 除息',    note:'現金股利 5.0 元/股（預估）' },
+    { date:'2025-10-16', type:'earnings', label:'Q3 法說會',  note:'揭露 Q3 財報＋Q4 展望' },
+    { date:'2025-12-18', type:'div',      label:'Q4 除息',    note:'現金股利 5.0 元/股（預估）' },
+    { date:'2026-01-15', type:'earnings', label:'Q4 法說會',  note:'揭露全年 2025 財報' },
+    { date:'2026-03-19', type:'div',      label:'Q1 除息',    note:'現金股利 5.0 元/股（預估）' },
+    { date:'2026-04-16', type:'earnings', label:'Q1 法說會',  note:'揭露 Q1 財報＋Q2 展望' },
+    { date:'2026-06-18', type:'div',      label:'Q2 除息',    note:'現金股利 5.0 元/股（預估）' },
+    { date:'2026-07-16', type:'earnings', label:'Q2 法說會',  note:'揭露 Q2 財報＋Q3 展望' },
+  ],
+
+  upcoming(withinDays = 45){
+    const twStr = new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' });
+    const today = new Date(twStr);
+    today.setHours(0,0,0,0);
+    return this.LIST
+      .map(e => {
+        const d = new Date(e.date);
+        const days = Math.round((d - today) / 86400000);
+        return { ...e, daysAway: days };
+      })
+      .filter(e => e.daysAway >= -3 && e.daysAway <= withinDays)
+      .sort((a, b) => a.daysAway - b.daysAway)
+      .slice(0, 3);
+  },
+
+  renderBanner(){
+    const items = this.upcoming();
+    if(!items.length) return '';
+    return items.map(e => {
+      const isDiv = e.type === 'div';
+      const urgency = e.daysAway <= 5  ? 'rgba(239,68,68,.12)'
+                    : e.daysAway <= 14 ? 'rgba(245,158,11,.1)'
+                    : 'rgba(59,130,246,.08)';
+      const borderC = e.daysAway <= 5  ? '#ef4444'
+                    : e.daysAway <= 14 ? '#f59e0b' : '#3b82f6';
+      const daysTxt = e.daysAway < 0 ? `已過 ${Math.abs(e.daysAway)} 天`
+                    : e.daysAway === 0 ? '今天！'
+                    : `還有 ${e.daysAway} 天`;
+      return `<div style="background:${urgency};border-left:3px solid ${borderC};border-radius:8px;
+                padding:9px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px">
+        <span style="font-size:1.1rem">${isDiv ? '💰' : '📋'}</span>
+        <div style="flex:1;min-width:150px">
+          <span style="font-weight:700;color:var(--t1)">${e.label}</span>
+          <span style="font-size:.72rem;color:var(--t3);margin-left:8px">${e.note}</span>
+        </div>
+        <span style="font-size:.78rem;font-weight:700;color:${borderC};white-space:nowrap">${e.date} ｜ ${daysTxt}</span>
+      </div>`;
+    }).join('');
   }
 };
 
@@ -3884,6 +4094,54 @@ function renderChipFlow(ctx){
   </div>`;
 }
 
+/* ── 優化 4：台積電 vs 0050 相對強弱 ── */
+function renderRS(ctx){
+  const rs = App._rs0050;
+  if(!rs) return '';
+  const { ratio, tsmc30, etf30 } = rs;
+  const rsColor = ratio > 1.02 ? 'var(--green)' : ratio < 0.98 ? 'var(--red)' : 'var(--yellow)';
+  const rsLabel = ratio > 1.05 ? '🚀 台積電顯著跑贏大盤'
+                : ratio > 1.02 ? '📈 台積電小幅跑贏大盤'
+                : ratio > 0.98 ? '➖ 走勢接近大盤'
+                : ratio > 0.95 ? '📉 台積電略遜大盤'
+                : '⚠️ 台積電顯著弱於大盤';
+  return `
+  <div class="ic" style="margin-bottom:10px">
+    <div class="nm">📊 相對強弱（vs 0050 ETF，近30日）</div>
+    <div class="vl" style="color:${rsColor}">${(ratio * 100 - 100).toFixed(2)}%</div>
+    <div class="dt">
+      台積電 30日漲跌：${tsmc30 >= 0 ? '+' : ''}${tsmc30.toFixed(2)}%<br>
+      0050 ETF 30日漲跌：${etf30 >= 0 ? '+' : ''}${etf30.toFixed(2)}%<br>
+      <strong style="color:${rsColor}">${rsLabel}</strong><br>
+      <span style="font-size:.68rem;color:var(--t3)">RS > 1 = 個股比 ETF 強，是法人主動買進的訊號</span>
+    </div>
+  </div>`;
+}
+
+/* ── 優化 5：事件橫幅 ── */
+function renderEventsBanner(){
+  const banner = Events.renderBanner();
+  if(!banner) return '';
+  return `
+  <div style="margin-bottom:14px">
+    <div class="sec" style="margin-bottom:8px">📅 重大事件提醒 <span class="sec-cnt">除息日前後股價常有異動，法說會後常有大漲大跌，請提前規劃部位</span></div>
+    ${banner}
+  </div>`;
+}
+
+/* ── 優化 7：資料匯出按鈕 ── */
+function renderExportBar(ctx){
+  const { lastDate } = ctx;
+  return `
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;padding:12px 16px;
+    background:var(--card);border-radius:10px;border:1px solid var(--border)">
+    <span style="font-size:.8rem;color:var(--t2);flex:1">📁 資料匯出</span>
+    ${Notifier.renderBtn()}
+    <button class="btn btn-sm" onclick="App.exportCSV()">⬇ 匯出 CSV</button>
+    <button class="btn btn-sm" onclick="App.exportJSON()">⬇ 匯出 JSON</button>
+  </div>`;
+}
+
 function renderFooter(ctx){
   const { dirResult } = ctx;
   return `
@@ -4248,11 +4506,23 @@ function renderJournal(ctx){
             const stopDist = p.stopLoss ? ((ctx.last - p.stopLoss) / ctx.last * 100).toFixed(1) : null;
             const tpDist = p.takeProfit ? ((p.takeProfit - ctx.last) / ctx.last * 100).toFixed(1) : null;
             const days = Math.round((Date.now() - new Date(p.openDate)) / (24 * 3600 * 1000));
+            // 進場當時的市場情境快照
+            const snap = p.openSnapshot || {};
+            const snapHtml = (snap.rsi || snap.entryScore) ? `
+              <div class="pc-snapshot">
+                進場快照：
+                ${snap.entryScore != null ? `ES ${snap.entryScore}` : ''}
+                ${snap.rsi != null ? `｜RSI ${snap.rsi.toFixed(0)}` : ''}
+                ${snap.kdK != null ? `｜K ${snap.kdK.toFixed(0)}` : ''}
+                ${snap.mtfRes != null ? `｜MTF ${snap.mtfRes >= 0.5 ? '多' : snap.mtfRes <= -0.5 ? '空' : '中'}` : ''}
+                ${snap.upProb != null ? `｜明日漲機率 ${(snap.upProb*100).toFixed(0)}%` : ''}
+              </div>` : '';
             return `<div class="position-card">
               <div class="pc-cell"><div class="pl">進場</div><div class="pv">${F.int(p.openPrice)} × ${p.shares} 股</div><div class="pl">${p.openDate} (${days} 天前)</div></div>
               <div class="pc-cell"><div class="pl">浮動損益</div><div class="pv ${pnl>=0?'pnl-pos':'pnl-neg'}">${pnl>=0?'+':''}${F.int(pnl)} 元</div><div class="pl ${pnl>=0?'pnl-pos':'pnl-neg'}">${F.pct(pnlPct)}</div></div>
               <div class="pc-cell"><div class="pl">停損 ${p.stopLoss?F.int(p.stopLoss):'未設'}</div><div class="pv ${stopDist&&stopDist<3?'pnl-neg':''}">${stopDist?'距 -'+stopDist+'%':'-'}</div></div>
               <div class="pc-cell"><div class="pl">停利 ${p.takeProfit?F.int(p.takeProfit):'未設'}</div><div class="pv">${tpDist?'距 +'+tpDist+'%':'-'}</div></div>
+              ${snapHtml}
               <button class="btn btn-sell btn-sm" onclick="App.openSellModal('${p.id}')">賣出</button>
             </div>`;
           }).join('')
@@ -4429,6 +4699,8 @@ let App = {
       this.cacheAgeMs = result.cacheAgeMs;
       this.compute();
       this.render();
+      // 非阻塞：背景抓取 0050 RS 資料
+      this.fetchRS().then(() => { if(this._rs0050) this.render(); }).catch(()=>{});
     }catch(e){
       document.getElementById('app').innerHTML = `
         <div class="err"><h3>⚠️ 數據載入失敗</h3><p>${e.message}</p>
@@ -4460,6 +4732,7 @@ let App = {
     const atr = Ind.atr(highs, lows, closes);
     const { adx, diPlus, diMinus } = Ind.adx(highs, lows, closes);
     const mfi = Ind.mfi(highs, lows, closes, vols);
+    const vwap = Ind.vwap(highs, lows, closes, vols);
     // 52 週高低點（近 252 個交易日）
     const w52len = Math.min(252, closes.length);
     const high52 = Math.max(...highs.slice(-w52len));
@@ -4470,7 +4743,7 @@ let App = {
       ma5, ma10, ma20, ma60, ma120, ma240,
       K, D, rsi, psy, dif, dea, hist, boll, volMA,
       obv, obvMA, atr, adx, diPlus, diMinus,
-      mfi, high52, low52
+      mfi, vwap, high52, low52
     };
   },
 
@@ -4522,6 +4795,7 @@ let App = {
     const cBoll=I.boll[n-1], cVol=I.vols[n-1], cVolMA=I.volMA[n-1];
     const cOBV=I.obv[n-1], cOBVMA=I.obvMA[n-1];
     const cMFI=I.mfi[n-1];
+    const cVWAP=I.vwap[n-1];
     const lastOpen = r[n-1].open, prevOpen = r[n-2]?.open;
     const cATR=I.atr[n-1];
     const atrSlice = I.atr.filter(v=>v!=null).slice(-30);
@@ -4625,7 +4899,7 @@ let App = {
       cDIF, cDEA, cHist, pHist, p2Hist,
       prevVol, prevChg,
       cBoll, cVol, cVolMA, bollPct, volK, volMAK,
-      cOBV, cOBVMA, cMFI, cATR, cATRMean, atr: cATR,
+      cOBV, cOBVMA, cMFI, cVWAP, cATR, cATRMean, atr: cATR,
       divRSI, divMACD, sr, foreign: this.foreign,
       S, dirResult, dirRatio, sm,
       total: dirResult.weighted, maxS: dirResult.max,
@@ -4644,9 +4918,13 @@ let App = {
     // ── 記錄多空分數歷史 ──
     ScoreHistory.push(dirResult.weighted, lastDate);
 
+    // ── Browser 通知檢查（背景靜默）──
+    try{ Notifier.check(ctx); }catch(e){}
+
     document.getElementById('app').innerHTML =
       // ── Header ──
       renderHeader(ctx) +
+      renderEventsBanner() +
 
       // ══ A 今日結論：最重要，第一眼看到 ══
       renderGroupHeader('A','🚦','今日操作結論',
@@ -4704,6 +4982,7 @@ let App = {
       renderMA(ctx) +
       renderDuForeignStreak(ctx) +
       renderChipFlow(ctx) +
+      renderRS(ctx) +
       renderSOXCorr(ctx) +
       renderFundamentals() +
 
@@ -4715,6 +4994,7 @@ let App = {
       renderJournal(ctx) +
       renderFalseSignals() +
 
+      renderExportBar(ctx) +
       renderFooter(ctx) +
       `<div class="toast-area" id="toast-area"></div>
        <div class="modal-overlay" id="modal-overlay"><div class="modal" id="modal-content"></div></div>
@@ -4813,6 +5093,71 @@ let App = {
   },
   scrollToPosCalc(){
     document.querySelector('.poscalc')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  },
+
+  // ─── 優化 4：抓取 0050 做相對強弱計算 ───
+  _rs0050: null,
+  async fetchRS(){
+    try{
+      const url = 'https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&stockNo=0050';
+      const d = await CorsProxy.fetchJSON(url);
+      if(!d || !d.data || !d.data.length) return;
+      const rows = d.data
+        .map(row => {
+          if(!Array.isArray(row) || row.length < 9) return null;
+          const c = parseFloat(row[6].replace(/,/g,''));
+          return isNaN(c) ? null : c;
+        })
+        .filter(Boolean);
+      if(rows.length < 2) return;
+      const etf30 = (rows[rows.length-1] - rows[Math.max(0, rows.length-30)]) / rows[Math.max(0, rows.length-30)] * 100;
+      // 台積電 30 日漲跌
+      const I = this.ind;
+      const n = I.closes.length;
+      const tsmc30 = (I.closes[n-1] - I.closes[Math.max(0, n-30)]) / I.closes[Math.max(0, n-30)] * 100;
+      this._rs0050 = {
+        ratio: (1 + tsmc30/100) / (1 + etf30/100),
+        tsmc30, etf30
+      };
+    }catch(e){ console.warn('fetchRS failed', e); }
+  },
+
+  // ─── 優化 7：匯出資料 ───
+  exportCSV(){
+    if(!this.rows?.length){ alert('尚無資料'); return; }
+    const I = this.ind;
+    const headers = ['日期','開盤','最高','最低','收盤','成交量','MA5','MA20','MA60','K','D','RSI','PSY','VWAP20'];
+    const lines = this.rows.map((r,i) => [
+      r.dateStr, r.open, r.high, r.low, r.close, r.vol,
+      I.ma5[i]?.toFixed(2) ?? '',
+      I.ma20[i]?.toFixed(2) ?? '',
+      I.ma60[i]?.toFixed(2) ?? '',
+      I.K[i]?.toFixed(2) ?? '',
+      I.D[i]?.toFixed(2) ?? '',
+      I.rsi[i]?.toFixed(2) ?? '',
+      I.psy[i]?.toFixed(2) ?? '',
+      I.vwap[i]?.toFixed(2) ?? ''
+    ].join(','));
+    const csv = [headers.join(','), ...lines].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `TSMC_2330_${new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Taipei'})}.csv`;
+    a.click();
+  },
+  exportJSON(){
+    if(!this.rows?.length){ alert('尚無資料'); return; }
+    const data = this.rows.map((r,i) => ({
+      date: r.dateStr, open: r.open, high: r.high, low: r.low,
+      close: r.close, vol: r.vol,
+      ma20: this.ind.ma20[i], K: this.ind.K[i], D: this.ind.D[i],
+      rsi: this.ind.rsi[i], vwap: this.ind.vwap[i]
+    }));
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `TSMC_2330_${new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Taipei'})}.json`;
+    a.click();
   },
 
   // ─── Modal: 買進 / 賣出 ───
@@ -5113,40 +5458,59 @@ let App = {
       }
     };
 
+    // ── 彩色量能柱（放量紅=漲、放量綠=跌、縮量灰）──
+    const volMA20 = I.volMA.slice(-N);
+    const volColors = I.vols.slice(-N).map((v, i) => {
+      const isHighVol = v > (volMA20[i] || 0) * 1.0;
+      const isUp = I.closes[startIdx + i] >= (I.opens[startIdx + i] || I.closes[startIdx + i]);
+      if(!isHighVol) return 'rgba(100,116,139,0.35)';
+      return isUp ? 'rgba(239,68,68,0.55)' : 'rgba(16,185,129,0.55)';
+    });
+
     pchart = new Chart(ctx, {
       type: 'line',
       plugins: [roundLevelPlugin],
       data: {
         labels: I.labels.slice(-N),
         datasets: [
+          // ── 主線：收盤價 ──
           { label: '收盤價', data: I.closes.slice(-N),
             borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,.08)',
-            fill: true, borderWidth: 2, pointRadius: 0, tension: .3 },
+            fill: true, borderWidth: 2, pointRadius: 0, tension: .3, yAxisID: 'y' },
+          // ── 均線 ──
           { label: 'MA20', data: I.ma20.slice(-N),
-            borderColor: '#f59e0b', borderWidth: 1.5, pointRadius: 0, tension: .3 },
+            borderColor: '#f59e0b', borderWidth: 1.5, pointRadius: 0, tension: .3, yAxisID: 'y' },
           { label: 'MA60', data: I.ma60.slice(-N),
-            borderColor: '#3b82f6', borderWidth: 1.5, pointRadius: 0, tension: .3 },
-          // 買入訊號 ▲
+            borderColor: '#3b82f6', borderWidth: 1.5, pointRadius: 0, tension: .3, yAxisID: 'y' },
+          // ── VWAP（量加權均價）──
+          { label: 'VWAP(20)', data: I.vwap.slice(-N),
+            borderColor: '#f472b6', borderWidth: 1.5, borderDash: [4,4],
+            pointRadius: 0, tension: .3, yAxisID: 'y' },
+          // ── 買入訊號 ▲ ──
           { label: '買入訊號', data: buyPoints,
-            type: 'scatter',
-            pointStyle: 'triangle', rotation: 0,
+            type: 'scatter', pointStyle: 'triangle', rotation: 0,
             backgroundColor: '#10b981', borderColor: '#10b981',
-            pointRadius: 7, pointHoverRadius: 9,
-            showLine: false },
-          // 賣出訊號 ▼
+            pointRadius: 7, pointHoverRadius: 9, showLine: false, yAxisID: 'y' },
+          // ── 賣出訊號 ▼ ──
           { label: '賣出訊號', data: sellPoints,
-            type: 'scatter',
-            pointStyle: 'triangle', rotation: 180,
+            type: 'scatter', pointStyle: 'triangle', rotation: 180,
             backgroundColor: '#ef4444', borderColor: '#ef4444',
-            pointRadius: 7, pointHoverRadius: 9,
-            showLine: false }
+            pointRadius: 7, pointHoverRadius: 9, showLine: false, yAxisID: 'y' },
+          // ── 彩色成交量柱（右 y 軸）──
+          { label: '成交量', data: I.vols.slice(-N),
+            type: 'bar',
+            backgroundColor: volColors,
+            borderWidth: 0,
+            yAxisID: 'y1',
+            order: 10 }
         ]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
+          legend: { labels: { color: '#94a3b8', font: { size: 11 },
+            filter: item => item.text !== '成交量' } },   // 量柱不顯示在圖例
           tooltip: {
             backgroundColor: '#1c2038', titleColor: '#f1f5f9', bodyColor: '#94a3b8',
             callbacks: {
@@ -5155,7 +5519,11 @@ let App = {
                   return `🟢 買入訊號 $${item.raw}`;
                 if(item.dataset.label === '賣出訊號' && item.raw !== null)
                   return `🔴 賣出訊號 $${item.raw}`;
-                return `${item.dataset.label}: ${item.raw !== null ? item.raw : ''}`;
+                if(item.dataset.label === '成交量')
+                  return `📊 成交量 ${(item.raw/1000).toFixed(0)}K張`;
+                if(item.dataset.label === 'VWAP(20)' && item.raw !== null)
+                  return `💹 VWAP ${item.raw.toFixed(1)}`;
+                return `${item.dataset.label}: ${item.raw != null ? item.raw : ''}`;
               }
             }
           }
@@ -5164,7 +5532,16 @@ let App = {
           x: { ticks: { color: '#94a3b8', font: { size: 10 }, maxTicksLimit: 10 },
                grid: { color: 'rgba(255,255,255,.04)' } },
           y: { ticks: { color: '#94a3b8', font: { size: 10 } },
-               grid: { color: 'rgba(255,255,255,.04)' }, position: 'right' }
+               grid: { color: 'rgba(255,255,255,.04)' }, position: 'right' },
+          y1: {
+            position: 'left',
+            ticks: { color: 'rgba(148,163,184,.4)', font: { size: 9 },
+              callback: v => (v/1000).toFixed(0)+'K' },
+            grid: { display: false },
+            // 把量能柱壓縮在下方 25%（不遮擋 K 線）
+            max: v => v.max * 5,
+            beginAtZero: true
+          }
         }
       }
     });
