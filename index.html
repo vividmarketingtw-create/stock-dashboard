@@ -4766,17 +4766,18 @@ function renderRS(ctx){
 // ✦ 五步決策引導列 — 最高勝率邏輯的正確閱讀順序
 function renderDecisionGuide(){
   const steps = [
-    { num:'①', icon:'🔭', label:'大方向(MTF)',  anchor:'#anchor-mtf',     tip:'先確認日/週/月三線方向是否一致' },
-    { num:'②', icon:'🌡️', label:'方向評分',    anchor:'#anchor-gauge',    tip:'多空加權評分，方向明確再操作' },
-    { num:'③', icon:'🎯', label:'進場位置',    anchor:'#anchor-entry',    tip:'布林/均線位置是否適合進場' },
-    { num:'④', icon:'🔮', label:'明日預測',    anchor:'#anchor-predict',  tip:'K-NN 歷史相似日的漲跌機率' },
-    { num:'⑤', icon:'💰', label:'風險設定',    anchor:'#anchor-poscalc', tip:'設好停損/部位大小，這步最重要' }
+    { num:'①', icon:'🔭', label:'大方向(MTF)',  anchor:'anchor-mtf',     tip:'先確認日/週/月三線方向是否一致' },
+    { num:'②', icon:'🌡️', label:'方向評分',    anchor:'anchor-gauge',    tip:'多空加權評分，方向明確再操作' },
+    { num:'③', icon:'🎯', label:'進場位置',    anchor:'anchor-entry',    tip:'布林/均線位置是否適合進場' },
+    { num:'④', icon:'🔮', label:'明日預測',    anchor:'anchor-predict',  tip:'K-NN 歷史相似日的漲跌機率' },
+    { num:'⑤', icon:'💰', label:'風險設定',    anchor:'anchor-poscalc',  tip:'設好停損/部位大小，這步最重要' }
   ];
   return `
   <div class="decision-guide">
     <span class="dg-title">⚡ 決策順序</span>
     ${steps.map((s,i) => `
-      <a class="dg-step" href="${s.anchor}" title="${s.tip}" onclick="event.preventDefault();document.querySelector('${s.anchor}')?.scrollIntoView({behavior:'smooth',block:'start'})">
+      <a class="dg-step" href="#${s.anchor}" title="${s.tip}"
+         onclick="event.preventDefault();scrollToAnchor('${s.anchor}')">
         <span class="dg-num">${s.num}</span>
         <span>${s.icon} ${s.label}</span>
       </a>
@@ -4794,21 +4795,21 @@ function renderBeginnerFlow(){
     <div class="bf-card-body">
       <div class="bf-card-title">新手看盤三步驟 — 每次照這個順序，不會迷失</div>
       <div class="bf-steps">
-        <div class="bf-step" onclick="document.getElementById('anchor-summary')?.scrollIntoView({behavior:'smooth',block:'start'})" title="點擊跳到今日速讀卡">
+        <div class="bf-step" onclick="scrollToAnchor('anchor-summary')" title="點擊跳到今日速讀卡">
           <div class="bf-step-num">1</div>
           <div class="bf-step-text">
             <strong>看今日速讀卡 ↓</strong>
             <span>先掌握今天大方向：漲跌多少、整體是多頭還是空頭</span>
           </div>
         </div>
-        <div class="bf-step" onclick="document.getElementById('anchor-entry')?.scrollIntoView({behavior:'smooth',block:'start'})" title="點擊跳到進出場評分">
+        <div class="bf-step" onclick="scrollToAnchor('anchor-entry')" title="點擊跳到進出場評分">
           <div class="bf-step-num">2</div>
           <div class="bf-step-text">
             <strong>看進出場評分 ↓</strong>
             <span>分數高才考慮行動，低於 40 分就等待，不要強行操作</span>
           </div>
         </div>
-        <div class="bf-step" onclick="document.getElementById('anchor-poscalc')?.scrollIntoView({behavior:'smooth',block:'start'})" title="點擊跳到部位計算機">
+        <div class="bf-step" onclick="scrollToAnchor('anchor-poscalc')" title="點擊跳到部位計算機">
           <div class="bf-step-num">3</div>
           <div class="bf-step-text">
             <strong>用部位計算機 ↓</strong>
@@ -6432,7 +6433,7 @@ let App = {
     this.render();
   },
   scrollToPosCalc(){
-    document.querySelector('.poscalc')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    scrollToAnchor('anchor-poscalc');
   },
 
   // ─── 優化 4：抓取 0050 做相對強弱計算 ───
@@ -9344,6 +9345,17 @@ function renderGroupHeader(zone, emoji, title, desc, badgeText='', badgeClass=''
     </div>
     ${badgeHtml}
   </div>`;
+}
+
+/* ─── 精準捲動：補償 sticky header 高度 ─── */
+function scrollToAnchor(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  // 量測 sticky header (.hd) 的實際高度，再加 16px 喘息空間
+  const hd = document.querySelector('.hd');
+  const offset = hd ? hd.getBoundingClientRect().height + 16 : 80;
+  const top = el.getBoundingClientRect().top + window.scrollY - offset;
+  window.scrollTo({ top, behavior: 'smooth' });
 }
 
 /* ─── Task 14: 模式切換 ─── */
