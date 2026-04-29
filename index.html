@@ -3290,6 +3290,28 @@ function renderRealtimeEval(){
   </div>`;
 }
 
+/* ── 盤中進場雷達 HTML 殼 ── */
+function renderIntradayRadar(){
+  return `
+  <div class="sec" id="anchor-radar">🎯 盤中進場雷達
+    <span class="sec-cnt">每 60 秒更新 — 多項燈號同時亮起才是真正的低點，單一訊號可能是假底</span>
+  </div>
+  <div id="intraday-radar-card" style="background:var(--card);border-radius:14px;padding:20px 24px;
+    margin-bottom:14px;border:2px solid var(--border);transition:border-color .3s">
+    <div id="radar-verdict" style="text-align:center;padding:10px 14px;border-radius:9px;
+      background:var(--card2);color:var(--t2);font-size:.88rem;font-weight:700;margin-bottom:16px">
+      等待盤中資料…（僅交易時段 09:00–13:30 運作）
+    </div>
+    <div id="radar-signals" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+    <div style="margin-top:12px;font-size:.68rem;color:var(--t3);line-height:1.7;
+      background:var(--card2);padding:10px 14px;border-radius:8px;border-left:3px solid var(--purple)">
+      💡 <b>讀法：</b>綠色 = 該條件有利於「低點買進」。3 燈以上綠 + 量能進度 ≥ 1× = 進場訊號；
+      2 燈以下 = 繼續等待；若高點偵測同時亮起，請勿進場。
+    </div>
+    <div id="radar-time" style="margin-top:8px;font-size:.65rem;color:var(--t3);text-align:right"></div>
+  </div>`;
+}
+
 function renderIntradayCard(){
   return `
   <div class="intraday-card">
@@ -3308,6 +3330,29 @@ function renderIntradayCard(){
         <span class="id-chip"><span class="ck">昨收</span><b id="id-prev">--</b></span>
         <span class="id-chip"><span class="ck">量</span><b id="id-vol">--</b></span>
         <span class="id-chip"><span id="id-itime" style="color:var(--t3);font-size:.72rem;font-weight:400">--:-- 更新</span></span>
+      </div>
+      <!-- 量能進度條 -->
+      <div id="vol-pace-wrap" style="display:none;margin-top:10px;padding:8px 12px;background:var(--card2);border-radius:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:.72rem;color:var(--t2);font-weight:700">📊 量能進度（推估今日全日量 vs 20日均量）</span>
+          <span id="vol-pace-label" style="font-size:.75rem;font-weight:800;color:var(--t2)">--</span>
+        </div>
+        <div style="background:var(--border);border-radius:4px;height:8px;overflow:hidden">
+          <div id="vol-pace-bar" style="height:100%;width:0%;border-radius:4px;transition:width .4s ease;background:var(--green)"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:3px">
+          <span style="font-size:.65rem;color:var(--t3)">0×</span>
+          <span style="font-size:.65rem;color:var(--t3)">均量 1×</span>
+          <span style="font-size:.65rem;color:var(--t3)">2×</span>
+        </div>
+      </div>
+      <!-- 即時支撐阻力距離 -->
+      <div id="sr-dist-wrap" style="display:none;margin-top:6px;padding:6px 12px;background:var(--card2);
+        border-radius:8px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+        <span style="font-size:.72rem;color:var(--t2);font-weight:700">📍 即時關卡距離</span>
+        <span id="sr-dist-sup" style="font-size:.8rem;font-weight:700;color:var(--green)">支撐 --</span>
+        <span id="sr-dist-res" style="font-size:.8rem;font-weight:700;color:var(--red)">壓力 --</span>
+        <span id="sr-dist-boll" style="font-size:.8rem;font-weight:700;color:var(--purple)">布林 --</span>
       </div>
     </div>
     <div class="intraday-chart-wrap">
@@ -6480,6 +6525,7 @@ let App = {
     const divMACD = Div.detect(I.closes, I.hist, 30);
     // ── 支撐壓力（傳入 vols 啟用 Volume Profile）──
     const sr = SR.find(I.highs, I.lows, I.closes, I.vols, 60);
+    this._sr = sr; // 存供盤中雷達使用
 
     // ── 今日是否為特殊期間 ──
     const todaySpecial = SpecialDates.type(r[n-1].date);
@@ -6645,6 +6691,7 @@ let App = {
         '60秒更新','live') +
       renderSessionBar() +
       renderIntradayCard() +
+      renderIntradayRadar() +
       renderRealtimeEval() +
 
       // ══ C 今日技術分析 ══
@@ -6791,7 +6838,8 @@ let App = {
         IntradayChart.drawFromApp();    // 先用歷史資料秒顯示
         IntradayChart.update();         // 非同步嘗試外部 API 升級
       }
-      if(typeof RealtimeEval !== 'undefined') RealtimeEval.updateFromApp();
+      if(typeof RealtimeEval  !== 'undefined') RealtimeEval.updateFromApp();
+      if(typeof IntradayRadar !== 'undefined') IntradayRadar.updateFromApp();
     }, 100);
   },
 
@@ -8220,11 +8268,13 @@ const IntradayChart = {
     const result = await this.fetchData();
     if(result){
       this.draw(result);
-      if(typeof RealtimeEval !== 'undefined') RealtimeEval.update(result);
+      if(typeof RealtimeEval    !== 'undefined') RealtimeEval.update(result);
+      if(typeof IntradayRadar   !== 'undefined') IntradayRadar.update(result);
     } else {
       // 外部 API 全失敗 → fallback 到 App 歷史資料
       this.drawFromApp();
-      if(typeof RealtimeEval !== 'undefined') RealtimeEval.updateFromApp();
+      if(typeof RealtimeEval    !== 'undefined') RealtimeEval.updateFromApp();
+      if(typeof IntradayRadar   !== 'undefined') IntradayRadar.updateFromApp();
     }
   },
 
@@ -8747,6 +8797,219 @@ const RealtimeEval = {
     else if(score <= -0.5) note = '部分均線壓制';
     else                   note = '均線多空交雜';
     return { score: +score.toFixed(2), label, note };
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   MODULE: INTRADAY RADAR（盤中進場雷達）
+   5 項即時確認：布林位置、均線支撐、支撐帶距離、量能進度、盤中VWAP
+   ═══════════════════════════════════════════════════════════════ */
+const IntradayRadar = {
+
+  /** 計算盤中 VWAP（量價加權均價）*/
+  _vwap(closes, highs, lows, vols){
+    if(!closes?.length) return null;
+    let cumTV = 0, cumV = 0;
+    for(let i = 0; i < closes.length; i++){
+      const v = vols?.[i] || 0;
+      const tp = ((closes[i]||0) + (highs?.[i]||closes[i]) + (lows?.[i]||closes[i])) / 3;
+      cumTV += tp * v;
+      cumV  += v;
+    }
+    return cumV > 0 ? cumTV / cumV : null;
+  },
+
+  /** 更新量能進度條與 S/R 距離（通用工具，update / updateFromApp 都呼叫）*/
+  _updateVolAndSR(cur, todayVol){
+    const ind = (typeof App !== 'undefined' && App.ind) ? App.ind : {};
+    const n   = ind.closes?.length ?? 0;
+    const histVolMA = (Array.isArray(ind.vols) && n >= 20)
+      ? ind.vols.slice(-20).reduce((a,b)=>a+b,0)/20 : null;
+
+    // ── 量能進度條 ──
+    const paceWrap = document.getElementById('vol-pace-wrap');
+    const paceBar  = document.getElementById('vol-pace-bar');
+    const paceLabel= document.getElementById('vol-pace-label');
+    if(paceWrap && paceBar && paceLabel && histVolMA && todayVol){
+      const now    = new Date();
+      const open   = new Date(now); open.setHours(9,0,0,0);
+      const totalMs= 4.5*3600*1000;
+      const elapsed= Math.min(Math.max(now - open, 1), totalMs);
+      const pace   = (todayVol / (elapsed/totalMs)) / histVolMA;
+      const pct    = Math.min(pace / 2 * 100, 100); // 2× 均量 = 100%
+      paceWrap.style.display = 'block';
+      paceBar.style.width    = pct + '%';
+      paceBar.style.background = pace >= 1.2 ? 'var(--green)' : pace >= 0.7 ? 'var(--yellow)' : 'var(--red)';
+      paceLabel.textContent  = `${pace.toFixed(1)}× 均量`;
+      paceLabel.style.color  = pace >= 1.2 ? 'var(--green)' : pace >= 0.7 ? 'var(--yellow)' : 'var(--red)';
+    }
+
+    // ── S/R 距離 ──
+    const srWrap  = document.getElementById('sr-dist-wrap');
+    const srSup   = document.getElementById('sr-dist-sup');
+    const srRes   = document.getElementById('sr-dist-res');
+    const srBoll  = document.getElementById('sr-dist-boll');
+    if(srWrap && cur && n > 0){
+      srWrap.style.display = 'flex';
+      const sr = (typeof App !== 'undefined') ? App._sr : null;
+      if(sr && srSup && srRes){
+        const supDist = ((cur - sr.support)    / cur * 100).toFixed(1);
+        const resDist = ((sr.resistance - cur) / cur * 100).toFixed(1);
+        srSup.textContent = `🛡 支撐 ${Math.round(sr.support)} (−${supDist}%)`;
+        srRes.textContent = `⛔ 壓力 ${Math.round(sr.resistance)} (+${resDist}%)`;
+      }
+      if(srBoll && ind.boll?.[n-1]){
+        const b = ind.boll[n-1];
+        const bp = ((cur - b.lower)/(b.upper - b.lower)*100).toFixed(0);
+        srBoll.textContent = `📏 布林 ${bp}% （下軌${Math.round(b.lower)} / 上軌${Math.round(b.upper)}）`;
+        srBoll.style.color = bp < 20 ? 'var(--green)' : bp > 80 ? 'var(--red)' : 'var(--purple)';
+      }
+    }
+  },
+
+  /** 從 Yahoo Finance 分時結果更新雷達 */
+  update(intradayResult){
+    const card = document.getElementById('intraday-radar-card');
+    const verdictEl  = document.getElementById('radar-verdict');
+    const signalsEl  = document.getElementById('radar-signals');
+    const timeEl     = document.getElementById('radar-time');
+    if(!card || !verdictEl || !signalsEl) return;
+
+    const meta   = intradayResult?.meta;
+    const stamps = intradayResult?.timestamp ?? [];
+    const quotes = intradayResult?.indicators?.quote?.[0] ?? {};
+    const iClose = (quotes.close ?? []).filter(c => c != null);
+    const iHigh  = quotes.high  ?? [];
+    const iLow   = quotes.low   ?? [];
+    const iVol   = quotes.volume ?? [];
+
+    if(!meta || iClose.length < 3){
+      verdictEl.textContent = '盤中資料不足，繼續等待…';
+      this._updateVolAndSR(null, null);
+      return;
+    }
+
+    const cur       = meta.regularMarketPrice ?? iClose[iClose.length-1];
+    const prevClose = meta.chartPreviousClose ?? cur;
+    const todayVol  = meta.regularMarketVolume ?? 0;
+
+    this._updateVolAndSR(cur, todayVol);
+
+    // 歷史指標
+    const ind  = (typeof App !== 'undefined' && App.ind) ? App.ind : {};
+    const n    = ind.closes?.length ?? 0;
+    const boll = n > 0 ? ind.boll?.[n-1] : null;
+    const ma20 = n > 0 ? ind.ma20?.[n-1] : null;
+    const ma60 = n > 0 ? ind.ma60?.[n-1] : null;
+    const sr   = (typeof App !== 'undefined') ? App._sr : null;
+    const histVolMA = (Array.isArray(ind.vols) && n >= 20)
+      ? ind.vols.slice(-20).reduce((a,b)=>a+b,0)/20 : null;
+
+    // 計算盤中 VWAP
+    const iVwap = this._vwap(iClose, iHigh, iLow, iVol);
+
+    // 量能進度
+    const now    = new Date();
+    const open2  = new Date(now); open2.setHours(9,0,0,0);
+    const totalMs= 4.5*3600*1000;
+    const elapsed= Math.min(Math.max(now - open2, 1), totalMs);
+    const volPace = histVolMA && todayVol ? (todayVol/(elapsed/totalMs))/histVolMA : null;
+
+    // ── 5 項燈號 ──
+    const bollPct = boll ? ((cur - boll.lower)/(boll.upper - boll.lower)*100) : 50;
+    const signals = [
+      {
+        name: '布林帶位置',
+        desc: '現價在日布林下段 → 日線超賣機會',
+        hit:  bollPct < 30,
+        val:  boll ? `${bollPct.toFixed(0)}%（下軌${Math.round(boll.lower)}）` : '--',
+        tip:  bollPct < 20 ? '接近下軌，超賣' : bollPct < 30 ? '下段偏低' : bollPct > 70 ? '上段偏高' : '通道中段',
+      },
+      {
+        name: '日線均線支撐',
+        desc: '現價接近 MA20 or MA60 支撐位',
+        hit:  ma20 != null && cur >= ma20 * 0.97 && cur <= ma20 * 1.02
+              || ma60 != null && cur >= ma60 * 0.97 && cur <= ma60 * 1.02,
+        val:  ma20 ? `MA20 ${Math.round(ma20)} / MA60 ${ma60 ? Math.round(ma60) : '--'}` : '--',
+        tip:  (ma20 && cur < ma20) ? `跌破 MA20 −${((ma20-cur)/ma20*100).toFixed(1)}%`
+              : (ma20 && Math.abs(cur-ma20)/ma20 < 0.02) ? '貼近 MA20 支撐'
+              : (ma60 && Math.abs(cur-ma60)/ma60 < 0.02) ? '貼近 MA60 支撐'
+              : ma20 ? `MA20 上方 +${((cur-ma20)/ma20*100).toFixed(1)}%` : '--',
+      },
+      {
+        name: '歷史支撐帶',
+        desc: '現價在歷史關鍵支撐帶附近（±2%）',
+        hit:  sr != null && Math.abs(cur - sr.support) / cur <= 0.02,
+        val:  sr ? `支撐 ${Math.round(sr.support)}，距 ${((cur-sr.support)/cur*100).toFixed(1)}%` : '--',
+        tip:  sr ? (cur <= sr.support * 1.01 ? '⚡ 正在支撐帶' : `距支撐帶 ${((cur-sr.support)/cur*100).toFixed(1)}%`) : '資料計算中',
+      },
+      {
+        name: '量能進度',
+        desc: '今日成交量節奏 ≥ 1× 均量 → 有實質買盤',
+        hit:  volPace != null && volPace >= 1.0,
+        val:  volPace != null ? `${volPace.toFixed(1)}× 均量` : '--',
+        tip:  volPace != null ? (volPace >= 1.5 ? '量能充足，進場信心較強' : volPace >= 1.0 ? '量能達標' : '量能偏低，謹慎') : '計算中',
+      },
+      {
+        name: '盤中 VWAP',
+        desc: '現價站上盤中 VWAP（機構平均成本）',
+        hit:  iVwap != null && cur >= iVwap,
+        val:  iVwap != null ? `VWAP ${iVwap.toFixed(1)}，${cur >= iVwap ? '站上' : '跌破'} ${Math.abs(cur-iVwap).toFixed(1)} 元` : '--',
+        tip:  iVwap != null ? (cur >= iVwap ? '高於 VWAP，偏多' : '低於 VWAP，偏空') : '計算中',
+      },
+    ];
+
+    const greenCount = signals.filter(s => s.hit).length;
+    let verdictText, verdictBg, borderColor;
+    if(greenCount >= 4){
+      verdictText = `⚡ ${greenCount}/5 燈亮起 — 多重低點確認，可考慮分批進場`;
+      verdictBg   = 'rgba(16,185,129,.15)'; borderColor = 'rgba(16,185,129,.6)';
+    } else if(greenCount >= 3){
+      verdictText = `🟢 ${greenCount}/5 燈亮起 — 低點訊號共振，留意進場機會`;
+      verdictBg   = 'rgba(16,185,129,.08)'; borderColor = 'rgba(16,185,129,.4)';
+    } else if(greenCount >= 2){
+      verdictText = `🟡 ${greenCount}/5 燈亮起 — 部分訊號，繼續等待更多確認`;
+      verdictBg   = 'rgba(245,158,11,.08)'; borderColor = 'var(--border)';
+    } else {
+      verdictText = `⚪ ${greenCount}/5 燈亮起 — 目前非低點區域，建議觀望`;
+      verdictBg   = 'var(--card2)'; borderColor = 'var(--border)';
+    }
+
+    verdictEl.textContent = verdictText;
+    verdictEl.style.background = verdictBg;
+    verdictEl.style.color = greenCount >= 3 ? 'var(--green)' : greenCount >= 2 ? 'var(--yellow)' : 'var(--t1)';
+    card.style.borderColor = borderColor;
+
+    signalsEl.innerHTML = signals.map(s => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;
+        border-radius:8px;background:var(--card2);opacity:${s.hit?1:.6}">
+        <span style="font-size:1.1rem;flex-shrink:0">${s.hit ? '🟢' : '⚫'}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.78rem;font-weight:700;color:${s.hit?'var(--green)':'var(--t1)'}">${s.name}</div>
+          <div style="font-size:.68rem;color:var(--t3)">${s.tip}</div>
+        </div>
+        <div style="font-size:.72rem;color:var(--t2);text-align:right;flex-shrink:0">${s.val}</div>
+      </div>`).join('');
+
+    if(timeEl) timeEl.textContent = `上次更新：${new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
+  },
+
+  /** 盤後 fallback — 用歷史資料顯示靜態提示 */
+  updateFromApp(){
+    const verdictEl = document.getElementById('radar-verdict');
+    if(!verdictEl) return;
+    verdictEl.textContent = '📴 盤後模式 — 雷達僅於交易時段（09:00–13:30）運作，請明日開盤後查看';
+    verdictEl.style.background = 'var(--card2)';
+    verdictEl.style.color = 'var(--t3)';
+    const card = document.getElementById('intraday-radar-card');
+    if(card) card.style.borderColor = 'var(--border)';
+
+    // 盤後仍可更新 S/R 距離和靜態量能
+    const ind  = (typeof App !== 'undefined' && App.ind) ? App.ind : {};
+    const n    = ind.closes?.length ?? 0;
+    const cur  = n > 0 ? ind.closes[n-1] : null;
+    const vol  = n > 0 ? ind.vols[n-1]   : null;
+    this._updateVolAndSR(cur, vol);
   }
 };
 
