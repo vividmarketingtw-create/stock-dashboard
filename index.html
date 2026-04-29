@@ -674,6 +674,7 @@ a:hover{text-decoration:underline}
 .toast .t-title{font-weight:700;margin-bottom:4px}
 .toast .t-close{position:absolute;top:6px;right:8px;cursor:pointer;color:var(--t2);font-size:1rem;background:none;border:none}
 @keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+@keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
 @media (max-width:900px){
   .mtf-grid{grid-template-columns:1fr}
@@ -1552,6 +1553,39 @@ const CFG = {
   KNN_EXCLUDE_RECENT: 5,                // 跳過最近 N 日避免資料外洩
   ATR_PERIOD: 14,
   TF_OPTIONS: [30, 60, 120, 240]        // 圖表時間軸選項
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   MODULE: TAIWAN CALENDAR（假日偵測，避免誤顯「資料過舊」）
+   ═══════════════════════════════════════════════════════════════ */
+const TaiwanCalendar = {
+  // 台灣國定假日（含補班日已移除、除夕/春節/清明/端午/中秋/國慶等）
+  // 格式 "YYYY-MM-DD" in Gregorian
+  HOLIDAYS: new Set([
+    // 2024
+    '2024-01-01','2024-02-08','2024-02-09','2024-02-10','2024-02-11','2024-02-12','2024-02-13','2024-02-14',
+    '2024-02-28','2024-04-04','2024-04-05','2024-05-01','2024-06-10','2024-09-17','2024-10-10',
+    // 2025
+    '2025-01-01','2025-01-27','2025-01-28','2025-01-29','2025-01-30','2025-01-31','2025-02-03',
+    '2025-02-28','2025-04-03','2025-04-04','2025-05-01','2025-05-30','2025-05-31',
+    '2025-10-06','2025-10-10',
+    // 2026
+    '2026-01-01','2026-02-16','2026-02-17','2026-02-18','2026-02-19','2026-02-20','2026-02-23',
+    '2026-02-28','2026-04-03','2026-04-04','2026-05-01','2026-06-19','2026-09-25','2026-10-09','2026-10-10'
+  ]),
+  // 補班日（原為假日但須上班，視為交易日）
+  MAKEUP_DAYS: new Set([
+    '2024-02-17','2025-01-25','2026-02-14'
+  ]),
+  /** 傳入 Date 物件，回傳台灣交易日（平日且非假日）*/
+  isTradingDay(date){
+    const tw = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
+    const d  = tw.getDay(); // 0=Sun,6=Sat
+    const ymd = tw.toLocaleDateString('sv-SE'); // "YYYY-MM-DD"
+    if(this.MAKEUP_DAYS.has(ymd)) return true;
+    if(d === 0 || d === 6) return false;
+    return !this.HOLIDAYS.has(ymd);
+  }
 };
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2987,15 +3021,30 @@ const Journal = {
       }
     }
 
+    // ── EV（期望值）──
+    const winRate = wins.length / closed.length;
+    const lossRate = 1 - winRate;
+    const ev = winRate * avgWin - lossRate * avgLoss;
+
+    // ── 資產曲線 (equity curve) ──
+    const sorted = [...closed].sort((a,b) => (a.closeDate||'') < (b.closeDate||'') ? -1 : 1);
+    let cum = 0;
+    const equitySeries = sorted.map(p => {
+      cum += p.pnl;
+      return { date: p.closeDate || '', value: cum };
+    });
+
     return {
       total: closed.length,
-      winRate: wins.length / closed.length,
+      winRate,
       avgWin, avgLoss,
       profitFactor: avgLoss > 0 ? avgWin / avgLoss : (avgWin > 0 ? Infinity : 0),
       totalPnl,
       avgHoldDays,
       scoreBuckets,
-      bestPattern
+      bestPattern,
+      ev,
+      equitySeries
     };
   },
 
@@ -3298,7 +3347,8 @@ function renderHeader(ctx){
   const pc = chg >= 0 ? 'var(--green)' : 'var(--red)';
   const now = new Date();
   const ts = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')} 載入`;
-  const stale = dataAgeHours > CFG.STALE_HOURS;
+  // 非交易日（週末/台灣假日）不顯示資料過舊警告
+  const stale = dataAgeHours > CFG.STALE_HOURS && TaiwanCalendar.isTradingDay(now);
   const staleHtml = stale
     ? `<span class="stale">⚠ 資料 ${dataAgeHours.toFixed(0)} 小時未更新</span>`
     : (fromCache ? `<span style="color:var(--cyan)">📦 來自快取</span>` : '');
@@ -3310,7 +3360,8 @@ function renderHeader(ctx){
       <div class="sub">Taiwan Semiconductor Manufacturing (TSMC) ｜ 資料來源：台灣證券交易所</div>
       <div class="auto-refresh">
         🕐 自動更新
-        <span id="ar-countdown" class="ar-count">5:00</span>
+        <span id="ar-countdown" class="ar-count">1:00</span>
+        <span id="ar-mode" style="font-size:.68rem;color:var(--t3)">盤中模式</span>
         <button id="ar-pause-btn" class="ar-btn" onclick="AutoRefresh.toggle()" title="暫停/繼續">⏸</button>
         <span style="margin-left:6px;opacity:.5">｜ 按 <kbd style="font-size:.72rem;padding:1px 4px;border-radius:3px;border:1px solid var(--border);background:var(--card2)">?</kbd> 查看快捷鍵</span>
       </div>
@@ -5590,6 +5641,12 @@ function renderDailySummary(ctx){
       <span class="summary-label">📰 今日盤面速讀</span>
       <span class="summary-tag ${tagCls}">${tagLabel}</span>
       <span style="font-size:.68rem;color:var(--t3)">${lastDate} 收盤 ｜ 自動生成</span>
+      <button onclick="App.copyDailySummary()" title="複製今日分析摘要"
+        style="margin-left:auto;padding:4px 10px;font-size:.72rem;border-radius:7px;
+          border:1px solid var(--border);background:var(--card2);color:var(--t2);
+          cursor:pointer;white-space:nowrap;flex-shrink:0">
+        📋 複製摘要
+      </button>
     </div>
     <div class="summary-main">${summaryText}</div>
     ${chipHtml ? `<div class="summary-chips">${chipHtml}</div>` : ''}
@@ -6190,7 +6247,21 @@ function renderJournal(ctx){
           <div class="stats-card"><div class="sl">獲利因子</div><div class="sv ${stats.profitFactor>=1.5?'c-g':stats.profitFactor>=1?'c-y':'c-r'}">${isFinite(stats.profitFactor)?stats.profitFactor.toFixed(2):'∞'}</div></div>
           <div class="stats-card"><div class="sl">總損益</div><div class="sv ${stats.totalPnl>=0?'c-g':'c-r'}">${stats.totalPnl>=0?'+':''}${F.int(stats.totalPnl)}</div></div>
           <div class="stats-card"><div class="sl">平均持有</div><div class="sv">${stats.avgHoldDays.toFixed(0)} 天</div></div>
+          <div class="stats-card" style="grid-column:span 2">
+            <div class="sl">期望值 EV <span style="font-size:0.65rem;opacity:.7">（每筆交易平均獲利）</span></div>
+            <div class="sv ${stats.ev>=0?'c-g':'c-r'}">${stats.ev>=0?'+':''}${F.int(stats.ev)} 元</div>
+            <div style="font-size:0.65rem;opacity:.65;margin-top:3px">
+              ${(stats.winRate*100).toFixed(0)}% × ${F.int(stats.avgWin)} − ${((1-stats.winRate)*100).toFixed(0)}% × ${F.int(stats.avgLoss)}
+            </div>
+          </div>
         </div>
+        ${stats.equitySeries && stats.equitySeries.length >= 2 ? `
+        <div style="margin:14px 0 8px;font-size:0.8rem;font-weight:700;color:var(--t1)">
+          📈 資產曲線（累積損益）
+        </div>
+        <div style="position:relative;height:160px;background:var(--card2);border-radius:10px;padding:10px">
+          <canvas id="equity-chart"></canvas>
+        </div>` : ''}
         ${stats.scoreBuckets && stats.scoreBuckets.length ? `
         <div style="margin:14px 0 8px;font-size:0.8rem;font-weight:700;color:var(--t1)">
           📊 進場分數 vs 個人勝率（操作一致性分析）
@@ -6255,6 +6326,7 @@ const Theme = {
 };
 
 let pchart = null;
+let echart = null;
 let App = {
   rows: [],
   ind: {},
@@ -6266,29 +6338,43 @@ let App = {
   pendingPositionId: null,
   ruleCondCount: 1,
 
+  _fetchError: null,   // ✦ 降級模式：記錄最近一次 fetch 錯誤
+
   async init(forceRefresh = false){
     Journal.load();
     const btn = document.querySelector('.btn');
     if(btn){ btn.disabled = true; btn.textContent = '載入中…'; }
-    document.getElementById('app').innerHTML =
-      `<div class="loader"><div class="spin"></div><span>${forceRefresh?'強制重新從 TWSE 抓取':'載入中（優先使用快取）'}…</span></div>`;
+
+    // 僅在 rows 為空（首次載入）時才顯示 loading 畫面，避免重整時清空
+    if(!this.rows.length){
+      document.getElementById('app').innerHTML =
+        `<div class="loader"><div class="spin"></div><span>${forceRefresh?'強制重新從 TWSE 抓取':'載入中（優先使用快取）'}…</span></div>`;
+    }
+
     try{
       const result = await Data.loadHistory(forceRefresh);
       if(!result.rows.length) throw new Error('未取得任何歷史數據，請稍後再試。');
       this.rows = result.rows;
       this.foreign = result.foreign;
-      this.twii = result.twii || null;  // ✦ 大盤方向（0050 ETF 代理）
+      this.twii = result.twii || null;
       this.fromCache = result.fromCache;
       this.cacheAgeMs = result.cacheAgeMs;
+      this._fetchError = null;   // 成功後清除錯誤狀態
       this.compute();
       this.render();
-      // 非阻塞：背景抓取 0050 RS 資料
       this.fetchRS().then(() => { if(this._rs0050) this.render(); }).catch(()=>{});
     }catch(e){
-      document.getElementById('app').innerHTML = `
-        <div class="err"><h3>⚠️ 數據載入失敗</h3><p>${e.message}</p>
-          <button class="btn" onclick="App.reload(true)">↻ 重試</button></div>`;
+      if(this.rows.length){
+        // ✦ 降級模式：已有資料，繼續顯示 + 加警告橫幅
+        this._fetchError = e.message;
+        this.render();
+      } else {
+        document.getElementById('app').innerHTML = `
+          <div class="err"><h3>⚠️ 數據載入失敗</h3><p>${e.message}</p>
+            <button class="btn" onclick="App.reload(true)">↻ 重試</button></div>`;
+      }
     }
+    if(btn){ btn.disabled = false; btn.textContent = '↻ 刷新'; }
   },
 
   async reload(force = false){
@@ -6499,6 +6585,17 @@ let App = {
     this.lastSnapshot = RuleEngine.snapshot(ctx);
     const triggered = RuleEngine.evaluateAll(Journal.state.rules, this.lastSnapshot);
 
+    // ── 快取分享所需的核心數值 ──
+    this._shareCtx = {
+      lastDate, last: ctx.last, chgP: ctx.chgP,
+      dirLabel: dirResult.label,
+      es: ctx.ES?.total ?? '--',
+      upProb: ctx.prob?.wUpProb ?? null,
+      mtfScore: ctx.mtfResult ? (
+        (ctx.mtfResult.daily?.ratio||0) + (ctx.mtfResult.weekly?.ratio||0) + (ctx.mtfResult.monthly?.ratio||0)
+      ).toFixed(1) : '--'
+    };
+
     // ── 記錄多空分數歷史 ──
     ScoreHistory.push(dirResult.weighted, lastDate);
 
@@ -6508,6 +6605,17 @@ let App = {
     document.getElementById('app').innerHTML =
       // ── Header ──
       renderHeader(ctx) +
+      // ✦ 降級模式警告橫幅（fetch 失敗但有快取資料時顯示）
+      (App._fetchError ? `
+        <div style="display:flex;align-items:center;gap:10px;background:rgba(245,158,11,.12);
+          border:1.5px solid rgba(245,158,11,.5);border-radius:10px;padding:10px 16px;
+          margin-bottom:12px;font-size:.78rem;color:var(--yellow)">
+          ⚠️ <strong>網路更新失敗</strong>，目前顯示上次快取資料。
+          <span style="color:var(--t2)">${App._fetchError}</span>
+          <button onclick="App.reload(true)" style="margin-left:auto;background:rgba(245,158,11,.2);
+            border:1px solid rgba(245,158,11,.5);color:var(--yellow);border-radius:7px;
+            padding:4px 12px;font-size:.72rem;font-weight:700;cursor:pointer">↻ 重試</button>
+        </div>` : '') +
       // ✦ 頂部統一橫幅：今日一句話 + 模式切換 + 五問清單
       renderOneLiner(ctx) +
       // ✦ 五步決策引導列
@@ -6648,6 +6756,7 @@ let App = {
         document.querySelectorAll('.j-section').forEach(x => x.classList.remove('active'));
         t.classList.add('active');
         document.querySelector(`.j-section[data-js="${target}"]`).classList.add('active');
+        if(target === 'stats') setTimeout(() => this.drawEquityChart(), 60);
       });
     });
 
@@ -6665,6 +6774,7 @@ let App = {
     }
 
     setTimeout(() => this.drawChart(), 80);
+    setTimeout(() => this.drawEquityChart(), 120);
     initCollapsible();
     setTimeout(() => {
       drawScoreHistChart();
@@ -6701,20 +6811,106 @@ let App = {
 
   // ─── 部位計算機 ───
   recalcPos(){
-    const cap = parseFloat(document.getElementById('pc-cap').value);
-    const risk = parseFloat(document.getElementById('pc-risk').value);
-    const atrx = parseFloat(document.getElementById('pc-atrx').value);
-    const rr = parseFloat(document.getElementById('pc-rr').value);
-    if(isNaN(cap) || isNaN(risk) || isNaN(atrx) || isNaN(rr)){
-      alert('請填入所有欄位'); return;
-    }
+    // 驗證輔助：showFieldErr / clearFieldErr
+    const showErr = (id, msg) => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.style.borderColor = 'var(--red)';
+      let err = el.parentElement.querySelector('.pc-err');
+      if(!err){
+        err = document.createElement('span');
+        err.className = 'pc-err';
+        err.style.cssText = 'color:var(--red);font-size:.72rem;margin-left:6px;white-space:nowrap';
+        el.parentElement.appendChild(err);
+      }
+      err.textContent = msg;
+    };
+    const clearErr = (id) => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.style.borderColor = '';
+      const err = el.parentElement.querySelector('.pc-err');
+      if(err) err.remove();
+    };
+
+    const fields = [
+      { id:'pc-cap',  label:'總資金',  min:1000,     max:null },
+      { id:'pc-risk', label:'單筆風險', min:0.1,      max:20   },
+      { id:'pc-entry',label:'進場價',  min:1,        max:null },
+      { id:'pc-atrx', label:'ATR乘數', min:0.5,      max:10   },
+      { id:'pc-rr',   label:'R:R比',  min:0.5,      max:20   },
+    ];
+
+    let hasErr = false;
+    const vals = {};
+    fields.forEach(f => {
+      clearErr(f.id);
+      const v = parseFloat(document.getElementById(f.id)?.value);
+      if(isNaN(v) || v === null){
+        showErr(f.id, '請輸入數字'); hasErr = true;
+      } else if(v <= 0){
+        showErr(f.id, '必須大於 0'); hasErr = true;
+      } else if(f.min !== null && v < f.min){
+        showErr(f.id, `最小值 ${f.min}`); hasErr = true;
+      } else if(f.max !== null && v > f.max){
+        showErr(f.id, `最大值 ${f.max}`); hasErr = true;
+      } else {
+        vals[f.id] = v;
+      }
+    });
+    if(hasErr) return;
+
     Journal.updateSettings({
-      totalCapital: cap, riskPct: risk, atrStopMult: atrx, rrRatio: rr
+      totalCapital: vals['pc-cap'],
+      riskPct:      vals['pc-risk'],
+      atrStopMult:  vals['pc-atrx'],
+      rrRatio:      vals['pc-rr']
     });
     this.render();
   },
   scrollToPosCalc(){
     scrollToAnchor('anchor-poscalc');
+  },
+
+  // ─── 今日分析摘要一鍵分享 ───
+  copyDailySummary(){
+    const s = this._shareCtx;
+    if(!s){ alert('資料尚未載入'); return; }
+    const upProbStr = s.upProb != null ? `${(s.upProb * 100).toFixed(0)}%` : '--';
+    const mtfWord   = parseFloat(s.mtfScore) >= 1 ? '多頭' : parseFloat(s.mtfScore) <= -1 ? '空頭' : '中性';
+    const chgSign   = s.chgP >= 0 ? '+' : '';
+    const text = [
+      `📊 台積電 2330 今日分析摘要（${s.lastDate}）`,
+      `收盤 ${Math.round(s.last).toLocaleString()} 元，漲跌 ${chgSign}${s.chgP.toFixed(2)}%`,
+      `訊號：${s.dirLabel}　進場評分(ES)：${s.es} 分`,
+      `K-NN 明日漲機率：${upProbStr}　MTF共振：${mtfWord}（${s.mtfScore}）`,
+      `— 由 TSMC 看盤系統自動生成 —`
+    ].join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      this.showToastMsg('✅ 已複製到剪貼簿');
+    }).catch(() => {
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      this.showToastMsg('✅ 已複製到剪貼簿');
+    });
+  },
+  showToastMsg(msg){
+    const t = document.createElement('div');
+    t.style.cssText = `
+      position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+      background:var(--card);color:var(--t1);border:1px solid var(--border);
+      border-radius:10px;padding:10px 20px;font-size:.85rem;font-weight:700;
+      box-shadow:0 4px 20px rgba(0,0,0,.4);z-index:9999;white-space:nowrap;
+      animation:fadeInUp .25s ease`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2200);
   },
 
   // ─── 優化 4：抓取 0050 做相對強弱計算 ───
@@ -7218,6 +7414,66 @@ let App = {
             // 把量能柱壓縮在下方 25%（不遮擋 K 線）
             max: v => v.max * 5,
             beginAtZero: true
+          }
+        }
+      }
+    });
+  },
+
+  drawEquityChart(){
+    const canvas = document.getElementById('equity-chart');
+    if(!canvas) return;
+    const stats = Journal.stats();
+    if(!stats || !stats.equitySeries || stats.equitySeries.length < 2) return;
+    if(echart) { echart.destroy(); echart = null; }
+
+    const labels = stats.equitySeries.map((p,i) => p.date || `#${i+1}`);
+    const values = stats.equitySeries.map(p => p.value);
+    const isProfit = values[values.length - 1] >= 0;
+    const lineColor = isProfit ? '#10b981' : '#ef4444';
+    const fillColor = isProfit ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)';
+
+    echart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: '累積損益',
+          data: values,
+          borderColor: lineColor,
+          backgroundColor: fillColor,
+          borderWidth: 2,
+          pointRadius: values.length <= 20 ? 4 : 2,
+          pointHoverRadius: 6,
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1c2038',
+            titleColor: '#f1f5f9',
+            bodyColor: '#94a3b8',
+            callbacks: {
+              label(item){ return `累積損益：${item.raw >= 0 ? '+' : ''}${Math.round(item.raw).toLocaleString()} 元`; }
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#94a3b8', font: { size: 9 }, maxTicksLimit: 8 },
+            grid: { color: 'rgba(255,255,255,.04)' }
+          },
+          y: {
+            ticks: {
+              color: '#94a3b8', font: { size: 9 },
+              callback: v => (v >= 0 ? '+' : '') + Math.round(v/1000) + 'K'
+            },
+            grid: { color: 'rgba(255,255,255,.04)' }
           }
         }
       }
@@ -8296,8 +8552,16 @@ const RealtimeEval = {
    MODULE: AUTO-REFRESH TIMER
    ═══════════════════════════════════════════════════════════════ */
 const AutoRefresh = {
-  INTERVAL_S: 300,
-  _remaining: 300,
+  // ✦ 智能刷新間隔：盤中 60 秒、盤後 900 秒（15 分鐘）
+  get INTERVAL_S(){
+    const now = new Date();
+    const mins = now.getHours()*60 + now.getMinutes();
+    const day  = now.getDay();
+    const isWeekday = day >= 1 && day <= 5;
+    const isMarketHours = mins >= 9*60 && mins <= 13*60+30;
+    return (isWeekday && isMarketHours) ? 60 : 900;
+  },
+  _remaining: 60,
   _paused: false,
   _timer: null,
   start(){
@@ -8307,6 +8571,7 @@ const AutoRefresh = {
   },
   _tick(){
     if(this._paused) return;
+    // 每次 tick 重新算間隔（盤中/盤後切換時自動生效）
     this._remaining--;
     this._updateDisplay();
     if(this._remaining <= 0){
@@ -8320,6 +8585,13 @@ const AutoRefresh = {
     const m = Math.floor(this._remaining / 60);
     const s = this._remaining % 60;
     el.textContent = `${m}:${String(s).padStart(2,'0')}`;
+    // 顯示目前模式
+    const modeEl = document.getElementById('ar-mode');
+    if(modeEl){
+      const iv = this.INTERVAL_S;
+      modeEl.textContent = iv <= 60 ? '盤中模式' : '盤後模式';
+      modeEl.style.color  = iv <= 60 ? 'var(--green)' : 'var(--t3)';
+    }
   },
   toggle(){
     this._paused = !this._paused;
@@ -8421,18 +8693,17 @@ const ScoreHistory = {
   save(a){ try{ localStorage.setItem(this.KEY, JSON.stringify(a.slice(-this.MAX))); }catch{} },
   push(score, dateLabel){
     const a = this.load();
-    // 使用日期為 key，全域去重（防止中途載入造成重複）
     const safeLabel = dateLabel || new Date().toLocaleDateString('zh-TW',{timeZone:'Asia/Taipei'});
     const idx = a.findIndex(e => e.label === safeLabel);
     if(idx !== -1){
-      // 已有當天紀錄 → 更新分數（例如盤中多次重新整理）
       a[idx].score = Math.round(score * 10) / 10;
     } else {
       a.push({ label: safeLabel, score: Math.round(score * 10) / 10, ts: Date.now() });
     }
     this.save(a);
     return a;
-  }
+  },
+  clear(){ try{ localStorage.removeItem(this.KEY); }catch{} }
 };
 
 /* ═══════════════════════════════════════════════════════════════
@@ -8449,9 +8720,37 @@ function renderScoreHistory(){
       </div>
     </div>`;
   }
+
+  // ✦ 趨勢計算：取最近 5 筆的線性斜率
+  const recent = hist.slice(-5);
+  const n = recent.length;
+  const xMean = (n-1)/2;
+  const yMean = recent.reduce((a,h)=>a+h.score,0)/n;
+  const slope = recent.reduce((s,h,i)=>s+(i-xMean)*(h.score-yMean),0)
+               / recent.reduce((s,_,i)=>s+(i-xMean)**2,0);
+
+  const trendIcon  = slope >  0.3 ? '↑' : slope < -0.3 ? '↓' : '→';
+  const trendColor = slope >  0.3 ? 'var(--green)' : slope < -0.3 ? 'var(--red)' : 'var(--t2)';
+  const trendLabel = slope >  0.3 ? '上升中' : slope < -0.3 ? '下降中' : '持平';
+  const latest     = hist[hist.length-1].score;
+  const latestColor = latest >= 0 ? 'var(--green)' : 'var(--red)';
+
   return `
   <div class="score-hist">
-    <h3>📈 多空加權分數歷史（最近 ${hist.length} 筆紀錄）</h3>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap">
+      <h3 style="margin:0">📈 多空加權分數歷史（最近 ${hist.length} 筆）</h3>
+      <span style="font-size:.8rem;font-weight:800;color:${latestColor}">
+        今日 ${latest >= 0 ? '+' : ''}${latest.toFixed(2)}
+      </span>
+      <span style="display:flex;align-items:center;gap:4px;
+        background:${slope > 0.3 ? 'rgba(16,185,129,.12)' : slope < -0.3 ? 'rgba(239,68,68,.12)' : 'var(--card2)'};
+        border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:700;color:${trendColor}">
+        ${trendIcon} 近5日${trendLabel}（斜率 ${slope.toFixed(2)}/日）
+      </span>
+      <button onclick="ScoreHistory.clear();App.render()" style="margin-left:auto;
+        background:none;border:1px solid var(--border);color:var(--t3);border-radius:6px;
+        padding:3px 9px;font-size:.68rem;cursor:pointer">清除歷史</button>
+    </div>
     <canvas id="score-hist-chart" style="max-height:90px"></canvas>
   </div>`;
 }
@@ -9731,6 +10030,37 @@ function closeChecklistModal(){
   const el = document.getElementById('tsmc-checklist-modal');
   if(el) el.remove();
 }
+
+/* ── localStorage 自動清理：防止 5MB 配額溢出 ── */
+(function trimLocalStorage(){
+  try {
+    // 各鍵最大保留筆數
+    const TRIM_RULES = [
+      { key: 'tsmc_score_history', field: 'history', maxItems: 90 },
+      { key: 'tsmc_journal_v1',    field: 'trades',  maxItems: 200 },
+    ];
+    TRIM_RULES.forEach(rule => {
+      const raw = localStorage.getItem(rule.key);
+      if(!raw) return;
+      const obj = JSON.parse(raw);
+      if(!Array.isArray(obj[rule.field])) return;
+      if(obj[rule.field].length > rule.maxItems){
+        obj[rule.field] = obj[rule.field].slice(-rule.maxItems);
+        localStorage.setItem(rule.key, JSON.stringify(obj));
+        console.log(`[autoTrim] ${rule.key}.${rule.field} trimmed to ${rule.maxItems}`);
+      }
+    });
+
+    // 通用過大鍵保護：超過 500 KB 的單一 key 印出警告
+    for(let i = 0; i < localStorage.length; i++){
+      const k = localStorage.key(i);
+      const v = localStorage.getItem(k);
+      if(v && v.length > 500 * 1024){
+        console.warn(`[autoTrim] Key "${k}" is ${(v.length/1024).toFixed(0)} KB — consider exporting and clearing.`);
+      }
+    }
+  } catch(e){ console.warn('[autoTrim] error:', e); }
+})();
 
 Theme.init();
 App.init().finally(() => {
