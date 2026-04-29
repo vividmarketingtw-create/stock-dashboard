@@ -3479,7 +3479,7 @@ function renderBuySellPanel(ctx){
   //  渲染輸出
   // ══════════════════════════════════════════════
   return `
-  <div class="sec">💹 買賣訊號總覽 <span class="sec-cnt">目前同時有幾個「買進訊號」vs「賣出訊號」— 綠色＝看多，紅色＝看空，訊號越多越可信</span></div>
+  <div class="sec">💹 買賣訊號總覽 <span class="sec-cnt">⭐ 主要參考 — 加權強度計算（0~10分），考慮訊號嚴格程度與加權，比上方燈號更精確</span></div>
   <div class="sec" style="display:none">💹 逢高賣出 ／ 逢低買進 訊號
     <span class="sec-cnt">v5 · 七大條件 · MFI資金流 · 吞噬型態 · 量能高潮 · 費波那契關卡</span>
   </div>
@@ -7666,7 +7666,7 @@ const IndicatorAlerts = {
    ═══════════════════════════════════════════════════════════════ */
 function renderSignalLight(ctx){
   const { cK, cD, pK, pD, cRSI, cPSY, cHist, pHist, cDIF, cDEA,
-          total, S, cBoll, last, cMA20, cMA60, cVol, cVolMA } = ctx;
+          total, S, cBoll, last, cMA20, cMA60, cVol, cVolMA, dirRatio } = ctx;
 
   // 8個買入條件
   const buyConds = [
@@ -7706,6 +7706,49 @@ function renderSignalLight(ctx){
   const buyPct  = (buyHit / 8 * 100).toFixed(0);
   const sellPct = (sellHit / 8 * 100).toFixed(0);
 
+  // ── 衝突偵測：與下方加權面板比較 ──
+  const lightBull = net >= 1;
+  const lightBear = net <= -1;
+  const weightedBull = dirRatio != null && dirRatio >  0.05;
+  const weightedBear = dirRatio != null && dirRatio < -0.05;
+  const conflictBullLight = lightBull && weightedBear;   // 燈號多 但 加權空
+  const conflictBearLight = lightBear && weightedBull;   // 燈號空 但 加權多
+  const hasConflict = conflictBullLight || conflictBearLight;
+  const bothAgree   = (lightBull && weightedBull) || (lightBear && weightedBear);
+
+  let conflictHtml = '';
+  if(conflictBullLight){
+    conflictHtml = `
+    <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:12px 14px;margin-bottom:12px">
+      <div style="font-weight:700;font-size:.8rem;color:var(--yellow);margin-bottom:6px">🔍 兩個面板看法不同——這很正常，了解差異才能做出好決定</div>
+      <div style="font-size:.78rem;color:var(--t2);line-height:1.75">
+        <strong style="color:var(--t1)">① 今日操作燈號（此處）</strong>：算「哪些基本條件被觸發了」，只管有沒有，不管強度。現在觸發了 ${buyHit} 個買進條件（例如 DIF>DEA、PSY 偏低），所以顯示偏多。<br>
+        <strong style="color:var(--t1)">② 買賣訊號總覽（下方）</strong>：算「訊號的加權強度」，嚴格門檻（如 RSI 需<30 才算買訊）＋早期過熱警示（如 RSI>62 已扣分），加權後賣出強度 > 買進強度。<br>
+        <strong style="color:var(--yellow)">✅ 結論：以下方「買賣訊號總覽」的加權分數為主要參考。</strong> 現在的情境是：整體趨勢結構還算健康，但短線已偏超買，<strong>不是好的追漲進場時機</strong>。建議：現有持股繼續持有並把停損往上移，不要在此時追高加碼。
+      </div>
+    </div>`;
+  } else if(conflictBearLight){
+    conflictHtml = `
+    <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:12px 14px;margin-bottom:12px">
+      <div style="font-weight:700;font-size:.8rem;color:var(--yellow);margin-bottom:6px">🔍 兩個面板看法不同——了解差異才能做出好決定</div>
+      <div style="font-size:.78rem;color:var(--t2);line-height:1.75">
+        <strong style="color:var(--t1)">① 今日操作燈號（此處）</strong>：觸發了 ${sellHit} 個賣出條件，顯示偏空。但這些條件門檻較寬鬆，部分只是「接近」危險區，不代表已經到達極端。<br>
+        <strong style="color:var(--t1)">② 買賣訊號總覽（下方）</strong>：用嚴格的加權計算，買進強度 > 賣出強度，代表超賣指標的累積分量更重，反彈動能正在醞釀。<br>
+        <strong style="color:var(--green)">✅ 結論：以下方「買賣訊號總覽」的加權分數為主要參考。</strong> 現在的情境是：雖然部分條件偏空，但整體超賣程度更重要，<strong>可以開始少量觀察買點</strong>，等待確認訊號（如 KD 黃金交叉、量縮後的止跌）再行動。
+      </div>
+    </div>`;
+  } else if(bothAgree){
+    conflictHtml = `
+    <div style="background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.2);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:.78rem;color:var(--t2);line-height:1.6">
+      ✅ <strong style="color:var(--t1)">兩個面板方向一致</strong>，代表訊號可靠性較高。下方「買賣訊號總覽」提供更詳細的加權強度分析，建議搭配閱讀。
+    </div>`;
+  } else {
+    conflictHtml = `
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:.78rem;color:var(--t2);line-height:1.6">
+      ℹ️ <strong style="color:var(--t1)">此面板</strong>：快速計算 8 個基本條件的觸發數量，適合快速掌握大方向。<strong style="color:var(--t1)">下方「買賣訊號總覽」</strong>：使用加權強度計算，是更精確的主要參考。
+    </div>`;
+  }
+
   const condHtml = (conds, isS) => conds.map(c => `
     <div class="sl-cond">
       <span class="dot ${c.hit ? (isS?'sell-hit':'hit') : 'miss'}"></span>
@@ -7715,9 +7758,10 @@ function renderSignalLight(ctx){
   return `
   <div class="signal-light-card ic">
     <div class="sl-header">
-      <div class="sl-title">🚦 今日操作燈號</div>
+      <div class="sl-title">🚦 今日操作燈號 <span style="font-size:.68rem;font-weight:400;color:var(--t3)">· 快速概覽（8個條件計數）</span></div>
       <span class="sl-score-badge ${cls}">${emoji} ${signal}</span>
     </div>
+    ${conflictHtml}
     <div class="sl-main">
       <div class="sl-bars">
         <div class="sl-bar-row">
