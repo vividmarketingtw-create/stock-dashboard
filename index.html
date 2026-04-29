@@ -1635,137 +1635,60 @@ body.light .zone-header{background:linear-gradient(135deg,rgba(59,130,246,.06),r
 
 /* ═══════════════════════════════════════════════════════════
    波段操作專區 CSS
-   ═══════════════════════════════════════════════════════════ */
-
-/* 波段總燈 */
-.swing-master-light{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:28px 20px;border-radius:16px;
-  border:2px solid var(--border);
-  text-align:center;min-height:160px;
-  transition:border-color .3s,background .3s;
-}
-.swing-master-light.sl-buy{
-  background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.4);
-}
-.swing-master-light.sl-watch{
-  background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.4);
-}
-.swing-master-light.sl-sell{
-  background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.4);
-}
-.sml-emoji{ font-size:3rem;line-height:1;margin-bottom:8px }
-.sml-verdict{ font-size:1.25rem;font-weight:800;letter-spacing:.5px }
-.sml-sub{ font-size:.75rem;color:var(--t2);margin-top:6px;line-height:1.5 }
-.sml-score{ font-size:.75rem;color:var(--t3);margin-top:8px }
-
-/* 波段信號格 */
-.swing-signals-grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;
-  margin-bottom:16px;
-}
-.sw-sig{
-  background:var(--card2);border:1px solid var(--border);border-radius:12px;
-  padding:12px 14px;
-}
-.sw-sig .sw-name{ font-size:.72rem;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.5px }
-.sw-sig .sw-val{ font-size:1.05rem;font-weight:800;margin:4px 0 2px }
-.sw-sig .sw-desc{ font-size:.72rem;color:var(--t2);line-height:1.45 }
-.sw-sig.sw-bull{ border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.06) }
-.sw-sig.sw-bear{ border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.06) }
-.sw-sig.sw-neut{ border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.06) }
-
-/* ADR 卡片 */
-.adr-card{
-  background:var(--card2);border:1px solid var(--border);border-radius:12px;
-  padding:16px 18px;display:flex;align-items:center;gap:16px;
-  margin-bottom:12px;
-}
-.adr-icon{ font-size:1.8rem;flex-shrink:0 }
-.adr-body{ flex:1 }
-.adr-title{ font-size:.75rem;color:var(--t3);font-weight:700 }
-.adr-value{ font-size:1.3rem;font-weight:800;margin:3px 0 }
-.adr-sub{ font-size:.72rem;color:var(--t2);line-height:1.5 }
-.adr-badge{
-  padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:800;
-  flex-shrink:0;
-}
-.adr-badge.premium{ background:rgba(16,185,129,.15);color:var(--green) }
-.adr-badge.discount{ background:rgba(239,68,68,.15);color:var(--red) }
-.adr-badge.neutral{ background:rgba(100,116,139,.15);color:var(--t2) }
-.adr-badge.loading{ background:rgba(100,116,139,.1);color:var(--t3);
-  animation:pulse 1.5s infinite }
-@keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.4} }
-
-/* 回撤儀表 */
-.drawdown-card{
-  background:var(--card2);border:1px solid var(--border);border-radius:12px;
-  padding:16px 18px;margin-bottom:12px;
-}
-.dd-header{ font-size:.75rem;font-weight:700;color:var(--t3);margin-bottom:10px }
-.dd-bar-wrap{ position:relative;height:28px;background:var(--card);
-  border-radius:8px;overflow:hidden;margin-bottom:6px;
-  border:1px solid var(--border) }
-.dd-bar-fill{ height:100%;border-radius:8px;
-  background:linear-gradient(90deg,var(--green) 0%,var(--yellow) 50%,var(--red) 100%);
-  position:absolute;left:0;top:0;opacity:.7 }
-.dd-bar-cursor{
-  position:absolute;top:0;width:3px;height:100%;
-  background:var(--t1);border-radius:2px;
-  box-shadow:0 0 6px rgba(255,255,255,.4);
-}
-.dd-labels{ display:flex;justify-content:space-between;font-size:.68rem;color:var(--t3) }
-.dd-stats{ display:flex;gap:16px;margin-top:10px;flex-wrap:wrap }
-.dd-stat .ds-label{ font-size:.68rem;color:var(--t3) }
-.dd-stat .ds-val{ font-size:1rem;font-weight:800 }
-
-/* 波段操作行動卡 */
-.swing-action-card{
-  background:var(--card);border:1.5px solid var(--border);border-radius:14px;
-  padding:18px 20px;margin-bottom:12px;
-}
-.sac-title{ font-size:.78rem;font-weight:800;color:var(--t2);
-  text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px }
-.sac-steps{ display:grid;gap:8px }
-.sac-step{
-  display:flex;align-items:flex-start;gap:10px;
-  padding:10px 12px;border-radius:10px;background:var(--card2);
-  border:1px solid var(--border);
-}
-.sac-num{
-  width:24px;height:24px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:.72rem;font-weight:800;flex-shrink:0;
-  background:var(--card);border:1.5px solid var(--border);
-}
-.sac-body{ flex:1 }
-.sac-body strong{ font-size:.8rem;display:block;margin-bottom:2px }
-.sac-body span{ font-size:.72rem;color:var(--t2);line-height:1.45 }
-
-/* 外資期貨卡 */
-.futures-card{
-  background:var(--card2);border:1px solid var(--border);border-radius:12px;
-  padding:14px 16px;margin-bottom:12px;
-}
-.fc-title{ font-size:.75rem;font-weight:700;color:var(--t3);margin-bottom:8px }
-.fc-grid{ display:grid;grid-template-columns:repeat(3,1fr);gap:10px }
-.fc-item .fci-label{ font-size:.68rem;color:var(--t3) }
-.fc-item .fci-val{ font-size:1rem;font-weight:800 }
-.fc-item .fci-hint{ font-size:.68rem;color:var(--t2);margin-top:2px }
-
-/* SOX 自動抓取狀態 */
-.sox-auto-badge{
-  display:inline-flex;align-items:center;gap:4px;
-  padding:2px 8px;border-radius:10px;font-size:.68rem;font-weight:700;
-  background:rgba(6,182,212,.12);color:var(--cyan);border:1px solid rgba(6,182,212,.25);
-}
-
-/* 月營收趨勢 */
-.rev-grid{ display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:10px }
-.rev-item{ background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px }
-.rev-item .ri-month{ font-size:.68rem;color:var(--t3) }
-.rev-item .ri-yoy{ font-size:1rem;font-weight:800 }
-.rev-item .ri-hint{ font-size:.68rem;color:var(--t2) }
+═══════════════════════════════════════════════════════════ */
+.swing-master-light{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:28px 20px;border-radius:16px;border:2px solid var(--border);text-align:center;min-height:160px;transition:border-color .3s,background .3s}
+.swing-master-light.sl-buy{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.4)}
+.swing-master-light.sl-watch{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.4)}
+.swing-master-light.sl-sell{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.4)}
+.sml-emoji{font-size:3rem;line-height:1;margin-bottom:8px}
+.sml-verdict{font-size:1.25rem;font-weight:800;letter-spacing:.5px}
+.sml-sub{font-size:.75rem;color:var(--t2);margin-top:6px;line-height:1.5}
+.sml-score{font-size:.75rem;color:var(--t3);margin-top:8px}
+.swing-signals-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-bottom:16px}
+.sw-sig{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.sw-sig .sw-name{font-size:.72rem;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.sw-sig .sw-val{font-size:1.05rem;font-weight:800;margin:4px 0 2px}
+.sw-sig .sw-desc{font-size:.72rem;color:var(--t2);line-height:1.45}
+.sw-sig.sw-bull{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.06)}
+.sw-sig.sw-bear{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.06)}
+.sw-sig.sw-neut{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.06)}
+.adr-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:16px;margin-bottom:12px}
+.adr-icon{font-size:1.8rem;flex-shrink:0}
+.adr-body{flex:1}
+.adr-title{font-size:.75rem;color:var(--t3);font-weight:700}
+.adr-value{font-size:1.3rem;font-weight:800;margin:3px 0}
+.adr-sub{font-size:.72rem;color:var(--t2);line-height:1.5}
+.adr-badge{padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:800;flex-shrink:0}
+.adr-badge.premium{background:rgba(16,185,129,.15);color:var(--green)}
+.adr-badge.discount{background:rgba(239,68,68,.15);color:var(--red)}
+.adr-badge.neutral{background:rgba(100,116,139,.15);color:var(--t2)}
+.adr-badge.loading{background:rgba(100,116,139,.1);color:var(--t3);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.drawdown-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px}
+.dd-header{font-size:.75rem;font-weight:700;color:var(--t3);margin-bottom:10px}
+.dd-bar-wrap{position:relative;height:28px;background:var(--card);border-radius:8px;overflow:hidden;margin-bottom:6px;border:1px solid var(--border)}
+.dd-bar-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--green) 0%,var(--yellow) 50%,var(--red) 100%);position:absolute;left:0;top:0;opacity:.7;width:100%}
+.dd-bar-cursor{position:absolute;top:0;width:3px;height:100%;background:var(--t1);border-radius:2px;box-shadow:0 0 6px rgba(255,255,255,.4)}
+.dd-labels{display:flex;justify-content:space-between;font-size:.68rem;color:var(--t3)}
+.dd-stats{display:flex;gap:16px;margin-top:10px;flex-wrap:wrap}
+.dd-stat .ds-label{font-size:.68rem;color:var(--t3)}
+.dd-stat .ds-val{font-size:1rem;font-weight:800}
+.swing-action-card{background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:0}
+.sac-title{font-size:.78rem;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+.sac-steps{display:grid;gap:8px}
+.sac-step{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:10px;background:var(--card2);border:1px solid var(--border)}
+.sac-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;flex-shrink:0;background:var(--card);border:1.5px solid var(--border)}
+.sac-body{flex:1}
+.sac-body strong{font-size:.8rem;display:block;margin-bottom:2px}
+.sac-body span{font-size:.72rem;color:var(--t2);line-height:1.45}
+.futures-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.fc-title{font-size:.75rem;font-weight:700;color:var(--t3);margin-bottom:8px}
+.fc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.fc-item .fci-label{font-size:.68rem;color:var(--t3)}
+.fc-item .fci-val{font-size:1rem;font-weight:800}
+.fc-item .fci-hint{font-size:.68rem;color:var(--t2);margin-top:2px}
+.sox-auto-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:.68rem;font-weight:700;background:rgba(6,182,212,.12);color:var(--cyan);border:1px solid rgba(6,182,212,.25)}
 
 </style>
 </head>
@@ -5985,7 +5908,7 @@ function renderMorning(ctx){
   <div class="morning-card">
     <div class="mc-icon">🌅</div>
     <div class="mc-body">
-      <div class="mc-title">美股費半（SOX）— 台積電領先指標 <span class="sox-auto-badge">⚡ 波段專區已自動抓取</span></div>
+      <div class="mc-title">美股費半（SOX）— 台積電領先指標 <span class="sox-auto-badge">⚡ 波段專區自動抓取</span></div>
       <div class="mc-sub">費城半導體指數（SOX）漲跌通常領先台積電 1~3 個交易日。輸入昨夜美股 SOX 漲跌幅，系統會自動調整「明日預測」的機率。</div>
       ${v != null ? `<div class="mc-effect">${eff}</div>` : ''}
     </div>
@@ -6608,475 +6531,116 @@ const Theme = {
 
 let pchart = null;
 let echart = null;
-let 
+
 /* ═══════════════════════════════════════════════════════════
    波段操作模組
-   ═══════════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════════════ */
+
+/* ── 回撤計算 ── */
+function calcDrawdown(closes, highs, lows, high52, low52){
+  if(!closes || !closes.length || !high52 || !low52) return {
+    ddFromHigh:0, recFromLow:0, ddFromSwingH:0, swingH:0, swingL:0, relPos:50, high52:0, low52:0, last:0
+  };
+  const last = closes[closes.length - 1];
+  const range = high52 - low52;
+  const ddFromHigh   = high52 ? ((last - high52) / high52) * 100 : 0;
+  const recFromLow   = low52  ? ((last - low52)  / low52)  * 100 : 0;
+  const swingH       = Math.max(...highs.slice(-20));
+  const swingL       = Math.min(...lows.slice(-20));
+  const ddFromSwingH = swingH ? ((last - swingH) / swingH) * 100 : 0;
+  const relPos       = range > 0 ? Math.min(100, Math.max(0, ((last - low52) / range) * 100)) : 50;
+  return { ddFromHigh, recFromLow, ddFromSwingH, swingH, swingL, relPos, high52, low52, last };
+}
 
 /* ── SOX & ADR 自動抓取 ── */
 const SwingData = {
-  _sox: null,
-  _adr: null,
-  _soxTs: 0,
-  _adrTs: 0,
-  CACHE_MS: 15 * 60 * 1000,  // 15 分鐘快取
+  _sox: null, _adr: null, _soxTs: 0, _adrTs: 0,
+  CACHE_MS: 15 * 60 * 1000,
 
   async fetchSOX(){
-    try{
-      const proxies = [
-        'https://query1.finance.yahoo.com/v8/finance/chart/%5ESOX?interval=1d&range=5d',
-        'https://query2.finance.yahoo.com/v8/finance/chart/%5ESOX?interval=1d&range=5d'
-      ];
-      for(const url of proxies){
-        try{
-          const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
-          if(!r.ok) continue;
-          const j = await r.json();
-          const meta = j?.chart?.result?.[0]?.meta;
-          if(!meta) continue;
-          const prev = meta.chartPreviousClose || meta.previousClose;
-          const cur  = meta.regularMarketPrice || meta.previousClose;
-          if(!prev || !cur) continue;
-          const pct = ((cur - prev) / prev) * 100;
-          this._sox = { value: pct, cur, prev, ts: Date.now() };
-          this._soxTs = Date.now();
-          return this._sox;
-        }catch(e){ continue; }
-      }
-    }catch(e){}
+    const urls = [
+      'https://query1.finance.yahoo.com/v8/finance/chart/%5ESOX?interval=1d&range=5d',
+      'https://query2.finance.yahoo.com/v8/finance/chart/%5ESOX?interval=1d&range=5d'
+    ];
+    for(const url of urls){
+      try{
+        const r = await fetch(url, { signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined });
+        if(!r.ok) continue;
+        const j = await r.json();
+        const meta = j?.chart?.result?.[0]?.meta;
+        if(!meta) continue;
+        const prev = meta.chartPreviousClose || meta.previousClose;
+        const cur  = meta.regularMarketPrice || meta.previousClose;
+        if(!prev || !cur) continue;
+        const pct = ((cur - prev) / prev) * 100;
+        this._sox = { value: pct, cur, prev, ts: Date.now() };
+        this._soxTs = Date.now();
+        return this._sox;
+      }catch(e){ continue; }
+    }
     return null;
   },
 
   async fetchADR(){
     try{
-      // TSM ADR: 1 ADR = 5 台積電普通股
-      // 用 Yahoo Finance 抓 TSM 美股收盤
-      const proxies = [
+      const urls = [
         'https://query1.finance.yahoo.com/v8/finance/chart/TSM?interval=1d&range=5d',
         'https://query2.finance.yahoo.com/v8/finance/chart/TSM?interval=1d&range=5d'
       ];
       let tsmData = null;
-      for(const url of proxies){
+      for(const url of urls){
         try{
-          const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+          const r = await fetch(url, { signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined });
           if(!r.ok) continue;
           const j = await r.json();
           const meta = j?.chart?.result?.[0]?.meta;
           if(!meta) continue;
-          tsmData = {
-            price: meta.regularMarketPrice || meta.previousClose,
-            prevClose: meta.chartPreviousClose || meta.previousClose,
-            currency: meta.currency || 'USD'
-          };
+          tsmData = { price: meta.regularMarketPrice || meta.previousClose, prevClose: meta.chartPreviousClose || meta.previousClose };
           break;
         }catch(e){ continue; }
       }
       if(!tsmData) return null;
-
-      // 取得美元/台幣匯率（用 Yahoo Finance TWD=X）
-      let usdtwd = 31.5; // fallback
+      let usdtwd = 31.5;
       try{
         const fx = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/TWD%3DX?interval=1d&range=5d',
-          { signal: AbortSignal.timeout(5000) });
+          { signal: AbortSignal.timeout ? AbortSignal.timeout(5000) : undefined });
         if(fx.ok){
           const fj = await fx.json();
-          const fxPrice = fj?.chart?.result?.[0]?.meta?.regularMarketPrice;
-          if(fxPrice && fxPrice > 20 && fxPrice < 50) usdtwd = fxPrice;
+          const p = fj?.chart?.result?.[0]?.meta?.regularMarketPrice;
+          if(p && p > 20 && p < 50) usdtwd = p;
         }
       }catch(e){}
-
-      this._adr = { tsmUSD: tsmData.price, usdtwd, ts: Date.now(),
-        tsmPrevUSD: tsmData.prevClose };
+      this._adr = { tsmUSD: tsmData.price, usdtwd, ts: Date.now(), tsmPrevUSD: tsmData.prevClose };
       this._adrTs = Date.now();
       return this._adr;
     }catch(e){ return null; }
   },
 
-  getSOXPct(){
-    // 先看自動抓取，沒有的話回退到手動輸入
-    if(this._sox && (Date.now() - this._soxTs) < this.CACHE_MS){
-      return this._sox.value;
-    }
-    const manual = External.get();
-    return manual?.value ?? null;
-  },
-
   async init(){
-    // 非同步在背景跑，不影響主頁面載入
-    const [sox, adr] = await Promise.allSettled([
-      this.fetchSOX(),
-      this.fetchADR()
-    ]);
-    if(sox.status === 'fulfilled' && sox.value){
-      // 如果手動沒有輸入，把自動值寫入 External 供原有邏輯使用
-      if(!External.get()){
-        External._autoVal = sox.value.value;
+    try{
+      const [sox] = await Promise.allSettled([this.fetchSOX(), this.fetchADR()]);
+      if(sox.status === 'fulfilled' && sox.value){
+        if(!External.get() && typeof External.set === 'function'){
+          try{ External.set(sox.value.value); }catch(e){}
+        }
       }
-    }
-    // 觸發重新渲染以顯示新數據
-    if(App.rows.length) App.render();
+      if(typeof App !== 'undefined' && App.rows && App.rows.length) App.render();
+    }catch(e){ console.warn('[SwingData.init]', e); }
   }
 };
 
-/* ── 波段回撤計算 ── */
-function calcDrawdown(closes, highs, lows, high52, low52){
-  const last = closes[closes.length - 1];
-  const ddFromHigh = ((last - high52) / high52) * 100;  // 負數 = 跌幅
-  const recFromLow = ((last - low52)  / low52)  * 100;  // 正數 = 反彈幅度
-
-  // 近 20 日波段高低點
-  const recent = closes.slice(-20);
-  const swingH = Math.max(...highs.slice(-20));
-  const swingL = Math.min(...lows.slice(-20));
-  const ddFromSwingH = ((last - swingH) / swingH) * 100;
-
-  // 相對位置 0~100（0=52週低點, 100=52週高點）
-  const relPos = ((last - low52) / (high52 - low52)) * 100;
-
-  return { ddFromHigh, recFromLow, ddFromSwingH, swingH, swingL, relPos, high52, low52, last };
-}
-
-/* ── 波段操作信號燈渲染 ── */
-function renderSwingPanel(ctx){
-  const { last, cRSI, cK, cD, pK, pD, cBoll, dirRatio,
-          chipStats, mtfResult, high52, low52,
-          cMA60, cMA120, cMA240 } = ctx;
-  const I = App.ind;
-  const n = App.rows.length;
-
-  // ── 五大波段指標評分 ──
-  // 1. 多時框共振（最重要，權重 x2）
-  const weeklyScore  = mtfResult?.weekly?.score  ?? 0;
-  const monthlyRatio = mtfResult?.monthly?.ratio ?? 0;
-  let mtfScore = 0;
-  if(weeklyScore >= 2 && monthlyRatio > 0.2)       mtfScore = 2;
-  else if(weeklyScore >= 1 || monthlyRatio > 0.15) mtfScore = 1;
-  else if(weeklyScore <= -2 && monthlyRatio < -0.2) mtfScore = -2;
-  else if(weeklyScore <= -1 || monthlyRatio < -0.15) mtfScore = -1;
-
-  // 2. 技術面強度（現有 dirRatio）
-  let techScore = 0;
-  if(dirRatio > 0.5)       techScore = 2;
-  else if(dirRatio > 0.2)  techScore = 1;
-  else if(dirRatio < -0.5) techScore = -2;
-  else if(dirRatio < -0.2) techScore = -1;
-
-  // 3. 法人籌碼（外資連續）
-  const foreignConsec = chipStats?.foreignConsec ?? 0;
-  const trustConsec   = chipStats?.trustConsec   ?? 0;
-  let chipScore = 0;
-  if(foreignConsec >= 5)                     chipScore = 2;
-  else if(foreignConsec >= 3)                chipScore = 1;
-  else if(foreignConsec <= -5)               chipScore = -2;
-  else if(foreignConsec <= -3)               chipScore = -1;
-  if(foreignConsec >= 3 && trustConsec >= 2) chipScore = Math.min(chipScore + 1, 2);
-
-  // 4. 回撤位置（52週低買高賣）
-  const dd = calcDrawdown(I.closes, I.highs, I.lows, high52, low52);
-  let posScore = 0;
-  if(dd.relPos < 20)       posScore = 2;   // 極度接近低點
-  else if(dd.relPos < 35)  posScore = 1;   // 低檔區間
-  else if(dd.relPos > 80)  posScore = -2;  // 極度接近高點
-  else if(dd.relPos > 65)  posScore = -1;  // 高檔區間
-
-  // 5. 超買超賣（RSI + KD）
-  let osScore = 0;
-  const rsiBuy  = cRSI < 35;
-  const rsiSell = cRSI > 65;
-  const kdBuy   = cK != null && cK < 30 && cK > cD;
-  const kdSell  = cK != null && cK > 70 && cK < cD;
-  if(rsiBuy && kdBuy)    osScore = 2;
-  else if(rsiBuy || kdBuy) osScore = 1;
-  else if(rsiSell && kdSell) osScore = -2;
-  else if(rsiSell || kdSell) osScore = -1;
-
-  const total = mtfScore + techScore + chipScore + posScore + osScore;
-  const maxScore = 10;
-
-  // 判斷
-  let lightClass, emoji, verdict, sub;
-  if(total >= 5){
-    lightClass = 'sl-buy';
-    emoji = '🟢';
-    verdict = '波段買進時機';
-    sub = '多項指標共振向上，可考慮分批建倉';
-  } else if(total >= 2){
-    lightClass = 'sl-buy';
-    emoji = '🟡';
-    verdict = '偏多，謹慎佈局';
-    sub = '偏向多方但非最佳時機，可小量試單';
-  } else if(total >= -1){
-    lightClass = 'sl-watch';
-    emoji = '⏳';
-    verdict = '觀察等待';
-    sub = '方向不明，耐心等待更明確訊號再進場';
-  } else if(total >= -4){
-    lightClass = 'sl-sell';
-    emoji = '🔴';
-    verdict = '偏空，謹慎持股';
-    sub = '多項指標轉弱，持股者考慮減碼或設保護停損';
-  } else {
-    lightClass = 'sl-sell';
-    emoji = '🚨';
-    verdict = '波段賣出訊號';
-    sub = '多指標共振向下，持股者應考慮出場保留現金';
-  }
-
-  // 五大信號卡片
-  const sigCard = (name, val, desc, cls) =>
-    `<div class="sw-sig ${cls}">
-      <div class="sw-name">${name}</div>
-      <div class="sw-val">${val}</div>
-      <div class="sw-desc">${desc}</div>
-    </div>`;
-
-  const mtfTxt = mtfScore >= 2 ? '🚀 週月雙多'
-               : mtfScore >= 1 ? '📈 偏多共振'
-               : mtfScore <= -2 ? '⚠️ 週月雙空'
-               : mtfScore <= -1 ? '📉 偏空分歧'
-               : '➖ 中性';
-  const techTxt = techScore >= 2 ? '強多頭格局' : techScore >= 1 ? '偏多' : techScore <= -2 ? '強空頭格局' : techScore <= -1 ? '偏空' : '中性整理';
-  const chipTxt = chipScore >= 2 ? `外資連買 ${foreignConsec}日` : chipScore >= 1 ? `外資買超中` : chipScore <= -2 ? `外資連賣 ${Math.abs(foreignConsec)}日` : chipScore <= -1 ? `外資賣超中` : '籌碼方向待確認';
-  const posPct  = dd.relPos.toFixed(0);
-  const posTxt  = posScore >= 2 ? `歷史低點區（${posPct}%）` : posScore >= 1 ? `中低檔（${posPct}%）` : posScore <= -2 ? `歷史高點區（${posPct}%）` : posScore <= -1 ? `中高檔（${posPct}%）` : `中性位置（${posPct}%）`;
-  const osTxt   = osScore >= 2 ? `RSI ${cRSI?.toFixed(0)} + KD 低位金叉` : osScore >= 1 ? `出現超賣訊號` : osScore <= -2 ? `RSI ${cRSI?.toFixed(0)} + KD 高位死叉` : osScore <= -1 ? `出現超買訊號` : `RSI ${cRSI?.toFixed(0)} 中性`;
-
-  const scoreC = (s) => s >= 1 ? 'sw-bull' : s <= -1 ? 'sw-bear' : 'sw-neut';
-
-  // ADR 區塊
-  const adr = SwingData._adr;
-  let adrHtml = '';
-  if(adr){
-    const tsmTWD   = adr.tsmUSD * adr.usdtwd * 5; // 1 ADR = 5 股
-    const twdClose = last;
-    const premium  = ((tsmTWD / twdClose) - 1) * 100;
-    const adrClass = premium > 1.5 ? 'premium' : premium < -1.5 ? 'discount' : 'neutral';
-    const adrLabel = premium > 1.5 ? '▲ 溢價 — 明日偏多' : premium < -1.5 ? '▼ 折價 — 明日偏空' : '≈ 平價';
-    const adrColor = premium > 1.5 ? 'var(--green)' : premium < -1.5 ? 'var(--red)' : 'var(--t2)';
-    adrHtml = `
-    <div class="adr-card">
-      <div class="adr-icon">🌐</div>
-      <div class="adr-body">
-        <div class="adr-title">TSM ADR 溢折價（美國 NYSE 前夜）</div>
-        <div class="adr-value" style="color:${adrColor}">
-          ${premium >= 0 ? '+' : ''}${premium.toFixed(2)}%
-          <span style="font-size:.75rem;font-weight:400;color:var(--t2)">
-            TSM ${adr.tsmUSD.toFixed(2)} USD → 折合 NT${tsmTWD.toFixed(0)} ｜ 2330收盤 ${twdClose}
-          </span>
-        </div>
-        <div class="adr-sub">
-          溢價 &gt;1.5% 代表市場對台積電看好，隔天台股偏正面；折價代表美股市場轉弱，注意開低風險。
-          <br>匯率：1 USD ≈ ${adr.usdtwd.toFixed(1)} TWD ｜ 資料時間：${new Date(adr.ts).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}
-        </div>
-      </div>
-      <div class="adr-badge ${adrClass}">${adrLabel}</div>
-    </div>`;
-  } else {
-    adrHtml = `
-    <div class="adr-card">
-      <div class="adr-icon">🌐</div>
-      <div class="adr-body">
-        <div class="adr-title">TSM ADR 溢折價</div>
-        <div class="adr-value"><span class="adr-badge loading">⏳ 抓取中…</span></div>
-        <div class="adr-sub">正在從 Yahoo Finance 抓取 TSM 美股與美元/台幣匯率</div>
-      </div>
-    </div>`;
-  }
-
-  // SOX 自動抓取顯示
-  const soxData = SwingData._sox;
-  let soxHtml = '';
-  if(soxData){
-    const soxPct = soxData.value.toFixed(2);
-    const soxColor = soxData.value > 1 ? 'var(--green)' : soxData.value < -1 ? 'var(--red)' : 'var(--yellow)';
-    const soxLabel = soxData.value > 1 ? '↑ 正面' : soxData.value < -1 ? '↓ 負面' : '→ 中性';
-    soxHtml = `
-    <div class="adr-card" style="margin-bottom:12px">
-      <div class="adr-icon">💻</div>
-      <div class="adr-body">
-        <div class="adr-title">費城半導體指數 SOX <span class="sox-auto-badge">⚡ 自動</span></div>
-        <div class="adr-value" style="color:${soxColor}">
-          ${soxPct > 0 ? '+' : ''}${soxPct}%
-          <span style="font-size:.75rem;font-weight:400;color:var(--t2)">
-            SOX ${soxData.cur?.toFixed(1)} (前收 ${soxData.prev?.toFixed(1)})
-          </span>
-        </div>
-        <div class="adr-sub">台積電與SOX相關係數 &gt;0.85，費半大漲通常領先台積電上漲 1~2 個交易日</div>
-      </div>
-      <div class="adr-badge ${soxData.value > 0 ? 'premium' : 'discount'}">${soxLabel}</div>
-    </div>`;
-  }
-
-  // 回撤儀表
-  const cursorPct = Math.min(Math.max(dd.relPos, 0), 100);
-  const ddHtml = `
-  <div class="drawdown-card">
-    <div class="dd-header">📉 52週位置 / 回撤儀表</div>
-    <div class="dd-bar-wrap">
-      <div class="dd-bar-fill" style="width:100%"></div>
-      <div class="dd-bar-cursor" style="left:calc(${cursorPct}% - 1.5px)"></div>
-    </div>
-    <div class="dd-labels">
-      <span>52週低 ${F.int(dd.low52)}</span>
-      <span style="color:var(--t2);font-weight:700">現在 ${F.int(dd.last)} (${dd.relPos.toFixed(0)}%)</span>
-      <span>52週高 ${F.int(dd.high52)}</span>
-    </div>
-    <div class="dd-stats">
-      <div class="dd-stat">
-        <div class="ds-label">距52週高點</div>
-        <div class="ds-val" style="color:${dd.ddFromHigh < -10 ? 'var(--green)' : dd.ddFromHigh > -5 ? 'var(--red)' : 'var(--yellow)'}">
-          ${dd.ddFromHigh.toFixed(1)}%
-        </div>
-      </div>
-      <div class="dd-stat">
-        <div class="ds-label">距52週低點反彈</div>
-        <div class="ds-val" style="color:var(--cyan)">${dd.recFromLow.toFixed(1)}%</div>
-      </div>
-      <div class="dd-stat">
-        <div class="ds-label">距近20日波段高</div>
-        <div class="ds-val" style="color:${dd.ddFromSwingH < -5 ? 'var(--green)' : 'var(--yellow)'}">
-          ${dd.ddFromSwingH.toFixed(1)}%
-        </div>
-      </div>
-      <div class="dd-stat">
-        <div class="ds-label">近20日波段區間</div>
-        <div class="ds-val" style="color:var(--t2);font-size:.85rem">${F.int(dd.swingL)} ~ ${F.int(dd.swingH)}</div>
-      </div>
-    </div>
-  </div>`;
-
-  // 波段操作行動步驟
-  let steps = [];
-  if(total >= 5){
-    steps = [
-      {n:'1', t:'確認停損點', d:`設在 ${F.int(dd.swingL)} 附近（近20日低點）或進場價 -7%`},
-      {n:'2', t:'分批進場', d:`30% 試單進場，站穩後再加 40%，突破前高補齊至 100%`},
-      {n:'3', t:'目標價設定', d:`第一目標 ${F.int(last * 1.08)} (+8%)，第二目標 ${F.int(dd.swingH * 1.02)} (前高+2%)`},
-      {n:'4', t:'持續觀察', d:'外資若轉賣超3日 or RSI > 70，減碼一半落袋'}
-    ];
-  } else if(total >= 2){
-    steps = [
-      {n:'1', t:'小量試單', d:'可用總資金 20~30% 建立初始倉位，不要重押'},
-      {n:'2', t:'等待確認', d:'等外資連續買超 3 日 + 週線轉多頭再加碼'},
-      {n:'3', t:'嚴守停損', d:`停損設在 ${F.int(last * 0.93)} (進場價 -7%)`},
-      {n:'4', t:'量能觀察', d:'成交量若持續低於均量，暫不加碼'}
-    ];
-  } else if(total >= -1){
-    steps = [
-      {n:'1', t:'場邊觀察', d:'不進場，等待明確的買進信號出現'},
-      {n:'2', t:'設定警報', d:`當股價跌至 ${F.int(last * 0.95)} 或 RSI < 35 時留意買點`},
-      {n:'3', t:'追蹤外資', d:'外資由賣轉買連續 2 日以上，可開始關注進場機會'},
-      {n:'4', t:'保留現金', d:'現金是最好的倉位，等好機會再動'}
-    ];
-  } else {
-    steps = [
-      {n:'1', t:'減碼或出場', d:'持股者建議分批賣出，保留 50% 以上現金'},
-      {n:'2', t:'停損優先', d:`持股停損設在 ${F.int(last * 0.95)}，跌破即執行`},
-      {n:'3', t:'等待落底', d:`目標等待 RSI < 35 + 外資連買 + 週線翻多再進場`},
-      {n:'4', t:'不抄底', d:'不要在趨勢未確認前逆勢建倉，等訊號再動'}
-    ];
-  }
-
-  const stepsHtml = steps.map(s =>
-    `<div class="sac-step">
-      <div class="sac-num">${s.n}</div>
-      <div class="sac-body"><strong>${s.t}</strong><span>${s.d}</span></div>
-    </div>`
-  ).join('');
-
-  // 外資期貨提示
-  const futuresHtml = `
-  <div class="futures-card">
-    <div class="fc-title">📑 外資期貨淨口數（盤後手動更新）
-      <a href="https://www.taifex.com.tw/cht/3/futContractsDate" target="_blank"
-         style="color:var(--cyan);font-size:.68rem;margin-left:6px;text-decoration:none">
-        → 台期所查詢 ↗
-      </a>
-    </div>
-    <div class="fc-grid">
-      <div class="fc-item">
-        <div class="fci-label">外資期貨淨口數</div>
-        <div class="fci-val" id="sw-futures-net" style="color:var(--t3)">— 請手動查詢</div>
-        <div class="fci-hint">正數=多單，負數=空單</div>
-      </div>
-      <div class="fc-item">
-        <div class="fci-label">前一日比較</div>
-        <div class="fci-val" id="sw-futures-diff" style="color:var(--t3)">—</div>
-        <div class="fci-hint">增加口數代表加碼</div>
-      </div>
-      <div class="fc-item">
-        <div class="fci-label">操作建議</div>
-        <div class="fci-val" id="sw-futures-sig" style="color:var(--t2);font-size:.85rem">輸入後自動判斷</div>
-        <div class="fci-hint">
-          <button onclick="SwingData.updateFutures()" class="btn btn-sm btn-ghost"
-            style="font-size:.65rem;padding:2px 8px;margin-top:4px">輸入</button>
-        </div>
-      </div>
-    </div>
-  </div>`;
-
-  return `
-  <!-- ══ I 波段操作專區 ══ -->
-  <div style="background:linear-gradient(135deg,rgba(59,130,246,.04),rgba(139,92,246,.04));
-    border:1.5px solid rgba(99,102,241,.2);border-radius:16px;padding:18px 20px;margin-bottom:14px">
-    <div class="sec" style="margin-bottom:14px;border-bottom:none">
-      ⚡ 波段操作專區
-      <span class="sec-cnt">低點進場、高點出場 — 整合多時框 × 籌碼 × 回撤 × 超買超賣，給出明確的波段操作建議</span>
-    </div>
-
-    <!-- 波段信號燈 + 五大信號 -->
-    <div style="display:grid;grid-template-columns:220px 1fr;gap:14px;margin-bottom:16px;align-items:start">
-      <div class="swing-master-light ${lightClass}">
-        <div class="sml-emoji">${emoji}</div>
-        <div class="sml-verdict" style="color:${total >= 2 ? 'var(--green)' : total >= -1 ? 'var(--yellow)' : 'var(--red)'}">${verdict}</div>
-        <div class="sml-sub">${sub}</div>
-        <div class="sml-score">波段評分 ${total > 0 ? '+' : ''}${total} / +${maxScore}</div>
-      </div>
-      <div class="swing-signals-grid">
-        ${sigCard('① 多時框共振', mtfTxt, '週線 + 月線同向是最強波段信號', scoreC(mtfScore))}
-        ${sigCard('② 技術面強度', techTxt, `方向比例 ${(dirRatio*100).toFixed(0)}%，多空指標共識`, scoreC(techScore))}
-        ${sigCard('③ 法人籌碼', chipTxt, '外資連續動向 — 跟對方向事半功倍', scoreC(chipScore))}
-        ${sigCard('④ 52週位置', posTxt, '越接近歷史低點，波段勝率越高', scoreC(posScore))}
-        ${sigCard('⑤ 超買超賣', osTxt, 'RSI + KD 複合，避免高點追漲低點殺跌', scoreC(osScore))}
-      </div>
-    </div>
-
-    <!-- 回撤儀表 -->
-    ${ddHtml}
-
-    <!-- ADR + SOX 自動抓取 -->
-    ${soxHtml}
-    ${adrHtml}
-
-    <!-- 外資期貨 -->
-    ${futuresHtml}
-
-    <!-- 波段操作行動步驟 -->
-    <div class="swing-action-card" style="margin-bottom:0">
-      <div class="sac-title">🗺️ 現在的波段操作步驟</div>
-      <div class="sac-steps">${stepsHtml}</div>
-    </div>
-  </div>`;
-}
-
-/* ── 外資期貨手動輸入 ── */
 SwingData.updateFutures = function(){
   const cur  = prompt('外資期貨今日淨口數（正數=多單，負數=空單）:');
   const prev = prompt('外資期貨昨日淨口數:');
   if(cur === null) return;
-  const curN  = parseInt(cur,  10);
-  const prevN = parseInt(prev, 10);
+  const curN = parseInt(cur, 10), prevN = parseInt(prev, 10);
   if(isNaN(curN)) return;
   const diff = isNaN(prevN) ? null : curN - prevN;
   const netEl  = document.getElementById('sw-futures-net');
   const diffEl = document.getElementById('sw-futures-diff');
   const sigEl  = document.getElementById('sw-futures-sig');
-  if(netEl)  netEl.textContent  = `${curN > 0 ? '+' : ''}${curN.toLocaleString()} 口`;
-  if(netEl)  netEl.style.color  = curN > 0 ? 'var(--green)' : curN < 0 ? 'var(--red)' : 'var(--t2)';
-  if(diff !== null && diffEl){
-    diffEl.textContent = `${diff > 0 ? '+' : ''}${diff.toLocaleString()} 口`;
-    diffEl.style.color = diff > 0 ? 'var(--green)' : diff < 0 ? 'var(--red)' : 'var(--t2)';
-  }
+  if(netEl){ netEl.textContent = `${curN > 0 ? '+' : ''}${curN.toLocaleString()} 口`; netEl.style.color = curN > 0 ? 'var(--green)' : curN < 0 ? 'var(--red)' : 'var(--t2)'; }
+  if(diff !== null && diffEl){ diffEl.textContent = `${diff > 0 ? '+' : ''}${diff.toLocaleString()} 口`; diffEl.style.color = diff > 0 ? 'var(--green)' : diff < 0 ? 'var(--red)' : 'var(--t2)'; }
   if(sigEl){
     if(curN >= 10000 && diff > 0)       { sigEl.textContent='🚀 外資大量做多+加碼'; sigEl.style.color='var(--green)'; }
     else if(curN >= 5000)               { sigEl.textContent='📈 外資淨多，偏多'; sigEl.style.color='var(--green)'; }
@@ -7086,7 +6650,156 @@ SwingData.updateFutures = function(){
   }
 };
 
-App = {
+/* ── 波段操作信號燈 ── */
+function renderSwingPanel(ctx){
+  try{
+    if(!ctx || !App.ind || !App.rows || !App.rows.length) return '';
+    const { last, cRSI, cK, cD, dirRatio, chipStats, mtfResult, high52, low52 } = ctx;
+    const I = App.ind;
+
+    // ── 五大波段評分 ──
+    const weeklyScore  = mtfResult && mtfResult.weekly  ? (mtfResult.weekly.score  || 0) : 0;
+    const monthlyRatio = mtfResult && mtfResult.monthly ? (mtfResult.monthly.ratio || 0) : 0;
+    let mtfScore = 0;
+    if(weeklyScore >= 2 && monthlyRatio > 0.2)        mtfScore = 2;
+    else if(weeklyScore >= 1 || monthlyRatio > 0.15)  mtfScore = 1;
+    else if(weeklyScore <= -2 && monthlyRatio < -0.2) mtfScore = -2;
+    else if(weeklyScore <= -1 || monthlyRatio < -0.15) mtfScore = -1;
+
+    const techScore = dirRatio > 0.5 ? 2 : dirRatio > 0.2 ? 1 : dirRatio < -0.5 ? -2 : dirRatio < -0.2 ? -1 : 0;
+
+    const foreignConsec = chipStats && chipStats.foreignConsec ? chipStats.foreignConsec : 0;
+    const trustConsec   = chipStats && chipStats.trustConsec   ? chipStats.trustConsec   : 0;
+    let chipScore = foreignConsec >= 5 ? 2 : foreignConsec >= 3 ? 1 : foreignConsec <= -5 ? -2 : foreignConsec <= -3 ? -1 : 0;
+    if(foreignConsec >= 3 && trustConsec >= 2) chipScore = Math.min(chipScore + 1, 2);
+
+    const dd = calcDrawdown(I.closes, I.highs, I.lows, high52, low52);
+    const posScore = dd.relPos < 20 ? 2 : dd.relPos < 35 ? 1 : dd.relPos > 80 ? -2 : dd.relPos > 65 ? -1 : 0;
+
+    const rsiBuy = cRSI != null && cRSI < 35, rsiSell = cRSI != null && cRSI > 65;
+    const kdBuy  = cK   != null && cK   < 30, kdSell  = cK   != null && cK   > 70;
+    const osScore = (rsiBuy && kdBuy) ? 2 : (rsiBuy || kdBuy) ? 1 : (rsiSell && kdSell) ? -2 : (rsiSell || kdSell) ? -1 : 0;
+
+    const total = mtfScore + techScore + chipScore + posScore + osScore;
+
+    let lightClass, emoji, verdict, sub;
+    if(total >= 5)       { lightClass='sl-buy';   emoji='🟢'; verdict='波段買進時機';   sub='多項指標共振向上，可考慮分批建倉'; }
+    else if(total >= 2)  { lightClass='sl-buy';   emoji='🟡'; verdict='偏多，謹慎佈局'; sub='偏向多方但非最佳時機，可小量試單'; }
+    else if(total >= -1) { lightClass='sl-watch'; emoji='⏳'; verdict='觀察等待';       sub='方向不明，耐心等待更明確訊號再進場'; }
+    else if(total >= -4) { lightClass='sl-sell';  emoji='🔴'; verdict='偏空，謹慎持股'; sub='多項指標轉弱，持股者考慮減碼或設保護停損'; }
+    else                 { lightClass='sl-sell';  emoji='🚨'; verdict='波段賣出訊號';   sub='多指標共振向下，持股者應考慮出場保留現金'; }
+
+    const sc = s => s >= 1 ? 'sw-bull' : s <= -1 ? 'sw-bear' : 'sw-neut';
+    const mtfTxt = mtfScore>=2?'🚀 週月雙多':mtfScore>=1?'📈 偏多共振':mtfScore<=-2?'⚠️ 週月雙空':mtfScore<=-1?'📉 偏空分歧':'➖ 中性';
+    const techTxt = techScore>=2?'強多頭格局':techScore>=1?'偏多':techScore<=-2?'強空頭格局':techScore<=-1?'偏空':'中性整理';
+    const chipTxt = chipScore>=2?`外資連買 ${foreignConsec}日`:chipScore>=1?'外資買超中':chipScore<=-2?`外資連賣 ${Math.abs(foreignConsec)}日`:chipScore<=-1?'外資賣超中':'籌碼方向待確認';
+    const posTxt  = `${dd.relPos.toFixed(0)}% 相對位置 ${posScore>=2?'(歷史低點區)':posScore>=1?'(中低檔)':posScore<=-2?'(歷史高點區)':posScore<=-1?'(中高檔)':'(中性)'}`;
+    const osTxt   = cRSI != null ? `RSI ${cRSI.toFixed(0)} ${osScore>=1?'超賣':osScore<=-1?'超買':'中性'}` : '指標讀取中';
+
+    const sigCard = (name, val, desc, cls) =>
+      `<div class="sw-sig ${cls}"><div class="sw-name">${name}</div><div class="sw-val">${val}</div><div class="sw-desc">${desc}</div></div>`;
+
+    // ADR
+    const adr = SwingData._adr;
+    let adrHtml = '';
+    if(adr && adr.tsmUSD){
+      const tsmTWD  = adr.tsmUSD * adr.usdtwd * 5;
+      const premium = last ? ((tsmTWD / last) - 1) * 100 : 0;
+      const adrCls  = premium > 1.5 ? 'premium' : premium < -1.5 ? 'discount' : 'neutral';
+      const adrLbl  = premium > 1.5 ? '▲ 溢價 — 隔日偏多' : premium < -1.5 ? '▼ 折價 — 隔日偏空' : '≈ 平價';
+      const adrClr  = premium > 1.5 ? 'var(--green)' : premium < -1.5 ? 'var(--red)' : 'var(--t2)';
+      adrHtml = `<div class="adr-card"><div class="adr-icon">🌐</div><div class="adr-body">
+        <div class="adr-title">TSM ADR 溢折價（NYSE 前夜）</div>
+        <div class="adr-value" style="color:${adrClr}">${premium>=0?'+':''}${premium.toFixed(2)}%
+          <span style="font-size:.75rem;font-weight:400;color:var(--t2)"> TSM ${adr.tsmUSD.toFixed(2)} USD → NT${tsmTWD.toFixed(0)} ｜ 2330收 ${last}</span></div>
+        <div class="adr-sub">溢價&gt;1.5%=市場看好台積電，隔天台股偏正面；折價=美股轉弱，注意開低風險<br>匯率 1USD≈${adr.usdtwd.toFixed(1)}TWD ｜ ${new Date(adr.ts).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div><div class="adr-badge ${adrCls}">${adrLbl}</div></div>`;
+    } else {
+      adrHtml = `<div class="adr-card"><div class="adr-icon">🌐</div><div class="adr-body">
+        <div class="adr-title">TSM ADR 溢折價</div>
+        <div class="adr-value"><span class="adr-badge loading">⏳ 抓取中…</span></div>
+        <div class="adr-sub">正在從 Yahoo Finance 抓取 TSM 美股與匯率</div></div></div>`;
+    }
+
+    // SOX
+    const soxD = SwingData._sox;
+    let soxHtml = '';
+    if(soxD && soxD.value != null){
+      const p = soxD.value, clr = p>1?'var(--green)':p<-1?'var(--red)':'var(--yellow)';
+      const lbl = p>1?'↑ 正面':p<-1?'↓ 負面':'→ 中性';
+      soxHtml = `<div class="adr-card" style="margin-bottom:12px"><div class="adr-icon">💻</div><div class="adr-body">
+        <div class="adr-title">費城半導體指數 SOX <span class="sox-auto-badge">⚡ 自動抓取</span></div>
+        <div class="adr-value" style="color:${clr}">${p>=0?'+':''}${p.toFixed(2)}%
+          <span style="font-size:.75rem;font-weight:400;color:var(--t2)"> ${soxD.cur!=null?soxD.cur.toFixed(1):''}</span></div>
+        <div class="adr-sub">台積電與SOX相關係數&gt;0.85，費半大漲通常領先台積電 1~2 個交易日</div>
+      </div><div class="adr-badge ${p>0?'premium':'discount'}">${lbl}</div></div>`;
+    }
+
+    // 回撤儀表
+    const cur = Math.min(Math.max(dd.relPos, 0), 100);
+    const ddHtml = `<div class="drawdown-card">
+      <div class="dd-header">📉 52週位置 / 回撤儀表</div>
+      <div class="dd-bar-wrap"><div class="dd-bar-fill"></div><div class="dd-bar-cursor" style="left:calc(${cur}% - 1.5px)"></div></div>
+      <div class="dd-labels"><span>52週低 ${F.int(dd.low52)}</span><span style="color:var(--t2);font-weight:700">現在 ${F.int(dd.last)} (${dd.relPos.toFixed(0)}%)</span><span>52週高 ${F.int(dd.high52)}</span></div>
+      <div class="dd-stats">
+        <div class="dd-stat"><div class="ds-label">距52週高</div><div class="ds-val" style="color:${dd.ddFromHigh<-10?'var(--green)':dd.ddFromHigh>-5?'var(--red)':'var(--yellow)'}">${dd.ddFromHigh.toFixed(1)}%</div></div>
+        <div class="dd-stat"><div class="ds-label">自低點反彈</div><div class="ds-val" style="color:var(--cyan)">${dd.recFromLow.toFixed(1)}%</div></div>
+        <div class="dd-stat"><div class="ds-label">距近20日高</div><div class="ds-val" style="color:${dd.ddFromSwingH<-5?'var(--green)':'var(--yellow)'}">${dd.ddFromSwingH.toFixed(1)}%</div></div>
+        <div class="dd-stat"><div class="ds-label">近20日區間</div><div class="ds-val" style="color:var(--t2);font-size:.85rem">${F.int(dd.swingL)}~${F.int(dd.swingH)}</div></div>
+      </div></div>`;
+
+    // 外資期貨
+    const futHtml = `<div class="futures-card">
+      <div class="fc-title">📑 外資期貨淨口數
+        <a href="https://www.taifex.com.tw/cht/3/futContractsDate" target="_blank" style="color:var(--cyan);font-size:.68rem;margin-left:6px;text-decoration:none">→ 台期所 ↗</a>
+      </div>
+      <div class="fc-grid">
+        <div class="fc-item"><div class="fci-label">今日淨口數</div><div class="fci-val" id="sw-futures-net" style="color:var(--t3)">— 請手動查詢</div><div class="fci-hint">正數=多單</div></div>
+        <div class="fc-item"><div class="fci-label">與前日差</div><div class="fci-val" id="sw-futures-diff" style="color:var(--t3)">—</div><div class="fci-hint">增加=加碼</div></div>
+        <div class="fc-item"><div class="fci-label">判讀</div><div class="fci-val" id="sw-futures-sig" style="color:var(--t2);font-size:.85rem">輸入後自動判斷</div>
+          <div class="fci-hint"><button onclick="SwingData.updateFutures()" class="btn btn-sm btn-ghost" style="font-size:.65rem;padding:2px 8px;margin-top:4px">輸入</button></div>
+        </div>
+      </div></div>`;
+
+    // 操作步驟
+    let steps;
+    if(total >= 5)      steps=[{n:'1',t:'確認停損',d:`設在 ${F.int(dd.swingL)} 附近或進場價 -7%`},{n:'2',t:'分批進場',d:'30% 試單 → 站穩後 +40% → 突破前高補齊'},{n:'3',t:'目標價',d:`第一目標 ${F.int(last*1.08)} (+8%)，第二目標 ${F.int(dd.swingH*1.02)}`},{n:'4',t:'持續觀察',d:'外資轉賣超3日或RSI>70，減碼一半落袋'}];
+    else if(total >= 2) steps=[{n:'1',t:'小量試單',d:'20~30% 初始倉位，不重押'},{n:'2',t:'等待確認',d:'外資連買3日+週線轉多再加碼'},{n:'3',t:'嚴守停損',d:`設在 ${F.int(last*0.93)} (進場價 -7%)`},{n:'4',t:'量能觀察',d:'量持續低於均量，暫不加碼'}];
+    else if(total >= -1) steps=[{n:'1',t:'場邊觀察',d:'不進場，等待明確買進信號'},{n:'2',t:'設警報',d:`股價跌至 ${F.int(last*0.95)} 或RSI<35時留意`},{n:'3',t:'追蹤外資',d:'外資由賣轉買連續2日，開始關注進場'},{n:'4',t:'保留現金',d:'現金是最好的倉位'}];
+    else                steps=[{n:'1',t:'減碼出場',d:'分批賣出，保留50%以上現金'},{n:'2',t:'停損優先',d:`停損設在 ${F.int(last*0.95)}，跌破即執行`},{n:'3',t:'等待落底',d:'等RSI<35+外資連買+週線翻多再進場'},{n:'4',t:'不抄底',d:'趨勢未確認前不逆勢建倉'}];
+
+    const stepsHtml = steps.map(s=>`<div class="sac-step"><div class="sac-num">${s.n}</div><div class="sac-body"><strong>${s.t}</strong><span>${s.d}</span></div></div>`).join('');
+
+    const vColor = total >= 2 ? 'var(--green)' : total >= -1 ? 'var(--yellow)' : 'var(--red)';
+
+    return `<div style="background:linear-gradient(135deg,rgba(59,130,246,.04),rgba(139,92,246,.04));border:1.5px solid rgba(99,102,241,.2);border-radius:16px;padding:18px 20px;margin-bottom:14px">
+      <div class="sec" style="margin-bottom:14px;border-bottom:none">⚡ 波段操作專區
+        <span class="sec-cnt">低點進場、高點出場 — 整合多時框×籌碼×回撤×超買超賣，給出明確的波段操作建議</span></div>
+      <div style="display:grid;grid-template-columns:200px 1fr;gap:14px;margin-bottom:16px;align-items:start">
+        <div class="swing-master-light ${lightClass}">
+          <div class="sml-emoji">${emoji}</div>
+          <div class="sml-verdict" style="color:${vColor}">${verdict}</div>
+          <div class="sml-sub">${sub}</div>
+          <div class="sml-score">波段評分 ${total>0?'+':''}${total} / +10</div>
+        </div>
+        <div class="swing-signals-grid">
+          ${sigCard('① 多時框共振', mtfTxt, '週線+月線同向是最強波段信號', sc(mtfScore))}
+          ${sigCard('② 技術面強度', techTxt, `方向比例 ${(dirRatio*100).toFixed(0)}%`, sc(techScore))}
+          ${sigCard('③ 法人籌碼', chipTxt, '外資連續動向跟對方向事半功倍', sc(chipScore))}
+          ${sigCard('④ 52週位置', posTxt, '越接近歷史低點波段勝率越高', sc(posScore))}
+          ${sigCard('⑤ 超買超賣', osTxt, 'RSI+KD複合避免高追低殺', sc(osScore))}
+        </div>
+      </div>
+      ${ddHtml}${soxHtml}${adrHtml}${futHtml}
+      <div class="swing-action-card"><div class="sac-title">🗺️ 現在的波段操作步驟</div><div class="sac-steps">${stepsHtml}</div></div>
+    </div>`;
+  }catch(e){
+    console.error('[renderSwingPanel]', e);
+    return '';
+  }
+}
+
+let App = {
   rows: [],
   ind: {},
   currentTF: 60,
@@ -7423,7 +7136,7 @@ App = {
         '根據技術指標告訴你現在適不適合進場，以及建議的分批操作方式',
         '操作建議','strategy') +
       renderBuySellPanel(ctx) +
-      renderSwingPanel(ctx) +
+      (()=>{try{return renderSwingPanel(ctx);}catch(e){return '';}})() +
       // ✦ 指標白話解讀（Task 16，新手友善；進階模式隱藏）
       `<div class="beg-only">` + renderIndicatorMeaning(ctx) + `</div>` +
       renderConflScore(ctx) +
@@ -11740,9 +11453,7 @@ function closeChecklistModal(){
 })();
 
 Theme.init();
-
-// ✦ 波段模組：非同步在背景抓取 ADR/SOX（不影響主流程）
-setTimeout(() => SwingData.init(), 500);
+setTimeout(() => SwingData.init(), 800);
 
 App.init().finally(() => {
   AutoRefresh.start();
