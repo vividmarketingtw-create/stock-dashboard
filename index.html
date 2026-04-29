@@ -865,6 +865,12 @@ body.light .hd{ background:rgba(255,255,255,0.95); }
   max-height:9999px;opacity:1}
 .sec-body.collapsed{max-height:0 !important;opacity:0;pointer-events:none}
 
+/* ─── 新手/進階模式 CSS 切換 ─── */
+/* adv-only：進階模式才顯示，新手模式隱藏 */
+body:not(.adv-mode) .adv-only { display: none !important; }
+/* beg-only：新手模式才顯示，進階模式隱藏 */
+body.adv-mode .beg-only { display: none !important; }
+
 /* ─── Keyboard shortcuts overlay ─── */
 .kbd-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);
   display:none;align-items:center;justify-content:center;z-index:3000;padding:20px}
@@ -6666,14 +6672,14 @@ let App = {
       renderOneLiner(ctx) +
       // ✦ 五步決策引導列
       renderDecisionGuide() +
-      // ✦ 新手輔助區（折疊，不佔第一屏空間）
-      `<details class="guide-collapsible">
+      // ✦ 新手輔助區（折疊，不佔第一屏空間；進階模式隱藏）
+      `<div class="beg-only"><details class="guide-collapsible">
         <summary>🗺️ 新手學習工具 &amp; 看盤引導</summary>
         <div class="guide-collapsible-body">
           ${renderLearningPath()}
           ${renderBeginnerFlow()}
         </div>
-      </details>` +
+      </details></div>` +
       renderDailySummary(ctx) +
       renderLearnCard(ctx) +
       renderEventsBanner() +
@@ -6709,8 +6715,8 @@ let App = {
         '根據技術指標告訴你現在適不適合進場，以及建議的分批操作方式',
         '操作建議','strategy') +
       renderBuySellPanel(ctx) +
-      // ✦ 指標白話解讀（Task 16，新手友善）
-      renderIndicatorMeaning(ctx) +
+      // ✦ 指標白話解讀（Task 16，新手友善；進階模式隱藏）
+      `<div class="beg-only">` + renderIndicatorMeaning(ctx) + `</div>` +
       renderConflScore(ctx) +
       renderEntryPanel(ctx) +
       renderDailyBrief(ctx) +
@@ -6720,7 +6726,7 @@ let App = {
         '趨勢 vs 震盪判斷、ADX 市場情境、美股費半（SOX）領先參考',
         '環境分析','analysis') +
       renderMarketRegime(ctx) +
-      renderDuKDResonance(ctx) +
+      `<div class="adv-only">` + renderDuKDResonance(ctx) + `</div>` +
       renderMorning(ctx) +
 
       // ══ F 明日展望 ══
@@ -6730,7 +6736,8 @@ let App = {
       renderPredictionPanel(ctx) +
       renderScoreHistory() +
 
-      // ══ G 深度分析（進階）══
+      // ══ G 深度分析（進階；新手模式整區隱藏）══
+      `<div class="adv-only">` +
       renderGroupHeader('G','🔬','深度分析（進階）',
         '完整的指標數值、籌碼面、均線矩陣與統計報告，適合想深入研究的投資人',
         '進階內容','advanced') +
@@ -6742,6 +6749,7 @@ let App = {
       renderRS(ctx) +
       renderSOXCorr(ctx) +
       renderFundamentals() +
+      `</div>` +
 
       // ══ H 我的操作紀錄 ══
       renderGroupHeader('H','💼','我的操作紀錄',
@@ -6749,8 +6757,10 @@ let App = {
         '個人化','personal') +
       renderPosCalc(ctx) +
       renderJournal(ctx) +
+      `<div class="adv-only">` +
       renderComboBacktest(ctx) +
       renderFalseSignals() +
+      `</div>` +
 
       renderExportBar(ctx) +
       renderFooter(ctx) +
@@ -10531,25 +10541,14 @@ function scrollToAnchor(id){
 
 /* ─── Task 14: 模式切換 ─── */
 function setViewMode(mode){
-  localStorage.setItem('tsmc_view_mode', mode === 'beginner' ? 'beginner' : 'advanced');
-  // 在進階模式顯示深度分析區塊；新手模式折疊它們
-  const advancedIds = ['sec-analysis','sec-indicators','sec-ma','sec-volume','sec-sr'];
   const isAdv = mode === 'advanced';
-  advancedIds.forEach(id => {
-    const el = document.getElementById(id);
-    if(!el) return;
-    const body = el.querySelector('.sec-body');
-    const tog  = el.querySelector('.sec-toggle');
-    if(!body) return;
-    if(isAdv){
-      body.classList.remove('collapsed');
-      if(tog) tog.classList.remove('collapsed');
-    } else {
-      body.classList.add('collapsed');
-      if(tog) tog.classList.add('collapsed');
-    }
+  localStorage.setItem('tsmc_view_mode', isAdv ? 'advanced' : 'beginner');
+  // CSS body-class 控制 .adv-only / .beg-only 可見性（無需重新 render）
+  document.body.classList.toggle('adv-mode', isAdv);
+  // 更新 pill 按鈕 active 狀態
+  document.querySelectorAll('.mode-pill-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', isAdv ? i === 1 : i === 0);
   });
-  App.render();
 }
 
 /* ─── Task 15: 交易前五問清單 Modal ─── */
@@ -10659,9 +10658,9 @@ App.init().finally(() => {
   LivePrice.start();
   IntradayChart.start();
   initKeyboardShortcuts();
-  // 初始化時套用已儲存的模式
+  // 初始化時套用已儲存的模式（直接設 body class，不觸發 render）
   const savedMode = localStorage.getItem('tsmc_view_mode') || 'beginner';
-  if(savedMode === 'advanced') setViewMode('advanced');
+  document.body.classList.toggle('adv-mode', savedMode === 'advanced');
 });
 </script>
 </body>
