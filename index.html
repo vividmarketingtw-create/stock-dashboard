@@ -786,6 +786,12 @@ body.light .hd{ background:rgba(255,255,255,0.95); }
   display:flex;align-items:flex-start;gap:8px;flex:1;min-width:160px;
   background:var(--card2);border-radius:10px;padding:10px 12px;
   border:1px solid var(--border);
+  cursor:pointer;transition:background .18s,border-color .18s,transform .15s;
+  text-decoration:none;
+}
+.bf-step:hover{
+  background:rgba(99,102,241,.1);border-color:var(--purple);
+  transform:translateY(-2px);
 }
 .bf-step-num{
   width:22px;height:22px;border-radius:50%;
@@ -3649,7 +3655,7 @@ function renderEntryPanel(ctx){
   const bollPct = ctx.bollPct;
   const cBoll = ctx.cBoll, last = ctx.last;
   return `
-  <div class="sec">🎯 進出場時機評分 <span class="sec-cnt">0~100 分評估「現在是好的進場時機嗎？」— 分數越高越適合買進，低於 40 分建議等待</span></div>
+  <div class="sec" id="anchor-entry">🎯 進出場時機評分 <span class="sec-cnt">0~100 分評估「現在是好的進場時機嗎？」— 分數越高越適合買進，低於 40 分建議等待</span></div>
   <div class="entry-panel">
     <div class="entry-top">
       <div class="entry-score-ring">
@@ -4327,24 +4333,24 @@ function renderBeginnerFlow(){
     <div class="bf-card-body">
       <div class="bf-card-title">新手看盤三步驟 — 每次照這個順序，不會迷失</div>
       <div class="bf-steps">
-        <div class="bf-step">
+        <div class="bf-step" onclick="document.getElementById('anchor-summary')?.scrollIntoView({behavior:'smooth',block:'start'})" title="點擊跳到今日速讀卡">
           <div class="bf-step-num">1</div>
           <div class="bf-step-text">
-            <strong>看今日速讀卡</strong>
+            <strong>看今日速讀卡 ↓</strong>
             <span>先掌握今天大方向：漲跌多少、整體是多頭還是空頭</span>
           </div>
         </div>
-        <div class="bf-step">
+        <div class="bf-step" onclick="document.getElementById('anchor-entry')?.scrollIntoView({behavior:'smooth',block:'start'})" title="點擊跳到進出場評分">
           <div class="bf-step-num">2</div>
           <div class="bf-step-text">
-            <strong>看進出場評分</strong>
+            <strong>看進出場評分 ↓</strong>
             <span>分數高才考慮行動，低於 40 分就等待，不要強行操作</span>
           </div>
         </div>
-        <div class="bf-step">
+        <div class="bf-step" onclick="document.getElementById('anchor-poscalc')?.scrollIntoView({behavior:'smooth',block:'start'})" title="點擊跳到部位計算機">
           <div class="bf-step-num">3</div>
           <div class="bf-step-text">
-            <strong>用部位計算機</strong>
+            <strong>用部位計算機 ↓</strong>
             <span>確認停損位置、買幾張，算好再下單，嚴守風險才能長期獲利</span>
           </div>
         </div>
@@ -4585,7 +4591,7 @@ function renderDailySummary(ctx){
   ).join('');
 
   return `
-  <div class="summary-card">
+  <div class="summary-card" id="anchor-summary">
     <div class="summary-top">
       <span class="summary-label">📰 今日盤面速讀</span>
       <span class="summary-tag ${tagCls}">${tagLabel}</span>
@@ -4917,7 +4923,7 @@ function renderPosCalc(ctx){
   const lotValue = last * 1000;
   const atrRisk = cATR ? Math.round(cATR * 1000) : null;
   return `
-  <div class="sec">💰 部位計算機 <span class="sec-cnt">輸入資金和進場價，自動算出應買幾張、停損設哪裡、目標獲利多少 — 嚴守停損是長期獲利的關鍵</span></div>
+  <div class="sec" id="anchor-poscalc">💰 部位計算機 <span class="sec-cnt">輸入資金和進場價，自動算出應買幾張、停損設哪裡、目標獲利多少 — 嚴守停損是長期獲利的關鍵</span></div>
   <!-- 風險意識提示卡 -->
   <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:12px;padding:14px 18px;margin-bottom:12px;display:flex;gap:12px;align-items:flex-start">
     <span style="font-size:1.3rem;line-height:1">⚠️</span>
