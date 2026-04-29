@@ -48,6 +48,35 @@ body.light .legend,body.light .morning-card,body.light .mtf-card{
   box-shadow:0 2px 8px rgba(0,0,0,.08)
 }
 /* ─── 切換按鈕 ─── */
+/* ✦ 五步決策引導列 */
+.decision-guide{
+  display:flex;align-items:center;flex-wrap:wrap;gap:0;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:10px 18px;margin-bottom:14px;
+  font-size:.75rem;font-weight:600;overflow:hidden;
+}
+.dg-step{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:8px;cursor:pointer;
+  color:var(--t2);transition:background .2s,color .2s;white-space:nowrap;
+  text-decoration:none;
+}
+.dg-step:hover{background:rgba(99,102,241,.12);color:var(--purple);text-decoration:none}
+.dg-step .dg-num{
+  width:20px;height:20px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.65rem;font-weight:800;flex-shrink:0;
+  background:var(--card2);border:1px solid var(--border);color:var(--t2);
+}
+.dg-step:hover .dg-num{background:var(--purple);border-color:var(--purple);color:#fff}
+.dg-arrow{color:var(--t3);font-size:.8rem;padding:0 2px;flex-shrink:0}
+.dg-title{font-size:.65rem;color:var(--t3);margin-right:10px;white-space:nowrap;flex-shrink:0;font-weight:700;letter-spacing:.3px}
+@media(max-width:600px){
+  .decision-guide{gap:0;padding:8px 10px}
+  .dg-arrow{display:none}
+  .dg-step{padding:5px 8px;font-size:.7rem}
+}
+
 .theme-btn{
   position:fixed;bottom:24px;right:24px;z-index:999;
   width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;
@@ -1214,9 +1243,12 @@ const Data = {
     if(!forceRefresh){
       const cached = Cache.load();
       if(Cache.isFresh(cached) && cached.rows && cached.rows.length){
+        // ✦ 快取命中時仍即時補抓大盤方向（0050 輕量、不影響載入速度）
+        const twii = await this.fetchTWII().catch(()=>null);
         return {
           rows: cached.rows.map(r => ({ ...r, date: new Date(r.date) })),
           foreign: cached.foreign,
+          twii,
           cacheAgeMs: Date.now() - cached.ts,
           fromCache: true
         };
@@ -1235,16 +1267,49 @@ const Data = {
     for(const r of results) if(r.status === 'fulfilled') all.push(...r.value);
     all.sort((a, b) => a.date - b.date);
 
-    // ─── 抓取外資資料（項目 7） ───
-    let foreign = null;
+    // ─── 並行抓取：外資資料 + 大盤方向（0050 ETF） ───
+    let foreign = null, twii = null;
+    const parallelFetches = [];
     if(all.length){
       const lastYmd = all[all.length - 1].ymd;
-      foreign = await this.fetchForeign(lastYmd);
+      parallelFetches.push(this.fetchForeign(lastYmd).then(v => { foreign = v; }));
     }
+    parallelFetches.push(this.fetchTWII().then(v => { twii = v; }));
+    await Promise.allSettled(parallelFetches);
 
     // ─── 寫入快取 ───
     Cache.save({ rows: all, foreign });
-    return { rows: all, foreign, cacheAgeMs: 0, fromCache: false };
+    return { rows: all, foreign, twii, cacheAgeMs: 0, fromCache: false };
+  },
+
+  // ✦ 新增：抓取元大台灣50（0050）近期資料，作為大盤（TAIEX）方向代理指標
+  // 0050 與 TAIEX 相關係數 > 0.97，且可直接透過 TWSE STOCK_DAY API 取得
+  async fetchTWII(){
+    try{
+      const now = new Date();
+      const ds = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}01`;
+      const url = `https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=${ds}&stockNo=0050`;
+      const r = await fetch(url);
+      if(!r.ok) return null;
+      const j = await r.json();
+      if(j.stat !== 'OK' || !Array.isArray(j.data) || j.data.length < 3) return null;
+      const closes = j.data.map(row => F.parseNum(row[6])).filter(v => !isNaN(v) && v > 0);
+      if(closes.length < 3) return null;
+      const n = closes.length;
+      const last5avg = closes.slice(-5).reduce((a,b)=>a+b,0)/Math.min(closes.length,5);
+      const prev5avg = closes.slice(-10,-5).reduce((a,b)=>a+b,0)/Math.min(5,Math.max(0,closes.length-5));
+      const last = closes[n-1];
+      const prev = closes[n-2] || last;
+      const chg5 = prev5avg > 0 ? (last5avg - prev5avg) / prev5avg * 100 : 0;
+      const chg1 = prev > 0 ? (last - prev) / prev * 100 : 0;
+      return {
+        last, chg1,
+        // 5日趨勢：正=市場偏多，負=市場偏空
+        trend5: chg5,
+        // 方向分類
+        direction: chg5 > 2 ? 'bull' : chg5 < -2 ? 'bear' : 'neutral'
+      };
+    }catch(e){ return null; }
   },
 
   async fetchForeign(ymd){
@@ -1829,14 +1894,16 @@ const SR = {
 const Score = {
   // 各指標權重（按可信度與獨立性分配）
   WEIGHTS: {
-    // 趨勢類（合計 5）
-    ma5: 0.5, ma20: 1.0, ma60: 1.0, maAlign: 1.5, macdDir: 1.0,
+    // ✦ 趨勢類（合計 5.0）：ma5/ma20/ma60 降為次要補充（去共線性），maAlign 主導趨勢群組
+    // 原設計：ma5=0.5, ma20=1.0, ma60=1.0, maAlign=1.5 → 三個 MA 與 maAlign 高度重疊，等於趨勢被放大 4 次
+    // 新設計：maAlign 主導（2.5），個別 MA 僅作輕量補充（當 maAlign=0 即均線糾結時，提供細分資訊）
+    ma5: 0.3, ma20: 0.5, ma60: 0.7, maAlign: 2.5, macdDir: 1.0,
     // 動能類（合計 4）
     kdCross: 1.0, kdLevel: 0.5, rsi: 1.0, psy: 1.0, macdMom: 0.5,
     // 量價類（合計 3.5）
     vol: 1.5, obv: 2.0,
-    // 波動/位置類（合計 3）
-    boll: 1.0, divergence: 2.0
+    // ✦ 波動/位置類（合計 2.2）：背離從 2.0 降至 1.2（背離偵測有回顧偏差，不應為最高權重）
+    boll: 1.0, divergence: 1.2
   },
   GROUPS: {
     trend:    ['ma5','ma20','ma60','maAlign','macdDir'],
@@ -1880,22 +1947,32 @@ const Score = {
             cBoll, cVol, cVolMA, chg, dirRatio } = p;
     const n = closes.length, last = closes[n - 1];
 
-    // 層一：技術指標共振強度（滿分 40）
-    const alignRate = Math.abs(dirRatio);
-    const psyExt = dirRatio > 0
+    // 層一：震盪指標極端共振強度（滿分 40）
+    // ✦ 修正：原 alignRate=abs(dirRatio)*0.6 是方向評分輸出的循環引用（自己評估自己）
+    //   改為：直接計算「有幾個獨立震盪指標同時在極端值」，Layer1 真正反映多指標共振
+    const isBull = dirRatio >= 0;
+    const psyExt = isBull
       ? F.clamp((25 - cPSY) / 25, 0, 1)
       : F.clamp((cPSY - 75) / 25, 0, 1);
-    const kdExt = dirRatio > 0
+    const kdExt = isBull
       ? F.clamp((20 - K[n - 1]) / 20, 0, 1)
       : F.clamp((K[n - 1] - 80) / 20, 0, 1);
-    const rsiExt = dirRatio > 0
+    const rsiExt = isBull
       ? F.clamp((30 - cRSI) / 30, 0, 1)
       : F.clamp((cRSI - 70) / 30, 0, 1);
     const avgExt = (psyExt + kdExt + rsiExt) / 3;
-    const macdTurn = dirRatio > 0
+    // 計算「達到輕度極端門檻」的獨立震盪指標數量（0~3）
+    const extHits = [
+      isBull ? cPSY < 38 : cPSY > 62,
+      isBull ? K[n-1] < 33 : K[n-1] > 67,
+      isBull ? cRSI < 42 : cRSI > 58
+    ].filter(Boolean).length;
+    const extCountScore = extHits / 3;  // 0, 0.33, 0.67, 1.0
+    const macdTurn = isBull
       ? (pHist < 0 && cHist > 0 ? 1 : cHist > pHist ? 0.5 : 0)
       : (pHist > 0 && cHist < 0 ? 1 : cHist < pHist ? 0.5 : 0);
-    const layer1 = Math.round(F.clamp(alignRate * 0.6 + avgExt * 0.3 + macdTurn * 0.1, 0, 1) * 40);
+    // 極端共振條件數 55% + 極端深度 30% + MACD 翻轉 15%（不再依賴 dirRatio 循環輸入）
+    const layer1 = Math.round(F.clamp(extCountScore * 0.55 + avgExt * 0.30 + macdTurn * 0.15, 0, 1) * 40);
 
     // 層二：量能配合（滿分 35）
     const volRatio = cVolMA > 0 ? cVol / cVolMA : 1;
@@ -1988,7 +2065,10 @@ const Predict = {
   distance(f1, f2){
     if(!f1 || !f2) return Infinity;
     const norm = {
-      psy: 30, kdK: 30, rsi: 25, macdHist: 5,
+      psy: 30, kdK: 30, rsi: 25,
+      // ✦ 修正：macdHist 改用動態標準差正規化（由 knn() 預先計算並存入 _macdNorm）
+      // 原硬編碼 5 對台積電不同價格區間失準（600元與1000元區間的 MACD 振幅差異達3~5倍）
+      macdHist: this._macdNorm || 5,
       maPos: 5, bollPos: 0.3, volRatio: 0.5, obvDiv: 0.3, chgPrev: 2,
       adxStr: 20  // ADX 典型波動範圍 ~20（10~30 最常見）
     };
@@ -2005,6 +2085,19 @@ const Predict = {
 
   // K-NN 找出最相似的 K 個歷史日（排除財報週、除息期、Fed 週等特殊日）
   knn(rows, ind, currentIdx, k = CFG.KNN_K){
+    // ✦ 動態正規化：預先計算過去 60 日 MACD Hist 的滾動標準差作為距離正規化基準
+    const histSlice = [];
+    for(let i = Math.max(0, currentIdx - 60); i <= currentIdx; i++){
+      const h = ind.hist[i];
+      if(h != null && !isNaN(h)) histSlice.push(h);
+    }
+    if(histSlice.length > 1){
+      const hMean = histSlice.reduce((a,b)=>a+b,0)/histSlice.length;
+      const hStd  = Math.sqrt(histSlice.reduce((a,b)=>a+(b-hMean)**2,0)/histSlice.length);
+      this._macdNorm = Math.max(hStd * 1.5, 0.3); // 1.5σ 覆蓋大多數正常波動；最小 0.3 防除零
+    } else {
+      this._macdNorm = 5; // fallback
+    }
     const cur = this.features(rows, ind, currentIdx);
     if(!cur) return [];
     const isCurrentSpecial = SpecialDates.isSpecial(rows[currentIdx].date);
@@ -2870,7 +2963,7 @@ function renderTopRow(ctx){
   const { dirResult, total, maxS, sm, scorePct } = ctx;
   return `
   <div class="grid2">
-    <div class="gauge-wrap">
+    <div class="gauge-wrap" id="anchor-gauge">
       <div class="gauge-title">整體多空判斷（加權）</div>
       ${SVG.gauge(dirResult.weighted, dirResult.max)}
       <div class="sent-label" style="color:${sm.color}">${sm.label}</div>
@@ -2949,7 +3042,7 @@ function renderPredictionPanel(ctx){
       <span class="sg-tip">⚠️ 盤中看這個意義不大，這是給盤後規劃明日策略用的</span>
     </div>
   </div>
-  <div class="predict-panel">
+  <div class="predict-panel" id="anchor-predict">
     <div class="predict-head">
       <span class="ph-title">${dirIcon} ${dirWord}</span>
       <span class="ph-badge">機率推估</span>
@@ -3098,7 +3191,7 @@ function renderBuySellPanel(ctx){
           divRSI, divMACD,
           cMA60, mtfResult, mtfRes,
           lastHigh, lastLow, lastOpen, prevOpen, high52, low52,
-          adxCtx
+          adxCtx, twii
         } = ctx;
 
   const cADX      = adxCtx?.cADX;
@@ -3237,6 +3330,17 @@ function renderBuySellPanel(ctx){
   else if(weeklyBear || monthlyBear) sellW += 0.5;
   sellW += sellEarlyN * 0.12;
   sellW = Math.min(10, +sellW.toFixed(2));
+
+  // ✦ 大盤逆風調整（Task 6）：依 0050 ETF 代理判斷市場環境
+  // 大盤空頭時多單評分打折 → 提示用戶逆風操作需降低部位
+  const twiiDir     = twii?.direction || 'neutral';
+  const twiiTrend5  = twii?.trend5 ?? 0;
+  const twiiChg1    = twii?.chg1 ?? 0;
+  const hasHeadwind = twiiDir === 'bear' && buyW > sellW;   // 想做多 but 大盤空頭
+  const hasTailwind = twiiDir === 'bull' && sellW > buyW;   // 想做空 but 大盤多頭
+  // 輕度折扣（非強制），僅作警示用途，保留操作彈性
+  if(hasHeadwind) buyW  = Math.max(0, +(buyW  * 0.85).toFixed(2));  // 逆風多單 -15%
+  if(hasTailwind) sellW = Math.max(0, +(sellW * 0.85).toFixed(2));  // 逆風空單 -15%
 
   // ══════════════════════════════════════════════
   //  輔助標籤
@@ -3570,7 +3674,22 @@ function renderBuySellPanel(ctx){
       ${adxBadge}
       ${trendBadge}
       ${priceBadge}
+      ${/* ✦ 大盤方向徽章 */twii ? (
+        twiiDir === 'bear'
+          ? `<span style="background:rgba(239,68,68,.15);color:var(--red);font-size:0.72rem;font-weight:700;padding:4px 12px;border-radius:20px">🌐 大盤空頭逆風｜0050 五日 ${twiiTrend5.toFixed(1)}%，多單需降低部位</span>`
+          : twiiDir === 'bull'
+          ? `<span style="background:rgba(16,185,129,.15);color:var(--green);font-size:0.72rem;font-weight:700;padding:4px 12px;border-radius:20px">🌐 大盤多頭順風｜0050 五日 +${twiiTrend5.toFixed(1)}%</span>`
+          : `<span style="background:rgba(148,163,184,.12);color:var(--t2);font-size:0.72rem;font-weight:700;padding:4px 12px;border-radius:20px">🌐 大盤中性｜0050 五日 ${twiiTrend5.toFixed(1)}%</span>`
+      ) : ''}
     </div>
+    ${hasHeadwind ? `
+    <div style="background:rgba(239,68,68,.10);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:10px 16px;margin-bottom:14px;font-size:0.78rem;color:var(--red2)">
+      ⚠️ <b>大盤逆風警示</b>：大盤（0050）近五日下跌 ${Math.abs(twiiTrend5).toFixed(1)}%，屬於空頭環境。當前買進評分已自動打 85 折至 <b>${buyW}/10</b>。逆勢做多風險較高，建議降低部位或等大盤止跌再進場。
+    </div>` : ''}
+    ${hasTailwind && sellW > 2 ? `
+    <div style="background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.25);border-radius:10px;padding:10px 16px;margin-bottom:14px;font-size:0.78rem;color:var(--yellow)">
+      ⚠️ <b>大盤順風反差警示</b>：大盤偏多但賣出訊號觸發，可能是個股相對弱勢訊號，賣出評分已調整至 <b>${sellW}/10</b>。
+    </div>` : ''}
 
     <!-- MTF 共振 -->
     <div style="background:var(--card2);border-radius:10px;padding:10px 16px;margin-bottom:18px;font-size:0.8rem">
@@ -4418,6 +4537,28 @@ function renderRS(ctx){
 /* ═══════════════════════════════════════════════════════════════
    看盤三步驟引導卡（新手固定引導，可關閉）
    ═══════════════════════════════════════════════════════════════ */
+// ✦ 五步決策引導列 — 最高勝率邏輯的正確閱讀順序
+function renderDecisionGuide(){
+  const steps = [
+    { num:'①', icon:'🔭', label:'大方向(MTF)',  anchor:'#anchor-mtf',     tip:'先確認日/週/月三線方向是否一致' },
+    { num:'②', icon:'🌡️', label:'方向評分',    anchor:'#anchor-gauge',    tip:'多空加權評分，方向明確再操作' },
+    { num:'③', icon:'🎯', label:'進場位置',    anchor:'#anchor-entry',    tip:'布林/均線位置是否適合進場' },
+    { num:'④', icon:'🔮', label:'明日預測',    anchor:'#anchor-predict',  tip:'K-NN 歷史相似日的漲跌機率' },
+    { num:'⑤', icon:'💰', label:'風險設定',    anchor:'#anchor-poscalc', tip:'設好停損/部位大小，這步最重要' }
+  ];
+  return `
+  <div class="decision-guide">
+    <span class="dg-title">⚡ 決策順序</span>
+    ${steps.map((s,i) => `
+      <a class="dg-step" href="${s.anchor}" title="${s.tip}" onclick="event.preventDefault();document.querySelector('${s.anchor}')?.scrollIntoView({behavior:'smooth',block:'start'})">
+        <span class="dg-num">${s.num}</span>
+        <span>${s.icon} ${s.label}</span>
+      </a>
+      ${i < steps.length-1 ? '<span class="dg-arrow">›</span>' : ''}
+    `).join('')}
+  </div>`;
+}
+
 function renderBeginnerFlow(){
   const dismissed = localStorage.getItem('tsmc_bf_dismissed') === '1';
   if(dismissed) return '';
@@ -4789,7 +4930,7 @@ function renderMTF(ctx){
     </div>`;
   };
   return `
-  <div class="sec">🔭 多週期共振分析 <span class="sec-cnt">短中長線方向是否一致？三個時框都看漲才是最強買進訊號，方向分歧則暫緩操作</span></div>
+  <div class="sec" id="anchor-mtf">🔭 多週期共振分析 <span class="sec-cnt">短中長線方向是否一致？三個時框都看漲才是最強買進訊號，方向分歧則暫緩操作</span></div>
   <div class="sg">
     <div class="sg-icon">ℹ️</div>
     <div class="sg-body">
@@ -5377,6 +5518,7 @@ let App = {
       if(!result.rows.length) throw new Error('未取得任何歷史數據，請稍後再試。');
       this.rows = result.rows;
       this.foreign = result.foreign;
+      this.twii = result.twii || null;  // ✦ 大盤方向（0050 ETF 代理）
       this.fromCache = result.fromCache;
       this.cacheAgeMs = result.cacheAgeMs;
       this.compute();
@@ -5583,6 +5725,7 @@ let App = {
       cBoll, cVol, cVolMA, bollPct, volK, volMAK,
       cOBV, cOBVMA, cMFI, cVWAP, cATR, cATRMean, atr: cATR,
       divRSI, divMACD, sr, foreign: this.foreign,
+      twii: this.twii,   // ✦ 大盤方向代理（0050 ETF）
       S, dirResult, dirRatio, sm,
       total: dirResult.weighted, maxS: dirResult.max,
       scorePct, ES_pct,
@@ -5606,6 +5749,8 @@ let App = {
     document.getElementById('app').innerHTML =
       // ── Header ──
       renderHeader(ctx) +
+      // ✦ 五步決策引導列（最高勝率閱讀順序）
+      renderDecisionGuide() +
       renderBeginnerFlow() +
       renderDailySummary(ctx) +
       renderLearnCard(ctx) +
@@ -5630,6 +5775,8 @@ let App = {
       renderGroupHeader('C','📊','今日技術分析',
         '多項指標綜合研判今日多空方向，走勢圖標記歷史買賣訊號點位',
         '核心判斷','analysis') +
+      // ✦ MTF 移至此處（高勝率邏輯：先確認大方向，再看進場訊號）
+      renderMTF(ctx) +
       renderTopRow(ctx) +
       renderCandlePatterns(ctx) +
       renderVolPriceDivAlert(ctx) +
@@ -5644,10 +5791,9 @@ let App = {
 
       // ══ E 市場環境 ══
       renderGroupHeader('E','🌐','市場環境判讀',
-        '判斷現在是趨勢行情還是盤整震盪，搭配美股半導體指數（SOX）領先參考',
+        '趨勢 vs 震盪判斷、ADX 市場情境、美股費半（SOX）領先參考',
         '環境分析','analysis') +
       renderMarketRegime(ctx) +
-      renderMTF(ctx) +
       renderDuKDResonance(ctx) +
       renderMorning(ctx) +
 
