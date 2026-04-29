@@ -863,11 +863,15 @@ const F = {
     return parseFloat(String(s).replace(/,/g, ''));
   },
   rocToDate(roc){
+    if(!roc || typeof roc !== 'string') return new Date(NaN);
     const p = roc.split('/');
+    if(p.length < 3) return new Date(NaN); // 格式不符時回傳 Invalid Date，由上層 isNaN() 過濾
     return new Date(+p[0] + 1911, +p[1] - 1, +p[2]);
   },
   rocToYmd(roc){
+    if(!roc || typeof roc !== 'string') return '';
     const p = roc.split('/');
+    if(p.length < 3) return '';
     return `${+p[0] + 1911}${String(+p[1]).padStart(2,'0')}${String(+p[2]).padStart(2,'0')}`;
   }
 };
@@ -905,6 +909,7 @@ const Data = {
       const j = await r.json();
       if(j.stat !== 'OK') return [];
       return (j.data || []).map(row => {
+        if(!Array.isArray(row) || row.length < 9) return null; // 欄位不足直接跳過
         const c = F.parseNum(row[6]);
         if(isNaN(c) || c <= 0) return null;
         return {
@@ -1856,7 +1861,10 @@ const Position = {
    ═══════════════════════════════════════════════════════════════ */
 const External = {
   KEY: 'tsmc_external_sox',
-  todayStr(){ return new Date().toISOString().slice(0, 10); },
+  /** 取得台灣今日日期字串 YYYY-MM-DD（避免 UTC 與台灣時差 8 小時造成日期錯誤） */
+  todayStr(){
+    return new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Taipei' });
+  },
   get(){
     try{
       const raw = localStorage.getItem(this.KEY);
@@ -1944,7 +1952,7 @@ const Journal = {
     const id = 'tr_' + Date.now();
     const trade = {
       id, type: 'buy',
-      date: new Date().toISOString().slice(0, 10),
+      date: this.todayStr(),
       price: parseFloat(price), shares: parseInt(shares),
       stopLoss: stopLoss ? parseFloat(stopLoss) : null,
       takeProfit: takeProfit ? parseFloat(takeProfit) : null,
@@ -1973,7 +1981,7 @@ const Journal = {
     const id = 'tr_' + Date.now();
     const trade = {
       id, type: 'sell',
-      date: new Date().toISOString().slice(0, 10),
+      date: this.todayStr(),
       price: parseFloat(price), shares: parseInt(shares),
       note: note || '', snapshot: snapshot || {}
     };
@@ -2147,7 +2155,7 @@ const RuleEngine = {
 
   // 對所有規則跑一次，回傳今日觸發的規則列表
   evaluateAll(rules, snap){
-    const today = new Date().toISOString().slice(0, 10);
+    const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Taipei' });
     const triggered = [];
     for(const rule of rules){
       const fire = this.evaluate(rule, snap);
@@ -4918,12 +4926,14 @@ const LivePrice = {
   _timer: null,
   _lastData: null,
 
-  /** 判斷目前是否在交易時段 (台灣 09:00-13:30 週一至週五) */
+  /** 判斷目前是否在交易時段 (台灣 09:00-13:30 週一至週五)
+   *  使用 toLocaleString('zh-TW') 強制轉台灣時區，避免使用者在其他時區誤判 */
   isTrading(){
-    const now = new Date();
-    const day = now.getDay();
+    const twStr  = new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' });
+    const tw     = new Date(twStr);
+    const day    = tw.getDay();
     if(day === 0 || day === 6) return false;
-    const mins = now.getHours() * 60 + now.getMinutes();
+    const mins   = tw.getHours() * 60 + tw.getMinutes();
     return mins >= 9 * 60 && mins < 13 * 60 + 30;
   },
 
@@ -4975,6 +4985,11 @@ const LivePrice = {
     const d = await CorsProxy.fetchJSON(url);
     const meta = d?.chart?.result?.[0]?.meta;
     if(!meta || !meta.regularMarketPrice) throw new Error('Yahoo no data');
+    // ── 資料新鮮度檢查：盤中時段若資料超過 15 分鐘視為過時快取，拒絕使用 ──
+    if(meta.regularMarketTime && LivePrice.isTrading()){
+      const ageMin = (Date.now() / 1000 - meta.regularMarketTime) / 60;
+      if(ageMin > 15) throw new Error(`Yahoo stale data (${ageMin.toFixed(1)} min old)`);
+    }
     const t = meta.regularMarketTime
       ? new Date(meta.regularMarketTime * 1000)
           .toLocaleTimeString('zh-TW', { hour:'2-digit', minute:'2-digit', second:'2-digit' })
@@ -5554,12 +5569,13 @@ const RealtimeEval = {
     const todayVol  = meta.regularMarketVolume  ?? 0;
 
     // 歷史指標（來自 App.ind，上次 render() 後即可用）
-    const ind  = (typeof App !== 'undefined') ? App.ind : {};
+    // 使用 optional chaining 防止 App.ind 尚未初始化時拋出異常
+    const ind  = (typeof App !== 'undefined' && App.ind) ? App.ind : {};
     const n    = ind.closes?.length ?? 0;
-    const ma5  = n > 0 ? ind.ma5[n-1]  : null;
-    const ma20 = n > 0 ? ind.ma20[n-1] : null;
-    const ma60 = n > 0 ? ind.ma60[n-1] : null;
-    const histVolMA = (ind.vols && n >= 20)
+    const ma5  = (n > 0 && Array.isArray(ind.ma5))  ? (ind.ma5[n-1]  ?? null) : null;
+    const ma20 = (n > 0 && Array.isArray(ind.ma20)) ? (ind.ma20[n-1] ?? null) : null;
+    const ma60 = (n > 0 && Array.isArray(ind.ma60)) ? (ind.ma60[n-1] ?? null) : null;
+    const histVolMA = (Array.isArray(ind.vols) && n >= 20)
       ? ind.vols.slice(-20).reduce((a,b)=>a+b,0)/20 : null;
 
     // ── 1. 盤中動能：最近 15 根 1-min 的漲跌幅 ──
@@ -5580,8 +5596,8 @@ const RealtimeEval = {
     let score = 0;
     const sigs = [];
 
-    // 動能（±2）
-    const momScore = mom > 0.3 ? 2 : mom > 0.1 ? 1 : mom < -0.3 ? -2 : mom < -0.1 ? -1 : 0;
+    // 動能（±2）—— 加 2% 緩衝帶避免 0.1%/0.3% 邊界頻繁翻轉
+    const momScore = mom > 0.35 ? 2 : mom > 0.15 ? 1 : mom < -0.35 ? -2 : mom < -0.15 ? -1 : 0;
     score += momScore;
     sigs.push({
       label: '盤中動能（15分）',
@@ -5590,9 +5606,9 @@ const RealtimeEval = {
       clr: momScore > 0 ? 'g' : momScore < 0 ? 'r' : 'n'
     });
 
-    // RSI（±2）
+    // RSI（±2）—— 加 3 點緩衝帶：超賣 <27（非 <25）、偏低 <37（非 <35）
     if(iRSI !== null){
-      const rs = iRSI < 25 ? 2 : iRSI < 35 ? 1 : iRSI > 75 ? -2 : iRSI > 65 ? -1 : 0;
+      const rs = iRSI < 27 ? 2 : iRSI < 37 ? 1 : iRSI > 73 ? -2 : iRSI > 63 ? -1 : 0;
       score += rs;
       sigs.push({
         label: '盤中 RSI（14 分鐘）',
@@ -5602,8 +5618,8 @@ const RealtimeEval = {
       });
     }
 
-    // 位置（±1.5）
-    const posScore = posRaw < 0.12 ? 1.5 : posRaw < 0.25 ? 0.7 : posRaw > 0.88 ? -1.5 : posRaw > 0.75 ? -0.7 : 0;
+    // 位置（±1.5）—— 擴大中性帶：0.10~0.90 都視為中性（原 0.12/0.88）
+    const posScore = posRaw < 0.10 ? 1.5 : posRaw < 0.22 ? 0.7 : posRaw > 0.90 ? -1.5 : posRaw > 0.78 ? -0.7 : 0;
     score += posScore;
     sigs.push({
       label: '日內位置',
@@ -5741,18 +5757,18 @@ const RealtimeEval = {
     let score = 0;
     const sigs = [];
 
-    // RSI
+    // RSI —— 加 3 點緩衝帶（<27 才算超賣，>73 才算超買）
     if(cRSI != null){
-      const rs = cRSI < 30 ? 2 : cRSI < 40 ? 1 : cRSI > 70 ? -2 : cRSI > 60 ? -1 : 0;
+      const rs = cRSI < 27 ? 2 : cRSI < 37 ? 1 : cRSI > 73 ? -2 : cRSI > 63 ? -1 : 0;
       score += rs;
       sigs.push({ label:'RSI(14)', val: cRSI.toFixed(1),
         note: cRSI<30?'超賣':cRSI<40?'偏低':cRSI>70?'超買':cRSI>60?'偏高':'中性',
         clr: rs>0?'g':rs<0?'r':'n' });
     }
 
-    // KD
+    // KD —— 加 2 點緩衝帶（<28 才算低檔金叉，>72 才算高檔死叉）
     if(cK!=null && cD!=null){
-      const kdB = cK<30 && cK>cD, kdS = cK>70 && cK<cD;
+      const kdB = cK<28 && cK>cD, kdS = cK>72 && cK<cD;
       const ks = kdB ? 1.5 : kdS ? -1.5 : 0;
       score += ks;
       sigs.push({ label:'KD', val:`K ${cK.toFixed(1)} / D ${cD.toFixed(1)}`,
@@ -5871,12 +5887,13 @@ const RealtimeEval = {
     return +(pacedVol / histAvgVol).toFixed(2);
   },
 
-  /** 均線位置評分 */
+  /** 均線位置評分（加 0.3% 緩衝帶，避免價格貼著均線時分數來回跳動） */
   _maScore(cur, ma5, ma20, ma60){
     let score = 0, parts = [], note = '';
-    if(ma5)  { if(cur > ma5)  { score += 0.5; parts.push('MA5 ✅'); } else { score -= 0.5; parts.push('MA5 ✗'); } }
-    if(ma20) { if(cur > ma20) { score += 0.8; parts.push('MA20 ✅'); } else { score -= 0.8; parts.push('MA20 ✗'); } }
-    if(ma60) { if(cur > ma60) { score += 0.7; parts.push('MA60 ✅'); } else { score -= 0.7; parts.push('MA60 ✗'); } }
+    const buf = 0.003; // 0.3% 緩衝帶
+    if(ma5)  { if(cur > ma5*(1+buf))  { score += 0.5; parts.push('MA5 ✅'); } else if(cur < ma5*(1-buf)) { score -= 0.5; parts.push('MA5 ✗'); } else parts.push('MA5 ～'); }
+    if(ma20) { if(cur > ma20*(1+buf)) { score += 0.8; parts.push('MA20 ✅'); } else if(cur < ma20*(1-buf)) { score -= 0.8; parts.push('MA20 ✗'); } else parts.push('MA20 ～'); }
+    if(ma60) { if(cur > ma60*(1+buf)) { score += 0.7; parts.push('MA60 ✅'); } else if(cur < ma60*(1-buf)) { score -= 0.7; parts.push('MA60 ✗'); } else parts.push('MA60 ～'); }
     const label = parts.length ? parts.join(' ') : '均線資料不足';
     if(score >= 1.5)       note = '站上多條均線，結構偏多';
     else if(score >= 0.5)  note = '部分均線支撐';
