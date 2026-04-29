@@ -341,6 +341,24 @@ a:hover{text-decoration:underline}
 .ic .sg.bear{background:rgba(239,68,68,.15);color:var(--red)}
 .ic .sg.neut{background:rgba(245,158,11,.15);color:var(--yellow)}
 .ic .dt{font-size:0.7rem;color:var(--t2);margin-top:7px;line-height:1.6}
+/* ── 區塊使用說明框 ── */
+.sg{
+  display:flex;gap:10px;align-items:flex-start;
+  background:rgba(99,102,241,.05);
+  border:1px solid rgba(99,102,241,.18);
+  border-radius:10px;padding:11px 14px;
+  margin-bottom:14px;font-size:.78rem;
+  color:var(--t2);line-height:1.7;
+}
+.sg-icon{font-size:1.1rem;line-height:1;flex-shrink:0;margin-top:1px}
+.sg-body{flex:1}
+.sg-body strong{color:var(--t1);font-weight:700}
+.sg-body .sg-tip{
+  display:inline-block;margin-top:5px;
+  background:rgba(99,102,241,.1);border-radius:6px;
+  padding:2px 8px;font-size:.72rem;color:var(--purple);font-weight:600;
+}
+
 /* 💡 白話學習說明 */
 .ic-learn{
   font-size:.72rem;line-height:1.55;
@@ -2923,6 +2941,14 @@ function renderPredictionPanel(ctx){
 
   return `
   <div class="sec">🔮 盤後 & 明日預估 <span class="sec-cnt">基於 ${prob.n} 個歷史相似日 + ATR 波動率錐 + 評分回測</span></div>
+  <div class="sg">
+    <div class="sg-icon">ℹ️</div>
+    <div class="sg-body">
+      <strong>這個預測怎麼算？</strong> 系統在歷史資料中找出和「今天的技術指標組合」最相似的過去日期（K-NN 演算法），統計那些相似日之後一天的漲跌概率，再結合當前的波動幅度（ATR）估算明日可能的波動範圍。<br>
+      <strong>準確率如何？</strong> 統計上方向正確率約 55～65%，比亂猜（50%）高但並不完美。這個預測的價值在於「給你一個有依據的參考方向」，不是保證。<strong>絕對不要只憑這個預測就決定買賣</strong>，要搭配其他指標綜合判斷。<br>
+      <span class="sg-tip">⚠️ 盤中看這個意義不大，這是給盤後規劃明日策略用的</span>
+    </div>
+  </div>
   <div class="predict-panel">
     <div class="predict-head">
       <span class="ph-title">${dirIcon} ${dirWord}</span>
@@ -3490,6 +3516,15 @@ function renderBuySellPanel(ctx){
     <span class="sec-cnt">v5 · 七大條件 · MFI資金流 · 吞噬型態 · 量能高潮 · 費波那契關卡</span>
   </div>
 
+  <div class="sg">
+    <div class="sg-icon">ℹ️</div>
+    <div class="sg-body">
+      <strong>這個面板在看什麼？</strong> 用 7 個嚴格條件（如 RSI 需低於 30 才算超賣買訊）搭配背離、K線型態、OBV 能量潮，計算出 0～10 分的買進與賣出強度，分數越高代表訊號越強。<br>
+      <strong>怎麼解讀分數？</strong> 買進或賣出強度 ≥4 分才算「有效訊號」；≥5.5 分是強烈訊號，可積極應對。兩邊都低（各<2.5 分）代表市場無極端，觀望等待。<br>
+      <strong>盤中可用嗎？</strong> 可以，但最可靠的時間是<strong>收盤後</strong>，此時所有指標數值確定，不會因為盤中價格震盪而改變結論。
+    </div>
+  </div>
+
   <!-- ★★ 一眼看懂主橫幅 ★★ -->
   <div style="background:${sigBg};border:3px solid ${sigColor};border-radius:20px;padding:26px 28px;margin-bottom:14px">
 
@@ -3656,6 +3691,18 @@ function renderEntryPanel(ctx){
   const cBoll = ctx.cBoll, last = ctx.last;
   return `
   <div class="sec" id="anchor-entry">🎯 進出場時機評分 <span class="sec-cnt">0~100 分評估「現在是好的進場時機嗎？」— 分數越高越適合買進，低於 40 分建議等待</span></div>
+  <div class="sg">
+    <div class="sg-icon">ℹ️</div>
+    <div class="sg-body">
+      <strong>這個分數怎麼算？</strong> 綜合量能（今天的成交量是否配合）、位置（股價在均線和布林通道哪個位置）、趨勢方向三個維度，給出 0～100 分。<br>
+      <strong>分數怎麼用？</strong>
+      <strong style="color:var(--green)">78分以上</strong>＝強力訊號，可積極進場；
+      <strong style="color:var(--green2)">58～78分</strong>＝可考慮分批買；
+      <strong style="color:var(--yellow)">38～58分</strong>＝繼續觀察；
+      <strong style="color:var(--t2)">38分以下</strong>＝條件未成熟，等待。<br>
+      <strong>新手重點：</strong> 這個分數告訴你「現在的時機好不好」，但不保證之後一定漲。就算 90 分也要設好停損，因為股市沒有100%的事。
+    </div>
+  </div>
   <div class="entry-panel">
     <div class="entry-top">
       <div class="entry-score-ring">
@@ -3987,6 +4034,14 @@ function renderIndicators(ctx){
     <span class="col-toggle">▶ 展開</span>
   </div>
   <div id="ind-body" class="collapsible-body col-closed" style="max-height:9999px">
+  <div class="sg">
+    <div class="sg-icon">ℹ️</div>
+    <div class="sg-body">
+      <strong>這裡有什麼？</strong> 每一張卡片顯示一個技術指標的當前數值、訊號強弱，以及 💡 白話解釋「現在這個數字代表什麼意思、你應該怎麼反應」。<br>
+      <strong>怎麼使用？</strong> 不需要每個都懂，新手建議先看懂三個：<strong>KD 交叉訊號</strong>（短線買賣點）、<strong>RSI 相對強弱</strong>（是否過熱超賣）、<strong>成交量能</strong>（漲跌是否有量支撐）。其他指標用來交叉確認，訊號越一致越可靠。<br>
+      滑鼠移到每張卡片的 <strong>?</strong> 符號，可以看到更詳細的技術說明。
+    </div>
+  </div>
   <!-- 共識摘要列 -->
   <div class="ind-summary">
     <div class="ind-sum-verdict" style="color:${summaryClr}">${summaryVerdict}</div>
@@ -4119,6 +4174,14 @@ function renderMA(ctx){
     <span class="col-toggle">▶ 展開</span>
   </div>
   <div id="ma-body" class="collapsible-body col-closed" style="max-height:9999px">
+  <div class="sg">
+    <div class="sg-icon">ℹ️</div>
+    <div class="sg-body">
+      <strong>均線是什麼？</strong> 把過去 N 天的收盤價平均，就是「N 日均線」。MA5（5日均線）反應快，代表短線趨勢；MA60（季線）反應慢，代表中長期趨勢。<strong>股價站在均線之上</strong>代表短/中/長線多頭；<strong>跌破均線</strong>代表該時框空頭壓力增加。<br>
+      <strong>新手最重要的兩條線：</strong> <strong style="color:var(--blue)">MA20（月線）</strong>是短線多空分界，站上就偏多；<strong style="color:var(--purple)">MA60（季線）</strong>是中線多空分界，跌破要謹慎。股價在所有均線之上且短均在長均之上（多頭排列），是最健康的多頭格局。<br>
+      <span class="sg-tip">📌 多頭排列：MA5 > MA20 > MA60 > MA120，每條均線都比下一條高，趨勢最強</span>
+    </div>
+  </div>
   <div class="ma2">
     <div class="ic ${sc(S.ma20)}">
       <div class="nm">均線 vs 現價（${F.int(last)}）<span class="tip" data-tip="${TIPS.ma}">?</span></div>
@@ -4187,6 +4250,13 @@ function renderMarketRegime(ctx){
       </span>` : '';
   return `
   <div class="sec">🏗️ 市場結構判斷 <span class="sec-cnt">現在是「趨勢行情」還是「盤整行情」？策略不同：趨勢盤跟風追漲，盤整盤高賣低買</span></div>
+  <div class="sg">
+    <div class="sg-icon">ℹ️</div>
+    <div class="sg-body">
+      <strong>為什麼要判斷市場結構？</strong> 同樣的操作策略，在趨勢盤和盤整盤效果完全不同。用 ADX 指標判斷：<strong style="color:var(--blue)">ADX≥25 = 趨勢盤</strong>，此時追漲殺跌有效，順勢操作；<strong style="color:var(--yellow)">ADX&lt;20 = 盤整盤</strong>，此時高賣低買有效，逢高減碼逢低布局。<br>
+      <strong>新手重點：</strong> 盤整盤中，很多買進訊號都是「假突破」，訊號可靠性較低。看到 ADX 低於 20 時，所有訊號的參考價值要打折，等待 ADX 回升到 25 以上才是較可信的方向。
+    </div>
+  </div>
   <div style="background:var(--card2);border-left:4px solid ${regimeCol};border-radius:10px;
     padding:12px 20px;margin-bottom:14px;display:flex;align-items:center;gap:18px;flex-wrap:wrap">
     <div>
@@ -4265,6 +4335,14 @@ function renderChipFlow(ctx){
 
   return `
   <div class="sec">🏦 法人籌碼流向 <span class="sec-cnt">外資（外國機構）、投信（本土基金）連續買賣超 — 連續買超代表法人看多，賣超代表看空</span></div>
+  <div class="sg">
+    <div class="sg-icon">ℹ️</div>
+    <div class="sg-body">
+      <strong>法人是誰？</strong> 外資是外國的大型機構投資人（如貝萊德、高盛等），掌握台積電最大的籌碼。投信是台灣本土的基金公司。散戶（你和我）的資金規模遠小於法人，所以跟著法人的方向往往更安全。<br>
+      <strong>怎麼解讀？</strong> <strong style="color:var(--green)">連續買超 3 天以上</strong>代表法人持續看好，股價容易有支撐；<strong style="color:var(--red)">連續賣超 3 天以上</strong>代表法人在出貨，要小心股價持續下跌。單日買賣超的波動正常，要看「連續性」才有意義。<br>
+      <span class="sg-tip">⚠️ 注意：這裡的法人數據是前一個交易日的，不是即時的</span>
+    </div>
+  </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:14px">
     <div class="ic">
       <div class="nm">外資 今日買賣超</div>
@@ -4696,6 +4774,14 @@ function renderMTF(ctx){
   };
   return `
   <div class="sec">🔭 多週期共振分析 <span class="sec-cnt">短中長線方向是否一致？三個時框都看漲才是最強買進訊號，方向分歧則暫緩操作</span></div>
+  <div class="sg">
+    <div class="sg-icon">ℹ️</div>
+    <div class="sg-body">
+      <strong>為什麼要看三個時框？</strong> 不同的時間框架代表不同的投資人在操作：日線是短線客（幾天到幾週），週線是波段客（幾週到幾個月），月線是長線投資人（幾個月以上）。三者方向一致時，代表所有類型的投資人都在同一方向，訊號最強也最可靠。<br>
+      <strong>怎麼用？</strong> 三線都偏多 → 可以積極做多；三線都偏空 → 避免逆勢買入；日線偏空但週/月線偏多 → 短線回調、中長線仍健康，可等回調後買進；日線偏多但週/月線偏空 → 只是短線反彈，謹慎追漲。<br>
+      <span class="sg-tip">📌 新手建議：優先讓月線和週線方向支持你的操作方向，再用日線找進場時機</span>
+    </div>
+  </div>
   <div class="mtf-grid">
     ${tf('日線（短期）', mtfResult.daily)}
     ${tf('週線（中期）', mtfResult.weekly)}
@@ -4819,6 +4905,16 @@ function renderDuKDResonance(ctx){
 
   return `
   <div class="sec">🎯 杜金龍 KD 共振 <span class="sec-cnt">日·週·月三個時框同時發出 KD 黃金交叉 → 杜老師最強進場訊號，三線共振才出手</span></div>
+  <div class="sg">
+    <div class="sg-icon">ℹ️</div>
+    <div class="sg-body">
+      <strong>什麼是杜金龍KD共振？</strong> 台股知名老師杜金龍提出的最強進場邏輯：當日線、週線、月線的 KD 指標同時出現黃金交叉（K 由下穿越 D），代表短中長期的買進動能全面共振，是歷史上台積電最高勝率的進場訊號之一。<br>
+      <strong>盤中 vs 收盤後的差異：</strong>
+      <strong style="color:var(--green)">週線和月線 KD</strong> 盤中非常穩定，可信度高。
+      <strong style="color:var(--yellow)">日線 KD</strong> 盤中會隨股價波動，可能出現「假交叉」——看到金叉但下午拉回又變回死叉。<strong>建議等收盤後再確認日線 KD 金叉是否成立</strong>，再行動。<br>
+      <span class="sg-tip">📌 最佳進場時機：三線都顯示黃金交叉，且 K 值在低檔（建議 50 以下）形成</span>
+    </div>
+  </div>
   <div class="du-kd-grid">
     ${kdCard('📅 日線 KD（短期）', cK, cD, dailyBull)}
     ${kdCard('📆 週線 KD（中期）', wK, wD, weeklyBull)}
@@ -7768,6 +7864,15 @@ function renderSignalLight(ctx){
       <span class="sl-score-badge ${cls}">${emoji} ${signal}</span>
     </div>
     ${conflictHtml}
+    <div class="sg">
+      <div class="sg-icon">ℹ️</div>
+      <div class="sg-body">
+        <strong>這個面板在看什麼？</strong> 用 8 個基本條件（KD、RSI、PSY、MACD 等）快速計算現在有幾個「買進條件」和幾個「賣出條件」被觸發，給出方向感。
+        適合：快速掌握今天整體偏多還是偏空。<br>
+        <strong>怎麼用？</strong> 買進條件觸發越多（≥5）代表多頭訊號越強；賣出條件觸發越多（≥5）代表空頭壓力越大。兩邊都少（各<3）代表市場無明顯方向，等待為宜。<br>
+        <span class="sg-tip">⭐ 主要操作依據請看下方「買賣訊號總覽」的加權分數，更精確</span>
+      </div>
+    </div>
     <div class="sl-main">
       <div class="sl-bars">
         <div class="sl-bar-row">
