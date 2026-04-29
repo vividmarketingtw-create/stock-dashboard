@@ -821,7 +821,6 @@ const Data = {
       };
       const foreignNet = findNet(4);
       // 投信淨買通常在第 7 或 9 欄
-      const trustIdx = row.findIndex((v, i) => i >= 5 && /[+-]?\d/.test(String(v)));
       let trustNet = NaN;
       // 嚴謹找：往後逐欄解析，第二個有意義的買賣超即為投信
       let foundCount = 0;
@@ -853,10 +852,11 @@ const Ind = {
     const k = 2 / (p + 1);
     // 準確性修正：使用前 p 日 SMA 作為 EMA 起始值，消除冷啟動偏誤
     // 原本用 arr[0] 當種子，若第1個值偏離均值會拉偏整條 EMA
+    // Bug4 修正：迴圈從 seedLen 開始，避免 arr[1..seedLen-1] 被重複計算
     const seedLen = Math.min(p, arr.length);
     const seed = arr.slice(0, seedLen).reduce((a, b) => a + b, 0) / seedLen;
-    const e = [seed];
-    for(let i = 1; i < arr.length; i++) e.push(arr[i] * k + e[i - 1] * (1 - k));
+    const e = new Array(seedLen).fill(seed);
+    for(let i = seedLen; i < arr.length; i++) e.push(arr[i] * k + e[i - 1] * (1 - k));
     return e;
   },
   macd(c){
@@ -969,7 +969,8 @@ const Ind = {
       const s=dp+dm; return s===0?0:Math.abs(dp-dm)/s*100;
     });
     // ADX = Wilder smooth of DX starting from index p
-    const adxOut = new Array(p*2-1).fill(null);
+    // Bug5 修正：第一個有效 ADX 應在 index 2p-2，用 p*2-2 個 null 對齊正確位置
+    const adxOut = new Array(p*2-2).fill(null);
     let adxV=null;
     for(let i=p-1;i<dx.length;i++){
       if(dx[i]==null) continue;
@@ -4964,7 +4965,7 @@ const IntradayChart = {
   _parseStooqCSV(csv){
     const lines = csv.trim().split('\n');
     if(lines.length < 2) throw new Error('Stooq csv too short');
-    const timestamps = [], closes = [], highs = [], lows = [], vols = [];
+    const timestamps = [], closes = [], highs = [], lows = [], opens = [], vols = [];
     for(let i = 1; i < lines.length; i++){
       const cols = lines[i].split(',');
       if(cols.length < 6) continue;
@@ -4979,6 +4980,7 @@ const IntradayChart = {
       closes.push(parseFloat(close));
       highs.push(parseFloat(high));
       lows.push(parseFloat(low));
+      opens.push(parseFloat(open));
       vols.push(parseInt(vol)||0);
     }
     if(timestamps.length < 2) throw new Error('Stooq parsed no rows');
@@ -4992,7 +4994,7 @@ const IntradayChart = {
         chartPreviousClose:  prevClose,
         regularMarketDayHigh: Math.max(...highs),
         regularMarketDayLow:  Math.min(...lows),
-        regularMarketOpen:    closes[0],
+        regularMarketOpen:    opens[0],
         regularMarketVolume:  vols.reduce((a,b)=>a+b,0),
         regularMarketTime:    timestamps[timestamps.length-1],
       },
@@ -5313,7 +5315,7 @@ const RealtimeEval = {
   /** 從 Yahoo Finance 分時結果 + App.ind 計算評分 */
   update(intradayResult){
     const g = id => document.getElementById(id);
-    if(!g('re-verdict-label') && !g('re-score-num')) return;
+    if(!g('re-verdict-label') || !g('re-score-num')) return;
 
     const meta   = intradayResult?.meta;
     const stamps = intradayResult?.timestamp ?? [];
@@ -5498,7 +5500,7 @@ const RealtimeEval = {
    */
   updateFromApp(){
     const g = id => document.getElementById(id);
-    if(!g('re-verdict-label') && !g('re-score-num')) return;
+    if(!g('re-verdict-label') || !g('re-score-num')) return;
     if(typeof App === 'undefined' || !App.ind?.closes?.length){
       this._showClosed('App 資料尚未載入');
       return;
