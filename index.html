@@ -180,11 +180,13 @@ a:hover{text-decoration:underline}
   display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;
 }
 .collapsible-hd .col-toggle{
-  margin-left:auto;font-size:.72rem;color:var(--t2);
-  background:var(--card2);border:1px solid var(--border);border-radius:6px;
-  padding:3px 10px;cursor:pointer;transition:background .2s;
+  margin-left:auto;flex-shrink:0;
+  font-size:.8rem;font-weight:600;color:var(--t1);
+  background:var(--card2);border:1.5px solid var(--purple);border-radius:8px;
+  padding:5px 14px;cursor:pointer;transition:background .2s,color .2s;
+  white-space:nowrap;
 }
-.collapsible-hd .col-toggle:hover{background:var(--border)}
+.collapsible-hd .col-toggle:hover{background:rgba(99,102,241,.15);color:var(--purple)}
 .collapsible-body{transition:max-height .35s ease,opacity .3s;overflow:hidden}
 .collapsible-body.col-closed{max-height:0!important;opacity:0;pointer-events:none}
 /* ─── 明日操作計畫 ─── */
@@ -679,10 +681,16 @@ body.light .hd{ background:rgba(255,255,255,0.95); }
 .score-hist h3{font-size:0.8rem;color:var(--t2);margin-bottom:10px}
 
 /* ─── Collapsible sections ─── */
-.sec-toggle{background:none;border:none;cursor:pointer;color:var(--t3);
-  font-size:0.8rem;padding:2px 6px;border-radius:4px;
-  margin-left:auto;transition:transform .25s;flex-shrink:0;line-height:1}
-.sec-toggle:hover{color:var(--t1)}
+.sec-toggle{
+  cursor:pointer;flex-shrink:0;margin-left:auto;
+  font-size:.95rem;font-weight:700;line-height:1;
+  color:var(--purple);
+  background:rgba(99,102,241,.1);
+  border:1.5px solid rgba(99,102,241,.35);
+  border-radius:8px;padding:5px 10px;
+  transition:transform .25s,background .2s;
+}
+.sec-toggle:hover{background:rgba(99,102,241,.2)}
 .sec-toggle.collapsed{transform:rotate(-90deg)}
 .sec-body{overflow:hidden;transition:max-height .3s ease,opacity .2s ease;
   max-height:9999px;opacity:1}
