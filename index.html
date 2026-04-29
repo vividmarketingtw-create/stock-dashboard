@@ -742,6 +742,31 @@ body.light .hd{ background:rgba(255,255,255,0.95); }
 .ial-empty{text-align:center;color:var(--t3);font-size:.8rem;padding:12px 0}
 @keyframes ialIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 
+/* ── 今日盤面速讀卡 ── */
+.summary-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:16px 20px;margin-bottom:14px;
+  position:relative;overflow:hidden;
+}
+.summary-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--blue),var(--purple),var(--cyan));
+}
+.summary-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.summary-label{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);flex:1}
+.summary-tag{font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:12px;white-space:nowrap}
+.summary-tag.bull{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.3)}
+.summary-tag.bear{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+.summary-tag.neut{background:rgba(245,158,11,.12);color:var(--yellow);border:1px solid rgba(245,158,11,.3)}
+.summary-main{font-size:.92rem;color:var(--t1);line-height:1.8;margin-bottom:10px}
+.summary-main strong{color:var(--t1);font-weight:700}
+.summary-chips{display:flex;flex-wrap:wrap;gap:6px}
+.summary-chip{font-size:.72rem;padding:3px 9px;border-radius:10px;
+  background:var(--card2);color:var(--t2);border:1px solid var(--border)}
+.summary-chip.g{color:var(--green);border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.08)}
+.summary-chip.r{color:var(--red);border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
+.summary-chip.y{color:var(--yellow);border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.08)}
+
 /* ── 4. 盤前今日重點提示卡片 ── */
 .daily-brief{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:14px}
 .db-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
@@ -4139,6 +4164,135 @@ function renderRS(ctx){
 }
 
 /* ── 優化 5：事件橫幅 ── */
+/* ═══════════════════════════════════════════════════════════════
+   今日盤面速讀 — 自動生成白話摘要
+   ═══════════════════════════════════════════════════════════════ */
+function renderDailySummary(ctx){
+  const { last, prev, chgP, cK, cD, pK, pD, cRSI, cPSY,
+          cHist, pHist, cDIF, cDEA, cMA20, cMA60, cMA5,
+          cVol, cVolMA, cBoll, dirResult,
+          mtfResult, cATR, lastDate, foreign } = ctx;
+
+  if(!last || !lastDate) return '';
+
+  const chgAbs  = Math.abs(last - (prev || last));
+  const chgSign = chgP >= 0 ? '漲' : '跌';
+  const chgCol  = chgP >= 0 ? 'var(--green)' : 'var(--red)';
+  const chgPStr = Math.abs(chgP).toFixed(2);
+
+  // ── 1. 價格句 ──────────────────────────────────────────────
+  const priceStr = `台積電今日收 <strong style="color:${chgCol}">${Math.round(last).toLocaleString()} 元</strong>，` +
+    `${chgSign} <strong style="color:${chgCol}">${Math.round(chgAbs)} 元（${chgPStr}%）</strong>。`;
+
+  // ── 2. 均線結構 ──────────────────────────────────────────────
+  const aboveMA20 = last > cMA20;
+  const aboveMA60 = last > cMA60;
+  const aboveMA5  = last > cMA5;
+  const distMA20Pct = ((last - cMA20) / cMA20 * 100).toFixed(1);
+
+  let structStr = '';
+  if(aboveMA20 && aboveMA60){
+    if(Math.abs(parseFloat(distMA20Pct)) > 8){
+      structStr = `技術上多頭結構完整（站上 MA20 / MA60），但距 MA20 已達 ${Math.abs(distMA20Pct)}%，<strong>短線偏高、追高風險大</strong>。`;
+    } else {
+      structStr = `技術上多頭結構完整（站上 MA20 / MA60），均線排列健康。`;
+    }
+  } else if(aboveMA20 && !aboveMA60){
+    structStr = `股價站上 MA20 但仍在 MA60 之下，結構偏弱，<strong>多空交界、方向未定</strong>。`;
+  } else if(!aboveMA20 && !aboveMA60){
+    structStr = `股價跌破 MA20 與 MA60，<strong>空頭結構確立</strong>，暫不適合進場做多。`;
+  } else {
+    structStr = `股價跌破 MA20 但仍在 MA60 之上，短線偏弱、中期仍有支撐。`;
+  }
+
+  // ── 3. 關鍵訊號句 ──────────────────────────────────────────────
+  const kdDead  = pK >= pD && cK < cD && cK > 50;
+  const kdGold  = pK <= pD && cK > cD && cK < 50;
+  const macdWeak = pHist > cHist && cHist > 0;
+  const macdTurn = pHist < 0 && cHist > 0;
+  const rsiHot  = cRSI > 70;
+  const rsiCold = cRSI < 30;
+  const volUp   = cVol > cVolMA * 1.2;
+  const volDown = cVol < cVolMA * 0.8;
+  const bollTop = cBoll && last > cBoll.upper * 0.97;
+  const bollBot = cBoll && last < cBoll.lower * 1.03;
+
+  const signals = [];
+  if(kdDead)  signals.push({ txt:'KD 出現死亡交叉（高檔偏空）', cls:'r' });
+  if(kdGold)  signals.push({ txt:'KD 出現黃金交叉（低檔買訊）', cls:'g' });
+  if(rsiHot)  signals.push({ txt:`RSI ${cRSI.toFixed(0)} 進入超買區`, cls:'r' });
+  if(rsiCold) signals.push({ txt:`RSI ${cRSI.toFixed(0)} 進入超賣區`, cls:'g' });
+  if(macdTurn) signals.push({ txt:'MACD 柱由負轉正，動能翻多', cls:'g' });
+  if(macdWeak) signals.push({ txt:'MACD 紅柱縮短，多頭動能減弱', cls:'y' });
+  if(bollTop)  signals.push({ txt:'布林通道近上軌，短線壓力大', cls:'r' });
+  if(bollBot)  signals.push({ txt:'布林通道近下軌，短線支撐區', cls:'g' });
+  if(volUp && chgP < 0) signals.push({ txt:'量增價跌，賣壓較重', cls:'r' });
+  if(volUp && chgP > 0) signals.push({ txt:'量增價漲，多頭有力', cls:'g' });
+  if(volDown) signals.push({ txt:'成交量縮，觀望氣氛濃', cls:'y' });
+
+  // ── 4. 操作結論 ──────────────────────────────────────────────
+  const w = dirResult?.weighted ?? 0;
+  const buyHit  = [
+    pK<=pD && cK>cD && cK<50, cRSI<40, cPSY<30,
+    pHist<0&&cHist>0, cDIF>cDEA, last>cMA20,
+    cBoll&&last<cBoll.lower*1.02, cVol>cVolMA&&chgP>0
+  ].filter(Boolean).length;
+  const sellHit = [
+    pK>=pD&&cK<cD&&cK>50, cRSI>70, cPSY>75,
+    pHist>0&&cHist<0, cDIF<cDEA, last<cMA20,
+    cBoll&&last>cBoll.upper*0.98, cVol>cVolMA&&chgP<0
+  ].filter(Boolean).length;
+
+  let conclusionStr = '';
+  let tagCls = 'neut', tagLabel = '⚖️ 中性觀望';
+
+  if(buyHit >= 5 || w >= 0.6){
+    conclusionStr = `多項指標共振買進，訊號明確，可考慮進場，但仍需確認量能配合。`;
+    tagCls = 'bull'; tagLabel = '🟢 偏多進場';
+  } else if(buyHit >= 3 || w >= 0.3){
+    conclusionStr = `訊號偏多但力道不足，<strong>建議小倉試探</strong>，待方向更明確再加碼。`;
+    tagCls = 'bull'; tagLabel = '👀 偏多觀察';
+  } else if(sellHit >= 5 || w <= -0.6){
+    conclusionStr = `多項賣出訊號觸發，<strong>建議減碼或空手觀望</strong>，避免追高。`;
+    tagCls = 'bear'; tagLabel = '🔴 偏空減碼';
+  } else if(sellHit >= 3 || w <= -0.3){
+    conclusionStr = `短線偏空，現有多單注意停損位置，<strong>不建議此時追進</strong>。`;
+    tagCls = 'bear'; tagLabel = '⚠️ 謹慎偏空';
+  } else {
+    conclusionStr = `訊號不明確，多空拉鋸，<strong>建議靜待方向確認再行動</strong>，降低操作頻率。`;
+    tagCls = 'neut'; tagLabel = '⚖️ 中性觀望';
+  }
+
+  // ── 5. 外資句（若有） ──────────────────────────────────────────────
+  let foreignStr = '';
+  if(foreign && !isNaN(foreign.foreignNet)){
+    const fb = foreign.foreignNet;
+    if(fb > 5000)       foreignStr = `外資今日大幅買超 ${(fb/1000).toFixed(0)}k 張，籌碼偏多。`;
+    else if(fb > 0)     foreignStr = `外資小幅買超 ${(fb/1000).toFixed(1)}k 張。`;
+    else if(fb < -5000) foreignStr = `外資大幅賣超 ${(Math.abs(fb)/1000).toFixed(0)}k 張，需留意籌碼鬆動。`;
+    else if(fb < 0)     foreignStr = `外資賣超 ${(Math.abs(fb)/1000).toFixed(1)}k 張，短期謹慎。`;
+  }
+
+  // ── 組合摘要 ──────────────────────────────────────────────────
+  const summaryText = [priceStr, structStr, (foreignStr || ''), conclusionStr]
+    .filter(Boolean).join(' ');
+
+  const chipHtml = signals.slice(0,6).map(s =>
+    `<span class="summary-chip ${s.cls}">${s.txt}</span>`
+  ).join('');
+
+  return `
+  <div class="summary-card">
+    <div class="summary-top">
+      <span class="summary-label">📰 今日盤面速讀</span>
+      <span class="summary-tag ${tagCls}">${tagLabel}</span>
+      <span style="font-size:.68rem;color:var(--t3)">${lastDate} 收盤 ｜ 自動生成</span>
+    </div>
+    <div class="summary-main">${summaryText}</div>
+    ${chipHtml ? `<div class="summary-chips">${chipHtml}</div>` : ''}
+  </div>`;
+}
+
 function renderEventsBanner(){
   const banner = Events.renderBanner();
   if(!banner) return '';
@@ -4980,6 +5134,7 @@ let App = {
     document.getElementById('app').innerHTML =
       // ── Header ──
       renderHeader(ctx) +
+      renderDailySummary(ctx) +
       renderEventsBanner() +
 
       // ══ A 今日結論：最重要，第一眼看到 ══
