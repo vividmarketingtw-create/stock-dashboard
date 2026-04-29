@@ -339,6 +339,16 @@ a:hover{text-decoration:underline}
 .ic .sg.bear{background:rgba(239,68,68,.15);color:var(--red)}
 .ic .sg.neut{background:rgba(245,158,11,.15);color:var(--yellow)}
 .ic .dt{font-size:0.7rem;color:var(--t2);margin-top:7px;line-height:1.6}
+/* 💡 白話學習說明 */
+.ic-learn{
+  font-size:.72rem;line-height:1.55;
+  margin-top:9px;padding:7px 9px;
+  border-radius:7px;
+  background:rgba(99,102,241,.07);
+  border-left:2px solid var(--purple);
+  color:var(--t2);
+}
+.ic-learn em{font-style:normal;font-weight:600;color:var(--t1)}
 
 /* ─── tooltip（新） ─── */
 .tip{position:relative;display:inline-flex;align-items:center;justify-content:center;
@@ -445,6 +455,17 @@ a:hover{text-decoration:underline}
 @media (max-width: 480px){
   .ind-grid{grid-template-columns:1fr}
   .fund-grid{grid-template-columns:1fr}
+  /* 區塊標題：手機上允許 sec-cnt 換行顯示 */
+  .sec{flex-wrap:wrap;gap:5px}
+  .sec-cnt{flex-basis:100%;padding-left:0}
+  /* 速讀卡：手機縮小內距 */
+  .summary-card{padding:16px 14px}
+  .summary-main{font-size:.9rem}
+  /* 部位計算機網格 */
+  .poscalc-grid{grid-template-columns:1fr}
+  .poscalc-out{grid-template-columns:1fr}
+  /* 學習說明縮小 */
+  .ic-learn{font-size:.7rem}
 }
 
 /* ─── 多時間框架（MTF） ─── */
@@ -3791,14 +3812,16 @@ function renderAnalysis(ctx){
   </div>`;
 }
 
-function ic(cls, name, tipKey, val, valCls, sigCls, sigTxt, detail){
+function ic(cls, name, tipKey, val, valCls, sigCls, sigTxt, detail, learn){
   const tip = tipKey && TIPS[tipKey] ? `<span class="tip" data-tip="${TIPS[tipKey]}">?</span>` : '';
+  const learnHtml = learn ? `<div class="ic-learn">💡 ${learn}</div>` : '';
   return `
     <div class="ic ${cls}">
       <div class="nm">${name}${tip}</div>
       <div class="vl ${valCls}">${val}</div>
       <span class="sg ${sigCls}">${sigTxt}</span>
       <div class="dt">${detail}</div>
+      ${learnHtml}
     </div>`;
 }
 
@@ -3909,38 +3932,98 @@ function renderIndicators(ctx){
   </div>
   <div class="ind-grid">
     ${ic(cls('psy'),'PSY 心理線（12日）','psy',F.num(cPSY,1),valC('psy'),cls('psy'),st(S.psy),
-      `&gt;75 過熱 ｜ &lt;25 超賣<br>狀態：${cPSY>75?'🔴 過熱':cPSY<25?'🟢 超賣':'⚪ 正常'}`)}
+      `&gt;75 過熱 ｜ &lt;25 超賣<br>狀態：${cPSY>75?'🔴 過熱':cPSY<25?'🟢 超賣':'⚪ 正常'}`,
+      cPSY>75
+        ? '現在<em>過熱</em>：這12天有超過9天在漲，大家追漲情緒高。此時買進風險較高，建議等回調再進場。'
+        : cPSY<25
+        ? '現在<em>超賣</em>：這12天不到3天在漲，市場極度悲觀。往往是長線布局的便宜時機，但要確認趨勢。'
+        : '現在<em>正常</em>：漲跌天數比例平衡，市場情緒沒有極端，可依其他指標決策。'
+    )}
     ${ic(cls('kdCross'),'KD 交叉訊號（9日）','kd',`K ${F.num(cK,1)} ／ D ${F.num(cD,1)}`,'',cls('kdCross'),
       S.kdCross===1?'▲ 黃金交叉':S.kdCross===-1?'▼ 死亡交叉':'— 無交叉',
-      `前日 K${F.num(pK,1)} D${F.num(pD,1)} → 今 K${F.num(cK,1)} D${F.num(cD,1)}`)}
+      `前日 K${F.num(pK,1)} D${F.num(pD,1)} → 今 K${F.num(cK,1)} D${F.num(cD,1)}`,
+      S.kdCross===1
+        ? '🟢 <em>黃金交叉</em>：K線從下方穿越D線，短線動能轉強。是教科書的買進訊號，但搭配其他指標更可靠。'
+        : S.kdCross===-1
+        ? '🔴 <em>死亡交叉</em>：K線從上方跌破D線，短線動能轉弱。是傳統的賣出警訊，建議減少持倉或設停損。'
+        : '⚪ <em>無交叉</em>：K和D沒有交叉，趨勢延續中。注意 K 和 D 的距離是否在縮短，縮短代表即將交叉。'
+    )}
     ${ic(cls('kdLevel'),'KD 超買超賣','kd',`K = ${F.num(cK,1)}`,valC('kdLevel'),cls('kdLevel'),
       cK>80?'▼ 超買':cK<20?'▲ 超賣':'— 中間',
-      'K&gt;80=超買，K&lt;20=超賣')}
+      'K&gt;80=超買，K&lt;20=超賣',
+      cK>80
+        ? '🔴 <em>超買</em>：K值高於80，股價短線漲過頭了。不建議此時追漲，等回落到80以下再評估。'
+        : cK<20
+        ? '🟢 <em>超賣</em>：K值低於20，股價短線跌過頭了。可能出現反彈，但要等K值回升確認才進場。'
+        : '🟡 <em>中性</em>：K值在20~80之間，無超買超賣。趨勢方向不明，搭配KD交叉訊號判斷。'
+    )}
     ${ic(cls('rsi'),'RSI 相對強弱（14日）','rsi',F.num(cRSI,1),valC('rsi'),cls('rsi'),st(S.rsi),
-      `&gt;70 過熱 ｜ &lt;30 超賣<br>狀態：${cRSI>70?'🔴 過熱':cRSI<30?'🟢 超賣':'⚪ 正常'}`)}
+      `&gt;70 過熱 ｜ &lt;30 超賣<br>狀態：${cRSI>70?'🔴 過熱':cRSI<30?'🟢 超賣':'⚪ 正常'}`,
+      cRSI>70
+        ? '🔴 <em>過熱</em>：RSI高於70，上漲力道太強，短線有回調風險。不建議此時追漲，等RSI降回70以下。'
+        : cRSI<30
+        ? '🟢 <em>超賣</em>：RSI低於30，下跌力道過猛，股價可能出現反彈。逆勢操作的觀察時機，但需確認止跌。'
+        : '🟡 <em>正常</em>：RSI在30~70之間，多空力道均衡。搭配MACD和KD判斷方向更準確。'
+    )}
     ${ic(cls('macdDir'),'MACD 多空方向','macd',`DIF ${F.num(cDIF,1)}`,valC('macdDir'),cls('macdDir'),
       S.macdDir>0?'▲ DIF&gt;DEA':'▼ DIF&lt;DEA',
-      `DEA ${F.num(cDEA,1)} ｜ 柱 ${F.num(cHist,1)} ｜ ${cHist>0?'紅柱':'綠柱'}`)}
-    ${ic(cls('macdMom'),'MACD 動能','macd',F.num(cHist,1),valC('macdMom'),cls('macdMom'),
+      `DEA ${F.num(cDEA,1)} ｜ 柱 ${F.num(cHist,1)} ｜ ${cHist>0?'紅柱':'綠柱'}`,
+      S.macdDir>0
+        ? '🟢 <em>多頭格局</em>：快線(DIF)站在慢線(DEA)上方，代表中線上升趨勢成立。持股或等回調買進。'
+        : '🔴 <em>空頭格局</em>：快線(DIF)跌破慢線(DEA)下方，代表中線下降趨勢。謹慎持股，考慮減碼或出場。'
+    )}
+    ${ic(cls('macdMom'),'MACD 動能（柱狀圖）','macd',F.num(cHist,1),valC('macdMom'),cls('macdMom'),
       S.macdMom>0?'▲ 動能擴大':'▼ 動能縮弱',
-      `${F.num(pHist,1)} → ${F.num(cHist,1)}　${S.macdMom>0?'加速':'減速'}`)}
+      `${F.num(pHist,1)} → ${F.num(cHist,1)}　${S.macdMom>0?'加速':'減速'}`,
+      S.macdMom>0
+        ? '🟢 <em>動能加速</em>：柱狀圖正在增大，漲勢（或跌勢）越來越有力。趨勢方向的朋友可以放心持有。'
+        : '🔴 <em>動能減弱</em>：柱狀圖正在縮小，趨勢力道在衰退。代表即將變盤，要開始準備應對。'
+    )}
     ${ic(cls('boll'),'布林通道（20,2）','boll',bollPct+'%',valC('boll'),cls('boll'),
       S.boll>0?'▲ 近下軌':S.boll<0?'▼ 近上軌':'— 中軌附近',
-      `上 ${cBoll?F.int(cBoll.upper):'--'} ｜ 中 ${cBoll?F.int(cBoll.mid):'--'} ｜ 下 ${cBoll?F.int(cBoll.lower):'--'}`)}
+      `上 ${cBoll?F.int(cBoll.upper):'--'} ｜ 中 ${cBoll?F.int(cBoll.mid):'--'} ｜ 下 ${cBoll?F.int(cBoll.lower):'--'}`,
+      S.boll>0
+        ? '🟢 <em>接近下軌</em>：股價跌到布林帶下緣。統計上有反彈機率，可逢低留意，但需搭配量能確認。'
+        : S.boll<0
+        ? '🔴 <em>接近上軌</em>：股價漲到布林帶上緣。短線有回落機率，不建議此時追高，等拉回再買。'
+        : '🟡 <em>中軌附近</em>：股價在正常波動範圍中間，無特殊壓力支撐。等待下一個方向訊號出現。'
+    )}
     ${ic(cls('vol'),'成交量能（20日均）','vol',`${volK} 張`,valC('vol'),cls('vol'),
       S.vol>0?'▲ 量增價漲':S.vol<0?'▼ 量增價跌':'— 量縮整理',
-      `今 ${volK}張 ｜ 均 ${volMAK}張<br>${cVol>cVolMA?'高於均量 '+((cVol/cVolMA-1)*100).toFixed(0)+'%':'低於均量 '+((1-cVol/cVolMA)*100).toFixed(0)+'%'}`)}
-    ${ic(sc(obvSig),'OBV 能量潮（新）','obv',F.k(cOBV)+'k',valC('obv'),sc(obvSig),
+      `今 ${volK}張 ｜ 均 ${volMAK}張<br>${cVol>cVolMA?'高於均量 '+((cVol/cVolMA-1)*100).toFixed(0)+'%':'低於均量 '+((1-cVol/cVolMA)*100).toFixed(0)+'%'}`,
+      S.vol>0
+        ? '🟢 <em>量增價漲</em>：成交量高且股價上漲，是最健康的漲勢。代表大家積極買入，趨勢可信。'
+        : S.vol<0
+        ? '🔴 <em>量增價跌</em>：成交量高但股價下跌，代表賣盤沉重。出逃的人多，需謹慎應對。'
+        : '🟡 <em>量縮整理</em>：成交量低於均量，市場在觀望。方向未明，等待成交量放大才確認方向。'
+    )}
+    ${ic(sc(obvSig),'OBV 能量潮','obv',F.k(cOBV)+'k','',sc(obvSig),
       obvSig>0?'▲ OBV 強於均':obvSig<0?'▼ OBV 弱於均':'— OBV 接近均',
-      `OBV vs 20MA：${cOBVMA?((cOBV-cOBVMA)/Math.abs(cOBVMA)*100).toFixed(1)+'%':'-'}<br>判斷量價是否同步累積能量`)}
+      `OBV vs 20MA：${cOBVMA?((cOBV-cOBVMA)/Math.abs(cOBVMA)*100).toFixed(1)+'%':'-'}<br>判斷量價是否同步累積能量`,
+      obvSig>0
+        ? '🟢 <em>資金悄悄流入</em>：OBV高於均線，代表有錢在默默買入，即使價格還沒大漲也是好訊號。'
+        : obvSig<0
+        ? '🔴 <em>資金悄悄流出</em>：OBV低於均線，代表賣壓在累積，即使價格還沒大跌也需留意。'
+        : '🟡 <em>資金中性</em>：OBV接近均線，資金沒有明顯偏向，等待其他指標確認方向。'
+    )}
     ${ic(atrUp?'neut':'neut','ATR 真實波幅（14）','atr',F.num(cATR,2),'',atrUp?'neut':'neut',
       atrUp?'🌪 波動放大':'😴 波動收斂',
-      `ATR=${F.num(cATR,2)} ｜ 平均=${F.num(cATRMean,2)}<br>用於停損點與明日波動範圍估計`)}
+      `ATR=${F.num(cATR,2)} ｜ 平均=${F.num(cATRMean,2)}<br>用於停損點與明日波動範圍估計`,
+      atrUp
+        ? '⚠️ <em>波動放大</em>：每天的股價波動幅度變大了。停損要設遠一點，否則容易被正常震盪震出去。'
+        : '😴 <em>波動收斂</em>：每天的股價波動幅度縮小了。可能在醞釀大行情，也可能進入長期盤整。'
+    )}
     ${ic(sc(divSig),'價格背離（RSI/MACD）','divergence',
       divSig>0?'多頭背離 🟢':divSig<0?'空頭背離 🔴':'無',
-      valC('divergence'),sc(divSig),
+      '',sc(divSig),
       divSig>0?'▲ 反轉訊號':divSig<0?'▼ 警示訊號':'— 正常',
-      divDesc)}
+      divDesc,
+      divSig>0
+        ? '🟢 <em>多頭背離</em>：價格創新低，但RSI/MACD沒有創新低。賣盤力量正在衰竭，可能即將反轉向上。高勝率底部訊號！'
+        : divSig<0
+        ? '🔴 <em>空頭背離</em>：價格創新高，但RSI/MACD沒有創新高。買盤力量正在衰竭，可能即將反轉向下。高勝率頭部訊號！'
+        : '⚪ <em>無背離</em>：價格和指標同步，趨勢結構正常，沒有反轉警訊，可跟隨現有趨勢。'
+    )}
     ${srCard}
     ${foreignCard}
   </div>
@@ -4611,8 +4694,24 @@ function renderPosCalc(ctx){
     atrStopMult: set.atrStopMult, rrRatio: set.rrRatio
   });
   if(!result) return '';
+  // 計算台積電1張的金額與ATR風險
+  const lotValue = last * 1000;
+  const atrRisk = cATR ? Math.round(cATR * 1000) : null;
   return `
   <div class="sec">💰 部位計算機 <span class="sec-cnt">輸入資金和進場價，自動算出應買幾張、停損設哪裡、目標獲利多少 — 嚴守停損是長期獲利的關鍵</span></div>
+  <!-- 風險意識提示卡 -->
+  <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:12px;padding:14px 18px;margin-bottom:12px;display:flex;gap:12px;align-items:flex-start">
+    <span style="font-size:1.3rem;line-height:1">⚠️</span>
+    <div>
+      <div style="font-weight:700;font-size:.85rem;color:var(--yellow);margin-bottom:5px">投資風險提醒 — 新手必讀</div>
+      <div style="font-size:.78rem;color:var(--t2);line-height:1.7">
+        台積電現價 <strong style="color:var(--t1)">${F.int(last)} 元</strong>，買 1 張需要約 <strong style="color:var(--t1)">${(lotValue/10000).toFixed(0)} 萬元</strong>。
+        ${atrRisk ? `依目前市場波動（ATR），<strong style="color:var(--yellow)">1 張每天平均波動約 ${atrRisk.toLocaleString()} 元</strong>，這是正常的上下震盪，設停損時要考慮這個幅度。` : ''}
+        <br>
+        ✅ <em>每次交易虧損不超過總資金的 2%</em>，才能在連續錯誤中保住本金。請確認停損位置後再下單。
+      </div>
+    </div>
+  </div>
   <div class="poscalc">
     <div class="poscalc-grid">
       <div class="poscalc-form">
