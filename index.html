@@ -826,6 +826,65 @@ body.light .signal-light-card,body.light .ind-alert-panel,body.light .daily-brie
 body.light .candle-patterns-card,body.light .sox-corr,body.light .false-signal-card{
   box-shadow:0 2px 8px rgba(0,0,0,.08)
 }
+
+/* ═══ 區塊分組標頭 (Zone Headers) ═══ */
+.zone-header{
+  display:flex;align-items:flex-start;gap:14px;
+  margin:28px 0 16px;padding:14px 18px;
+  border-radius:12px;
+  background:linear-gradient(135deg,rgba(59,130,246,.07),rgba(139,92,246,.05));
+  border-left:4px solid var(--blue);
+  position:relative;overflow:hidden;
+}
+.zone-header::after{
+  content:'';position:absolute;right:-20px;top:-20px;
+  width:80px;height:80px;border-radius:50%;
+  background:rgba(139,92,246,.06);
+}
+.zh-letter{
+  width:34px;height:34px;border-radius:8px;flex-shrink:0;
+  background:var(--blue);display:flex;align-items:center;justify-content:center;
+  font-size:.9rem;font-weight:800;color:#fff;letter-spacing:-.01em;margin-top:1px;
+}
+.zh-emoji{font-size:1.5rem;flex-shrink:0;margin-top:2px}
+.zh-body{flex:1;min-width:0}
+.zh-title{font-size:1rem;font-weight:800;color:var(--t1);letter-spacing:.01em}
+.zh-desc{font-size:.76rem;color:var(--t2);margin-top:3px;line-height:1.5}
+.zh-badge{
+  align-self:flex-start;padding:3px 10px;border-radius:10px;
+  font-size:.7rem;font-weight:700;white-space:nowrap;margin-top:4px;
+}
+.zh-badge.live{background:rgba(16,185,129,.15);color:var(--green)}
+.zh-badge.analysis{background:rgba(59,130,246,.15);color:var(--blue)}
+.zh-badge.strategy{background:rgba(245,158,11,.15);color:var(--yellow)}
+.zh-badge.advanced{background:rgba(100,116,139,.15);color:var(--t2)}
+.zh-badge.personal{background:rgba(139,92,246,.15);color:var(--purple)}
+
+/* Zone 顏色變體 */
+.zone-header.zone-a{border-left-color:var(--green);background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(52,211,153,.04))}
+.zone-header.zone-a .zh-letter{background:var(--green)}
+.zone-header.zone-b{border-left-color:var(--cyan);background:linear-gradient(135deg,rgba(6,182,212,.08),rgba(6,182,212,.03))}
+.zone-header.zone-b .zh-letter{background:var(--cyan)}
+.zone-header.zone-c{border-left-color:var(--purple);background:linear-gradient(135deg,rgba(139,92,246,.08),rgba(139,92,246,.03))}
+.zone-header.zone-c .zh-letter{background:var(--purple)}
+.zone-header.zone-d{border-left-color:var(--yellow);background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(245,158,11,.03))}
+.zone-header.zone-d .zh-letter{background:var(--yellow);color:#1a1a1a}
+.zone-header.zone-e{border-left-color:var(--blue);background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(59,130,246,.03))}
+.zone-header.zone-f{border-left-color:var(--red);background:linear-gradient(135deg,rgba(239,68,68,.08),rgba(239,68,68,.03))}
+.zone-header.zone-f .zh-letter{background:var(--red)}
+.zone-header.zone-g{border-left-color:var(--t3);background:linear-gradient(135deg,rgba(100,116,139,.06),rgba(100,116,139,.02))}
+.zone-header.zone-g .zh-letter{background:var(--t3)}
+
+/* 新手說明 tooltip */
+.hint-tag{
+  display:inline-flex;align-items:center;gap:3px;
+  padding:2px 7px;border-radius:8px;font-size:.68rem;font-weight:600;
+  background:rgba(59,130,246,.12);color:var(--blue);cursor:help;
+  border:1px solid rgba(59,130,246,.2);margin-left:6px;vertical-align:middle;
+}
+.hint-tag:hover{background:rgba(59,130,246,.2)}
+
+body.light .zone-header{background:linear-gradient(135deg,rgba(59,130,246,.06),rgba(139,92,246,.03))}
 </style>
 </head>
 <body>
@@ -2389,9 +2448,18 @@ function renderHeader(ctx){
         <div class="lw-time" id="lw-time"></div>
       </div>
       <div class="price">
-        <div class="now" style="color:${pc}">${F.int(last)}</div>
-        <div class="chg" style="color:${pc}">${chg >= 0 ? '▲' : '▼'} ${F.int(Math.abs(chg))} &nbsp;(${F.pct(chgP)})</div>
-        <div class="ts">最新日期 ${lastDate} ｜ ${ts} ${staleHtml}</div>
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+          <div>
+            <div style="font-size:.68rem;color:var(--t3);margin-bottom:2px">52週最高</div>
+            <div style="font-size:1rem;font-weight:700;color:var(--red2)">${F.int(ctx.high52 ?? 0)}</div>
+          </div>
+          <div style="width:1px;height:28px;background:var(--border)"></div>
+          <div>
+            <div style="font-size:.68rem;color:var(--t3);margin-bottom:2px">52週最低</div>
+            <div style="font-size:1rem;font-weight:700;color:var(--green2)">${F.int(ctx.low52 ?? 0)}</div>
+          </div>
+        </div>
+        <div class="ts" style="margin-top:6px">最新日期 ${lastDate} ｜ ${ts} ${staleHtml}</div>
       </div>
       <div class="alert-wrap">
         <button class="alert-btn ${alertCount ? 'has-alerts' : ''}" id="alert-btn"
@@ -3047,7 +3115,8 @@ function renderBuySellPanel(ctx){
   //  渲染輸出
   // ══════════════════════════════════════════════
   return `
-  <div class="sec">💹 逢高賣出 ／ 逢低買進 訊號
+  <div class="sec">💹 買賣訊號總覽 <span class="sec-cnt">KD · RSI · MACD · 布林 · 均線 · 量能 — 綠色＝買進訊號，紅色＝賣出訊號，數量越多代表訊號越強</span></div>
+  <div class="sec" style="display:none">💹 逢高賣出 ／ 逢低買進 訊號
     <span class="sec-cnt">v5 · 七大條件 · MFI資金流 · 吞噬型態 · 量能高潮 · 費波那契關卡</span>
   </div>
 
@@ -3216,7 +3285,7 @@ function renderEntryPanel(ctx){
   const bollPct = ctx.bollPct;
   const cBoll = ctx.cBoll, last = ctx.last;
   return `
-  <div class="sec">🎯 進出場時機評分</div>
+  <div class="sec">🎯 進出場時機評分 <span class="sec-cnt">綜合量能、位置、布林帶給出 0-100 分的進場評估，分數越高越適合進場</span></div>
   <div class="entry-panel">
     <div class="entry-top">
       <div class="entry-score-ring">
@@ -3424,7 +3493,7 @@ function renderAnalysis(ctx){
     </div><hr class="ac-divider">`;
 
   return `
-  <div class="sec">📝 今日白話文解析</div>
+  <div class="sec">📝 今日完整盤後解析 <span class="sec-cnt">用白話文說明今日各項指標的意義，新手必讀，快速掌握盤後重點</span></div>
   <div class="analysis-card">
     <div class="ac-title">
       AI 自動生成解析
@@ -3542,7 +3611,7 @@ function renderIndicators(ctx){
 
   return `
   <div class="sec collapsible-hd" onclick="(function(el){const b=document.getElementById('ind-body');b.classList.toggle('col-closed');el.querySelector('.col-toggle').textContent=b.classList.contains('col-closed')?'▶ 展開':'▼ 收折'})(this)">
-    📊 技術面指標 <span class="sec-cnt">滑鼠移到 ? 圖示可看詳細解釋</span>
+    📊 所有技術指標數值 <span class="sec-cnt">PSY·KD·RSI·MACD·布林·OBV·ATR — 滑鼠移到「?」可看說明；綠色表示多頭，紅色表示空頭</span>
     <span class="col-toggle">▼ 收折</span>
   </div>
   <div id="ind-body" class="collapsible-body" style="max-height:9999px">
@@ -3646,7 +3715,7 @@ function renderMA(ctx){
 
 function renderFundamentals(){
   return `
-  <div class="sec">📋 基本面 & 籌碼面（外部連結）</div>
+  <div class="sec">📋 延伸閱讀資源 <span class="sec-cnt">台積電基本面、法人動向等外部資料連結，搭配技術分析做更全面的判斷</span></div>
   <div class="fund-grid">
     <div class="fc"><div class="ft">🏦 三大法人買賣超</div><div class="fv">外資為台積電最關鍵籌碼</div>
       <div class="fn">外資連買=主升段前兆 ｜ 連賣=注意修正<br><a href="https://www.twse.com.tw/zh/trading/fund/T86.html" target="_blank">→ 證交所 三大法人</a></div></div>
@@ -3685,6 +3754,7 @@ function renderMarketRegime(ctx){
         ⚠️ ${todaySpecial}：KNN 預測可信度降低
       </span>` : '';
   return `
+  <div class="sec">🏗️ 市場結構判斷 <span class="sec-cnt">趨勢盤 = 追漲殺跌有效；盤整盤 = 高賣低買；ADX 指標判斷目前屬於哪一種</span></div>
   <div style="background:var(--card2);border-left:4px solid ${regimeCol};border-radius:10px;
     padding:12px 20px;margin-bottom:14px;display:flex;align-items:center;gap:18px;flex-wrap:wrap">
     <div>
@@ -3762,7 +3832,7 @@ function renderChipFlow(ctx){
   const tColor = !isNaN(foreign?.trustNet) ? (foreign.trustNet > 0 ? 'var(--green)' : foreign.trustNet < 0 ? 'var(--red)' : 'var(--t2)') : 'var(--t2)';
 
   return `
-  <div class="sec">🏦 籌碼流向 <span class="sec-cnt">外資 + 投信連續買賣超分析</span></div>
+  <div class="sec">🏦 法人籌碼流向 <span class="sec-cnt">外資（外國機構）、投信（本土基金）連續買賣超 — 連續買超代表法人看多，賣超代表看空</span></div>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:14px">
     <div class="ic">
       <div class="nm">外資 今日買賣超</div>
@@ -3820,8 +3890,8 @@ function renderMorning(ctx){
   <div class="morning-card">
     <div class="mc-icon">🌅</div>
     <div class="mc-body">
-      <div class="mc-title">早盤檢查 · 昨夜 SOX 漲跌（領先指標）</div>
-      <div class="mc-sub">SOX（費城半導體指數）在美股收盤後通常領先台積電 1~3 個交易日。輸入後會自動修正下方「明日漲跌機率」。</div>
+      <div class="mc-title">美股費半（SOX）昨夜漲跌 — 台積電的領先指標</div>
+      <div class="mc-sub">費城半導體指數（SOX）漲跌通常領先台積電 1~3 個交易日。輸入昨夜美股 SOX 漲跌幅，系統會自動調整「明日預測」的機率。</div>
       ${v != null ? `<div class="mc-effect">${eff}</div>` : ''}
     </div>
     <div class="mc-input">
@@ -3862,7 +3932,7 @@ function renderMTF(ctx){
     </div>`;
   };
   return `
-  <div class="sec">🔭 多時間框架共振 <span class="sec-cnt">日／週／月線方向疊加判斷</span></div>
+  <div class="sec">🔭 多週期共振分析 <span class="sec-cnt">日線（短期）× 週線（中期）× 月線（長期）三個時框方向一致時，訊號最可靠</span></div>
   <div class="mtf-grid">
     ${tf('日線（短期）', mtfResult.daily)}
     ${tf('週線（中期）', mtfResult.weekly)}
@@ -3886,7 +3956,7 @@ function renderPosCalc(ctx){
   });
   if(!result) return '';
   return `
-  <div class="sec">💰 部位計算機 <span class="sec-cnt">基於 ATR 自動算停損／停利／部位大小（波段預設 2.5×ATR、R:R 1:2.5）</span></div>
+  <div class="sec">💰 部位計算機 <span class="sec-cnt">輸入資金和進場價，自動算出應買幾張、停損設哪裡、目標獲利多少 — 嚴守停損是長期獲利的關鍵</span></div>
   <div class="poscalc">
     <div class="poscalc-grid">
       <div class="poscalc-form">
@@ -3968,7 +4038,7 @@ function renderJournal(ctx){
   const closedPositions = j.positions.filter(p => p.status === 'closed').slice(-15).reverse();
 
   return `
-  <div class="sec">📒 我的交易日誌 <span class="sec-cnt">記錄你的每筆決策、累積你的交易勝率</span></div>
+  <div class="sec">📒 我的交易日誌 <span class="sec-cnt">記錄每筆買進/賣出 → 系統自動計算你的個人勝率與盈虧比，找出你最強的進場模式</span></div>
   <div class="journal-card">
     <div class="journal-tabs">
       <button class="journal-tab active" data-jt="positions">🏷 持倉 (${openPositions.length})</button>
@@ -4387,32 +4457,74 @@ let App = {
     ScoreHistory.push(dirResult.weighted, lastDate);
 
     document.getElementById('app').innerHTML =
+      // ── Header ──
       renderHeader(ctx) +
-      renderSessionBar() +
+
+      // ══ A 今日結論：最重要，第一眼看到 ══
+      renderGroupHeader('A','🚦','今日操作結論',
+        '一眼判斷今天該買進、觀望還是賣出 — 系統自動統整所有指標給出操作建議',
+        '每次載入更新','live') +
       renderSignalLight(ctx) +
-      renderDailyBrief(ctx) +
-      renderCandlePatterns(ctx) +
       renderAlertPanel(ctx) +
+
+      // ══ B 盤中即時追蹤 ══
+      renderGroupHeader('B','📡','盤中即時追蹤',
+        '交易時間 09:00～13:30 每 60 秒自動更新。盤後顯示收盤後的技術面評估',
+        '60秒更新','live') +
+      renderSessionBar() +
       renderIntradayCard() +
       renderRealtimeEval() +
-      renderMorning(ctx) +
+
+      // ══ C 今日技術分析 ══
+      renderGroupHeader('C','📊','今日技術分析',
+        '多項指標綜合研判今日多空方向，走勢圖標記歷史買賣訊號點位',
+        '核心判斷','analysis') +
       renderTopRow(ctx) +
-      renderMarketRegime(ctx) +
+      renderCandlePatterns(ctx) +
       renderVolPriceDivAlert(ctx) +
-      renderScoreHistory() +
-      renderSOXCorr(ctx) +
-      renderMTF(ctx) +
-      renderPredictionPanel(ctx) +
+
+      // ══ D 進出場策略 ══
+      renderGroupHeader('D','🎯','進出場策略',
+        '根據技術指標告訴你現在適不適合進場，以及建議的分批操作方式',
+        '操作建議','strategy') +
       renderBuySellPanel(ctx) +
       renderEntryPanel(ctx) +
-      renderJournal(ctx) +
-      renderPosCalc(ctx) +
+      renderDailyBrief(ctx) +
+
+      // ══ E 市場環境 ══
+      renderGroupHeader('E','🌐','市場環境判讀',
+        '判斷現在是趨勢行情還是盤整震盪，搭配美股半導體指數（SOX）領先參考',
+        '環境分析','analysis') +
+      renderMarketRegime(ctx) +
+      renderMTF(ctx) +
+      renderMorning(ctx) +
+
+      // ══ F 明日展望 ══
+      renderGroupHeader('F','🔮','明日展望',
+        '基於歷史相似走勢（K-NN 演算法）+ ATR 波動率，預估明日可能漲跌區間',
+        '預測參考','strategy') +
+      renderPredictionPanel(ctx) +
+      renderScoreHistory() +
+
+      // ══ G 深度分析（進階）══
+      renderGroupHeader('G','🔬','深度分析（進階）',
+        '完整的指標數值、籌碼面、均線矩陣與統計報告，適合想深入研究的投資人',
+        '進階內容','advanced') +
       renderAnalysis(ctx) +
       renderIndicators(ctx) +
       renderMA(ctx) +
       renderChipFlow(ctx) +
+      renderSOXCorr(ctx) +
       renderFundamentals() +
+
+      // ══ H 我的操作紀錄 ══
+      renderGroupHeader('H','💼','我的操作紀錄',
+        '記錄每一筆買賣決策，系統自動計算你的勝率、盈虧比，幫你持續進步',
+        '個人化','personal') +
+      renderPosCalc(ctx) +
+      renderJournal(ctx) +
       renderFalseSignals() +
+
       renderFooter(ctx) +
       `<div class="toast-area" id="toast-area"></div>
        <div class="modal-overlay" id="modal-overlay"><div class="modal" id="modal-content"></div></div>
@@ -6821,6 +6933,25 @@ function renderWinRateDetail(){
     <div class="wr-grid">${cellHtml}</div>
     ${dayHtml ? `<div class="wr-section-title">⏱ 按持有天數分析勝率</div><div class="wr-grid">${dayHtml}</div>` : ''}
   `;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UI HELPER: 區塊分組標頭
+   ═══════════════════════════════════════════════════════════════ */
+function renderGroupHeader(zone, emoji, title, desc, badgeText='', badgeClass=''){
+  const badgeHtml = badgeText
+    ? `<span class="zh-badge ${badgeClass}">${badgeText}</span>`
+    : '';
+  return `
+  <div class="zone-header zone-${zone.toLowerCase()}">
+    <div class="zh-letter">${zone}</div>
+    <div class="zh-emoji">${emoji}</div>
+    <div class="zh-body">
+      <div class="zh-title">${title}</div>
+      <div class="zh-desc">${desc}</div>
+    </div>
+    ${badgeHtml}
+  </div>`;
 }
 
 Theme.init();
