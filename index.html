@@ -884,6 +884,26 @@ body.light .candle-patterns-card,body.light .sox-corr,body.light .false-signal-c
 }
 .hint-tag:hover{background:rgba(59,130,246,.2)}
 
+/* ── 杜金龍功能：KD 共振卡片 ── */
+.du-kd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:10px;margin-bottom:12px}
+.du-kd-card{background:var(--card);border-radius:10px;padding:14px 16px;border:1px solid var(--border)}
+.du-kd-label{font-size:.72rem;color:var(--t3);margin-bottom:6px;font-weight:600;letter-spacing:.02em}
+.du-kd-cross{font-size:.9rem;font-weight:800;margin-bottom:4px}
+.du-kd-vals{font-size:.7rem;color:var(--t2)}
+.du-resonance-bar{background:var(--card);border-radius:10px;padding:14px 16px;margin-bottom:14px;border:1px solid var(--border)}
+/* ── 杜金龍功能：外資連續天數 ── */
+.du-foreign-card{background:var(--card);border-radius:12px;padding:16px 20px;margin-bottom:14px;border:1px solid var(--border);display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
+.du-foreign-main{flex:1;min-width:180px}
+.du-streak-num{font-size:2rem;font-weight:900;line-height:1;margin-bottom:4px}
+.du-streak-label{font-size:.78rem;font-weight:700;margin-bottom:6px}
+.du-streak-dots{display:flex;gap:4px;flex-wrap:wrap;margin:8px 0 6px}
+.du-streak-dot{width:14px;height:14px;border-radius:50%}
+.du-streak-sub{font-size:.7rem;color:var(--t3);line-height:1.4}
+.du-foreign-rule{flex:1;min-width:200px;border-left:1px solid var(--border);padding-left:16px;font-size:.72rem;color:var(--t2);line-height:1.7}
+.du-foreign-rule strong{color:var(--t1);display:block;font-size:.75rem;margin-bottom:6px}
+
+body.light .du-kd-card,body.light .du-resonance-bar,body.light .du-foreign-card{background:#fff;border-color:#e2e8f0}
+
 body.light .zone-header{background:linear-gradient(135deg,rgba(59,130,246,.06),rgba(139,92,246,.03))}
 </style>
 </head>
@@ -3945,6 +3965,173 @@ function renderMTF(ctx){
   </div>`;
 }
 
+/* ── 杜金龍功能 1：週/月 KD 共振卡片 ── */
+function renderDuKDResonance(ctx){
+  const { mtfResult, cK, cD, rows } = ctx;
+  if(!mtfResult) return '';
+
+  // 計算週線 KD（用 5 日聚合後的 bar 陣列）
+  let wK = null, wD = null;
+  try {
+    if(Array.isArray(rows) && rows.length >= 30){
+      const weeklyBars = MTF.resample(rows, 5).slice(-30);
+      if(weeklyBars.length >= 9){
+        const wH = weeklyBars.map(b => b.high);
+        const wL = weeklyBars.map(b => b.low);
+        const wC = weeklyBars.map(b => b.close);
+        const { K: WK, D: WD } = Ind.kd(wH, wL, wC);
+        const wn = weeklyBars.length;
+        wK = WK[wn-1]; wD = WD[wn-1];
+      }
+    }
+  } catch(e){ /* 防禦性處理 */ }
+
+  // 狀態判定
+  const dailyBull  = cK != null && cD != null && cK > cD;
+  const weeklyBull = wK != null && wD != null && wK > wD;
+  const monthlyBull = mtfResult.monthly && mtfResult.monthly.ratio > 0;
+
+  const resonanceCount = [dailyBull, weeklyBull, monthlyBull].filter(Boolean).length;
+  const resColor = resonanceCount === 3 ? 'var(--green)'
+                 : resonanceCount === 2 ? 'var(--yellow)'
+                 : resonanceCount === 1 ? 'var(--red2)' : 'var(--red)';
+  const resLabel = resonanceCount === 3
+    ? '🚀 三線 KD 共振多頭 — 杜金龍最強進場訊號！'
+    : resonanceCount === 2
+    ? '✨ 兩線共振 — 進場機率提升，但需等第三線確認'
+    : resonanceCount === 1
+    ? '⏳ 共振尚未形成 — 觀望，勿搶進'
+    : '⚠️ 三線 KD 全部偏空 — 嚴禁進場，先行觀望';
+
+  const kdCard = (label, k, d, isBull) => {
+    if(k == null) return `
+    <div class="du-kd-card">
+      <div class="du-kd-label">${label}</div>
+      <div class="du-kd-cross" style="color:var(--t3)">資料不足</div>
+      <div class="du-kd-vals">— / —</div>
+    </div>`;
+    const col  = isBull ? 'var(--green)' : 'var(--red)';
+    const word = isBull ? '🟢 黃金交叉（偏多）' : '🔴 死亡交叉（偏空）';
+    const zone = k < 20 ? '⭐ 超低檔（最佳買區）' : k < 50 ? '中段' : k < 80 ? '中高檔' : '🔥 超高檔（需小心）';
+    return `
+    <div class="du-kd-card">
+      <div class="du-kd-label">${label}</div>
+      <div class="du-kd-cross" style="color:${col}">${word}</div>
+      <div class="du-kd-vals">K = ${k.toFixed(1)} ／ D = ${d.toFixed(1)} ｜ ${zone}</div>
+    </div>`;
+  };
+
+  const monthlyCard = () => {
+    const m = mtfResult.monthly;
+    if(!m) return `<div class="du-kd-card">
+      <div class="du-kd-label">🗓 月線趨勢方向</div>
+      <div class="du-kd-cross" style="color:var(--t3)">資料不足</div>
+    </div>`;
+    const col  = monthlyBull ? 'var(--green)' : 'var(--red)';
+    const word = m.direction === 'strong_bull' ? '🟢 強多頭格局'
+               : m.direction === 'bull'        ? '🟢 偏多'
+               : m.direction === 'mixed'       ? '🟡 多空分歧'
+               : m.direction === 'bear'        ? '🔴 偏空'
+               : '🔴 強空頭格局';
+    return `<div class="du-kd-card">
+      <div class="du-kd-label">🗓 月線趨勢方向</div>
+      <div class="du-kd-cross" style="color:${col}">${word}</div>
+      <div class="du-kd-vals">長期評分 ${m.score >= 0 ? '+' : ''}${m.score} / ±6（以 MA60/120/240 判斷）</div>
+    </div>`;
+  };
+
+  return `
+  <div class="sec">🎯 杜金龍 KD 多週期共振 <span class="sec-cnt">日 × 週 × 月三線 KD 同步出現黃金交叉，是杜老師最看重的最強多頭進場訊號</span></div>
+  <div class="du-kd-grid">
+    ${kdCard('📅 日線 KD（短期）', cK, cD, dailyBull)}
+    ${kdCard('📆 週線 KD（中期）', wK, wD, weeklyBull)}
+    ${monthlyCard()}
+  </div>
+  <div class="du-resonance-bar" style="border-left:4px solid ${resColor}">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="display:flex;gap:6px">
+        ${[0,1,2].map(i =>
+          `<div style="width:18px;height:18px;border-radius:50%;background:${i < resonanceCount ? resColor : 'var(--border)'};transition:background .3s"></div>`
+        ).join('')}
+      </div>
+      <span style="color:${resColor};font-weight:800;font-size:.9rem">${resLabel}</span>
+    </div>
+    <div style="margin-top:8px;font-size:.73rem;color:var(--t3);line-height:1.6">
+      <strong style="color:var(--t2)">杜金龍操作法：</strong>
+      當日、週、月三個時間框架 KD 指標同時出現黃金交叉（K 由下向上穿越 D），
+      且 K 值在低檔（建議 50 以下）形成，為最高可信度買進訊號。
+      反之，若三線皆死亡交叉則應空手觀望。
+    </div>
+  </div>`;
+}
+
+/* ── 杜金龍功能 2：外資連續買賣超天數計數器 ── */
+function renderDuForeignStreak(ctx){
+  const { chipStats, foreign } = ctx;
+  if(!chipStats) return `
+  <div class="du-foreign-card">
+    <div class="du-foreign-main">
+      <div class="du-streak-label" style="color:var(--t3)">🏦 杜金龍外資法則</div>
+      <div style="font-size:.75rem;color:var(--t3);margin-top:6px">累積資料不足，請重新整理後等待資料累積（需至少 2 個交易日）。</div>
+    </div>
+  </div>`;
+
+  const fc = chipStats.foreignConsec; // 正=連買，負=連賣
+  const abs = Math.abs(fc);
+  const isBuy = fc > 0;
+  const isNeutral = fc === 0;
+
+  const streakColor = isNeutral ? 'var(--t2)' : isBuy ? 'var(--green)' : 'var(--red)';
+  const streakIcon  = isNeutral ? '⚪' : isBuy ? '🟢' : '🔴';
+  const streakWord  = isNeutral ? '方向未定'
+                    : isBuy  ? `連續買超 ${abs} 天 ▲`
+                    : `連續賣超 ${abs} 天 ▼`;
+
+  // 最多顯示 10 個點
+  const dotCount = Math.min(abs, 10);
+  const dotColor = isBuy ? 'var(--green)' : isNeutral ? 'var(--t3)' : 'var(--red)';
+  const dots = Array.from({length: dotCount}, (_, i) => {
+    const opacity = 0.4 + (i / Math.max(dotCount - 1, 1)) * 0.6;
+    return `<div class="du-streak-dot" style="background:${dotColor};opacity:${opacity.toFixed(2)}"></div>`;
+  }).join('');
+
+  // 強度詮釋（杜金龍法則）
+  let duVerdict = '';
+  if(fc >= 10)       duVerdict = '🚀 外資超強力買超（≥10天）— 主力建倉訊號，波段上漲機率極高';
+  else if(fc >= 5)   duVerdict = '📈 外資持續買超（≥5天）— 多頭籌碼穩固，可積極進場';
+  else if(fc >= 3)   duVerdict = '✅ 外資連買 3 天以上 — 杜老師認定為「有效買超」';
+  else if(fc >= 1)   duVerdict = '👀 外資開始買超 — 持續觀察是否延續';
+  else if(fc === 0)  duVerdict = '— 今日方向中立，明日再觀察';
+  else if(fc >= -2)  duVerdict = '⚠️ 外資短暫賣超 — 量不大可觀察，勿恐慌';
+  else if(fc >= -5)  duVerdict = '📉 外資連賣超 — 籌碼鬆動，減少持倉';
+  else               duVerdict = '🚨 外資大量持續賣超 — 杜老師建議清倉觀望';
+
+  const fk = n => n == null || isNaN(n) ? '--' : (n >= 0 ? '+' : '') + (n/1000).toFixed(0) + 'K張';
+  const todayF = foreign ? fk(foreign.foreignNet) : '--';
+  const cum5F  = fk(chipStats.foreignCum5);
+
+  return `
+  <div class="du-foreign-card">
+    <div class="du-foreign-main">
+      <div class="du-streak-label" style="color:${streakColor}">${streakIcon} ${streakWord}</div>
+      <div class="du-streak-dots">${dots || '<span style="color:var(--t3);font-size:.72rem">（今日資料）</span>'}</div>
+      <div style="font-size:.75rem;color:var(--t2);margin-bottom:4px">
+        今日：<strong style="color:${fk(foreign?.foreignNet)?.startsWith('+') ? 'var(--green)' : 'var(--red)'}">${todayF}</strong>
+        ｜近 5 日累積：<strong>${cum5F}</strong>
+      </div>
+      <div style="font-size:.75rem;color:${streakColor};font-weight:700">${duVerdict}</div>
+    </div>
+    <div class="du-foreign-rule">
+      <strong>📌 杜金龍外資法則</strong>
+      連續 3 天以上買超 → 有效多頭籌碼<br>
+      連續 5 天以上 → 波段行情啟動<br>
+      連續 10 天以上 → 主力建倉，可重倉<br>
+      連續賣超 3 天 → 減碼或出場觀望<br>
+      <span style="color:var(--t3)">外資占台積電日均成交 30~50%，<br>其方向是最重要的籌碼指標。</span>
+    </div>
+  </div>`;
+}
+
 function renderPosCalc(ctx){
   const { last, cATR } = ctx;
   const set = Journal.state.settings;
@@ -4446,7 +4633,8 @@ let App = {
       ES, AM,
       prob, cone, conf, backtest,
       mtfResult, mtfRes,
-      adxCtx, todaySpecial, chipStats
+      adxCtx, todaySpecial, chipStats,
+      rows: this.rows
     };
 
     // ── 建立 snapshot 並評估規則 ──
@@ -4497,6 +4685,7 @@ let App = {
         '環境分析','analysis') +
       renderMarketRegime(ctx) +
       renderMTF(ctx) +
+      renderDuKDResonance(ctx) +
       renderMorning(ctx) +
 
       // ══ F 明日展望 ══
@@ -4513,6 +4702,7 @@ let App = {
       renderAnalysis(ctx) +
       renderIndicators(ctx) +
       renderMA(ctx) +
+      renderDuForeignStreak(ctx) +
       renderChipFlow(ctx) +
       renderSOXCorr(ctx) +
       renderFundamentals() +
@@ -4892,8 +5082,40 @@ let App = {
       else if(ratio <= -0.55) sellPoints[i] = I.closes[absIdx];
     }
 
+    // ── 整數關卡水平線（杜金龍功能 3）──
+    const roundLevelPlugin = {
+      id: 'roundLevels',
+      afterDraw(chart){
+        const c2  = chart.ctx;
+        const yAx = chart.scales.y;
+        const xAx = chart.scales.x;
+        if(!yAx || !xAx) return;
+        const pMin = yAx.min, pMax = yAx.max;
+        const step = (pMax - pMin) > 1000 ? 500 : 100;
+        const start = Math.ceil(pMin / step) * step;
+        c2.save();
+        c2.setLineDash([5, 7]);
+        c2.lineWidth = 0.7;
+        for(let p = start; p <= pMax; p += step){
+          const y = yAx.getPixelForValue(p);
+          // 線條
+          c2.strokeStyle = 'rgba(148,163,184,0.18)';
+          c2.beginPath();
+          c2.moveTo(xAx.left, y);
+          c2.lineTo(xAx.right, y);
+          c2.stroke();
+          // 標籤
+          c2.fillStyle = 'rgba(148,163,184,0.55)';
+          c2.font = '9px monospace';
+          c2.fillText(p.toLocaleString(), xAx.left + 4, y - 3);
+        }
+        c2.restore();
+      }
+    };
+
     pchart = new Chart(ctx, {
       type: 'line',
+      plugins: [roundLevelPlugin],
       data: {
         labels: I.labels.slice(-N),
         datasets: [
