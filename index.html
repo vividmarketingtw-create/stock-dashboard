@@ -727,6 +727,90 @@ body.light .hd{ background:rgba(255,255,255,0.95); }
   padding:18px;margin-bottom:14px}
 .score-hist h3{font-size:0.8rem;color:var(--t2);margin-bottom:10px}
 
+/* ✦ 今日一句話橫幅 */
+.one-liner{
+  display:flex;align-items:center;gap:14px;
+  border-radius:14px;padding:16px 22px;margin-bottom:14px;
+  border:2px solid;transition:background .3s,border-color .3s;
+}
+.one-liner-icon{font-size:2rem;line-height:1;flex-shrink:0}
+.one-liner-body{flex:1}
+.one-liner-label{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;opacity:.7}
+.one-liner-text{font-size:1.05rem;font-weight:800;line-height:1.4;letter-spacing:.01em}
+.one-liner-sub{font-size:.72rem;margin-top:5px;opacity:.75;line-height:1.5}
+
+/* ✦ 新手/進階模式切換 */
+.mode-toggle-bar{
+  display:flex;align-items:center;gap:10px;
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:10px;padding:8px 16px;margin-bottom:14px;font-size:.78rem;
+}
+.mode-toggle-label{color:var(--t2);flex:1}
+.mode-pill{display:flex;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:3px}
+.mode-pill-btn{
+  padding:4px 14px;border-radius:16px;font-size:.72rem;font-weight:700;cursor:pointer;
+  border:none;background:transparent;color:var(--t2);transition:all .2s;
+}
+.mode-pill-btn.active{background:var(--purple);color:#fff}
+
+/* ✦ 交易前五問 Modal */
+.checklist-modal{
+  position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+}
+.checklist-box{
+  background:var(--card);border:1px solid var(--border);border-radius:18px;
+  padding:28px;max-width:480px;width:calc(100% - 32px);
+  box-shadow:0 20px 60px rgba(0,0,0,.4);
+}
+.checklist-title{font-size:1.1rem;font-weight:800;margin-bottom:6px}
+.checklist-sub{font-size:.75rem;color:var(--t2);margin-bottom:20px;line-height:1.6}
+.checklist-item{
+  display:flex;align-items:flex-start;gap:12px;padding:12px 14px;
+  border:1.5px solid var(--border);border-radius:10px;margin-bottom:8px;
+  cursor:pointer;transition:border-color .2s,background .2s;
+}
+.checklist-item.checked{border-color:var(--green);background:rgba(16,185,129,.06)}
+.checklist-item input[type=checkbox]{
+  width:18px;height:18px;accent-color:var(--green);flex-shrink:0;margin-top:2px;cursor:pointer
+}
+.checklist-item-text{font-size:.82rem;line-height:1.5;color:var(--t1)}
+.checklist-item-sub{font-size:.68rem;color:var(--t2);margin-top:2px}
+.checklist-btn{
+  width:100%;margin-top:16px;padding:13px;border-radius:10px;border:none;
+  font-size:.95rem;font-weight:800;cursor:pointer;transition:all .2s;
+}
+.checklist-btn.ready{background:var(--green);color:#fff}
+.checklist-btn.notready{background:var(--border);color:var(--t3);cursor:not-allowed}
+
+/* ✦ 學習路徑卡片 */
+.lp-card{
+  background:linear-gradient(135deg,rgba(139,92,246,.10),rgba(59,130,246,.06)),var(--card);
+  border:1px solid rgba(139,92,246,.3);border-radius:14px;
+  padding:16px 20px;margin-bottom:14px;
+}
+.lp-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.lp-week-badge{
+  background:var(--purple);color:#fff;border-radius:8px;
+  padding:3px 10px;font-size:.68rem;font-weight:800;flex-shrink:0;
+}
+.lp-title{font-size:.9rem;font-weight:800;flex:1}
+.lp-day{font-size:.7rem;color:var(--t2)}
+.lp-progress{height:5px;background:var(--border);border-radius:3px;margin-bottom:12px;overflow:hidden}
+.lp-progress-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--blue));border-radius:3px;transition:width .5s}
+.lp-focus{font-size:.8rem;color:var(--t1);font-weight:600;margin-bottom:6px}
+.lp-tasks{display:flex;flex-direction:column;gap:6px}
+.lp-task{
+  display:flex;align-items:center;gap:8px;font-size:.75rem;color:var(--t2);
+  background:var(--card2);border-radius:8px;padding:7px 10px;cursor:pointer;
+  border:1px solid transparent;transition:border-color .2s;
+}
+.lp-task:hover{border-color:var(--purple)}
+.lp-task .lp-task-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--purple);flex-shrink:0
+}
+.lp-dismiss{font-size:.65rem;color:var(--t3);background:none;border:none;cursor:pointer;margin-left:auto;padding:0}
+
 /* ─── Collapsible sections ─── */
 .sec-toggle{
   cursor:pointer;flex-shrink:0;margin-left:auto;
@@ -4694,6 +4778,281 @@ function renderBeginnerFlow(){
   </div>`;
 }
 
+
+/* ═══════════════════════════════════════════════════════════════
+   Task 13 — 今日一句話決策橫幅
+   ═══════════════════════════════════════════════════════════════ */
+function renderOneLiner(ctx){
+  const dirRatio = ctx.dirRatio ?? 0;
+  const knnProb  = ctx.prob?.wUpProb ?? 0.5;
+  const adxReg   = ctx.adxCtx?.adxRegime ?? '';
+  const cADX     = ctx.adxCtx?.cADX ?? 0;
+  const twiiDir  = ctx.twii?.direction ?? 'neutral';
+  const es       = ctx.ES?.total ?? 0;
+  const mtf      = ctx.mtfResult;
+  const weeklyBull  = (mtf?.weekly?.ratio  ?? 0) >  0.15;
+  const monthlyBull = (mtf?.monthly?.ratio ?? 0) >  0.15;
+  const weeklyBear  = (mtf?.weekly?.ratio  ?? 0) < -0.15;
+  const monthlyBear = (mtf?.monthly?.ratio ?? 0) < -0.15;
+
+  let icon, text, sub, bg, border, color;
+
+  const strongBull = dirRatio >  0.25 && knnProb >= 0.55 && twiiDir !== 'bear';
+  const mildBull   = dirRatio >  0    && (knnProb >= 0.50 || twiiDir === 'bull');
+  const strongBear = dirRatio < -0.25 && knnProb <= 0.45 && twiiDir !== 'bull';
+  const mildBear   = dirRatio <  0    && (knnProb <= 0.50 || twiiDir === 'bear');
+  const rangeMode  = adxReg === 'range' && cADX < 20 && Math.abs(dirRatio) < 0.15;
+
+  const knnStr  = (knnProb*100).toFixed(0);
+  const drStr   = (Math.abs(dirRatio)*100).toFixed(0);
+  const twiiWord = twiiDir === 'bull' ? '大盤助漲' : twiiDir === 'bear' ? '大盤逆風' : '大盤中性';
+  const mtfWord  = (weeklyBull && monthlyBull) ? '、中長線共振多頭'
+                 : (weeklyBear && monthlyBear) ? '、中長線共振空頭'
+                 : (weeklyBull || monthlyBull) ? '、中線偏多'
+                 : (weeklyBear || monthlyBear) ? '、中線偏空' : '';
+
+  if(rangeMode){
+    icon='🔄'; color='var(--yellow)'; bg='rgba(245,158,11,.08)'; border='rgba(245,158,11,.40)';
+    text='今日震盪盤，等突破再操作';
+    sub=`ADX ${cADX.toFixed(0)} 偏低，趨勢不明確，訊號雜訊多 · 建議 ES ≥ 55 才出手，不要追高殺低`;
+  } else if(strongBull){
+    icon = es >= 60 ? '🚀' : '📈';
+    color='var(--green)'; bg='rgba(16,185,129,.09)'; border='rgba(16,185,129,.40)';
+    text = es >= 60 ? '多方訊號共振，可考慮分批買進' : '偏多方向，進場分偏低，繼續等待';
+    sub=`方向 +${drStr}%、K-NN 勝率 ${knnStr}%、${twiiWord}${mtfWord} · 進出場分 ES ${es}/100`;
+  } else if(mildBull){
+    icon='📈'; color='var(--blue)'; bg='rgba(59,130,246,.08)'; border='rgba(59,130,246,.35)';
+    text='略偏多，謹慎佈局或繼續觀望';
+    sub=`方向小幅偏多 (+${drStr}%)、K-NN ${knnStr}%，訊號共振度不足 → 等 ES ≥ 60 再出手更穩`;
+  } else if(strongBear){
+    icon = es >= 60 ? '🚨' : '📉';
+    color='var(--red)'; bg='rgba(239,68,68,.09)'; border='rgba(239,68,68,.40)';
+    text = es >= 60 ? '多項指標轉空，持股注意停損' : '偏空方向，控制風險為主';
+    sub=`方向 -${drStr}%、K-NN 下跌機率 ${(100-knnProb*100).toFixed(0)}%、${twiiWord}${mtfWord} · 進出場分 ES ${es}/100`;
+  } else if(mildBear){
+    icon='📉'; color='#f97316'; bg='rgba(249,115,22,.07)'; border='rgba(249,115,22,.35)';
+    text='略偏空，縮手觀望為宜';
+    sub=`方向小幅偏空 (-${drStr}%)、K-NN ${knnStr}%，持股者可把停損往上移`;
+  } else {
+    icon='⚖️'; color='var(--t2)'; bg='var(--card2)'; border='var(--border)';
+    text='今日多空均衡，建議靜待方向';
+    sub=`方向評分接近中立，指標分歧，輕倉觀望是最佳選擇 · 進出場分 ES ${es}/100`;
+  }
+
+  return `
+  <div class="one-liner" style="background:${bg};border-color:${border}">
+    <div class="one-liner-icon">${icon}</div>
+    <div class="one-liner-body">
+      <div class="one-liner-label" style="color:${color}">▌ 今日操作一句話</div>
+      <div class="one-liner-text" style="color:${color}">${text}</div>
+      <div class="one-liner-sub">${sub}</div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Task 14 — 新手 / 進階模式切換
+   ═══════════════════════════════════════════════════════════════ */
+function renderModeToggle(){
+  const mode = localStorage.getItem('tsmc_view_mode') || 'beginner';
+  const isBeg = mode === 'beginner';
+  return `
+  <div class="mode-toggle-bar">
+    <span class="mode-toggle-label">👁 顯示模式</span>
+    <div class="mode-pill">
+      <button class="mode-pill-btn ${isBeg?'active':''}"
+        onclick="setViewMode('beginner')">🌱 新手模式</button>
+      <button class="mode-pill-btn ${!isBeg?'active':''}"
+        onclick="setViewMode('advanced')">⚙️ 進階模式</button>
+    </div>
+    <span style="font-size:.68rem;color:var(--t3);margin-left:4px">
+      ${isBeg?'深度技術分析已隱藏，聚焦核心決策':'全部功能顯示中'}
+    </span>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Task 15 — 交易前五問清單 Modal
+   ═══════════════════════════════════════════════════════════════ */
+function renderChecklistBtn(){
+  return `
+  <div style="margin-bottom:14px">
+    <button onclick="openChecklistModal()" style="
+      display:flex;align-items:center;gap:10px;width:100%;
+      background:rgba(99,102,241,.10);border:1.5px solid rgba(99,102,241,.35);
+      color:var(--purple);border-radius:12px;padding:11px 18px;
+      font-size:.82rem;font-weight:700;cursor:pointer;text-align:left;
+    ">
+      <span style="font-size:1.2rem">📋</span>
+      <span>
+        <span style="display:block;font-size:.85rem">交易前五問清單</span>
+        <span style="font-size:.68rem;font-weight:400;color:var(--t2)">每次下單前，先回答這 5 個問題 — 全過才開倉</span>
+      </span>
+      <span style="margin-left:auto;font-size:.72rem;opacity:.6">點擊開啟 ›</span>
+    </button>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Task 16 — 指標白話摘要卡
+   ═══════════════════════════════════════════════════════════════ */
+function renderIndicatorMeaning(ctx){
+  const { cK, cD, cRSI, cPSY, cHist, pHist, bollPct, cVol, cVolMA, dirRatio } = ctx;
+  const cADX   = ctx.adxCtx?.cADX ?? null;
+  const adxReg = ctx.adxCtx?.adxRegime ?? '';
+
+  const rows = [];
+
+  // KD
+  if(cK != null){
+    const kdStr = cK < 20 ? `K=${cK?.toFixed(0)} 超賣區 → 歷史上這個位置反彈機率高，等 K 線開始回升再進場` 
+                : cK > 80 ? `K=${cK?.toFixed(0)} 超買區 → 漲太快，追高風險大，持股者把停損往上移`
+                : `K=${cK?.toFixed(0)} 中性區 → 動能尚未到極端值，順勢操作即可`;
+    rows.push({ icon:'📊', name:'KD 隨機指標', val: kdStr,
+      color: cK < 20 ? 'var(--green2)' : cK > 80 ? 'var(--red2)' : 'var(--t2)' });
+  }
+
+  // RSI
+  if(cRSI != null){
+    const rsiStr = cRSI < 30 ? `RSI ${cRSI?.toFixed(0)} — 恐慌超賣，多數人在賣，統計上反彈機率高`
+                 : cRSI > 70 ? `RSI ${cRSI?.toFixed(0)} — 過熱超買，追漲風險高，先觀察能否守住`
+                 : cRSI > 50 ? `RSI ${cRSI?.toFixed(0)} — 多頭區間，漲勢動能健康，逢回可加碼`
+                 : `RSI ${cRSI?.toFixed(0)} — 空頭區間，賣壓仍在，不宜貿然逢低買`;
+    rows.push({ icon:'💡', name:'RSI 相對強弱', val: rsiStr,
+      color: cRSI < 30 ? 'var(--green)' : cRSI > 70 ? 'var(--red)' : cRSI > 50 ? 'var(--blue)' : 'var(--yellow)' });
+  }
+
+  // PSY
+  if(cPSY != null){
+    const psyStr = cPSY < 25 ? `PSY ${cPSY?.toFixed(0)}% — 近期多數時間在跌，市場很悲觀，逆向思考可能是低點附近`
+                 : cPSY > 75 ? `PSY ${cPSY?.toFixed(0)}% — 近期多數時間在漲，市場很樂觀，當心過熱回落`
+                 : `PSY ${cPSY?.toFixed(0)}% — 中性，近期漲跌天數均衡，趨勢方向看其他指標`;
+    rows.push({ icon:'🧠', name:'PSY 心理線', val: psyStr,
+      color: cPSY < 25 ? 'var(--green2)' : cPSY > 75 ? 'var(--red2)' : 'var(--t2)' });
+  }
+
+  // MACD Hist
+  if(cHist != null && pHist != null){
+    const histStr = cHist > 0 && cHist > pHist ? `柱狀圖為正且增大 → 多頭動能加速，趨勢確認中`
+                  : cHist > 0 && cHist < pHist ? `柱狀圖為正但縮小 → 多頭動能在減弱，留意轉折`
+                  : cHist < 0 && cHist < pHist ? `柱狀圖為負且增大 → 空頭動能加速，下跌壓力大`
+                  : cHist < 0 && cHist > pHist ? `柱狀圖為負但縮小 → 空頭動能在減弱，可能即將反彈`
+                  : `柱狀圖趨近零 → 多空動能均衡，等方向確認`;
+    rows.push({ icon:'📉', name:'MACD 動能', val: histStr,
+      color: cHist > 0 ? 'var(--green2)' : 'var(--red2)' });
+  }
+
+  // ADX
+  if(cADX != null){
+    const adxStr = cADX >= 30 ? `ADX ${cADX?.toFixed(0)} — 強趨勢，跟著方向操作比逆勢賭反轉勝率高`
+                 : cADX >= 20 ? `ADX ${cADX?.toFixed(0)} — 趨勢萌芽，訊號可信度中等，配合K線確認`
+                 : `ADX ${cADX?.toFixed(0)} — 盤整市場，突破前先等，避免假訊號`;
+    rows.push({ icon:'🧭', name:'ADX 趨勢強度', val: adxStr,
+      color: cADX >= 25 ? 'var(--blue)' : cADX >= 18 ? 'var(--yellow)' : 'var(--t3)' });
+  }
+
+  // Volume
+  if(cVol != null && cVolMA != null){
+    const ratio = cVol / cVolMA;
+    const volStr = ratio >= 1.8 ? `成交量爆增 ${ratio?.toFixed(1)}倍均量 → 重要轉折訊號，配合方向才有意義`
+                 : ratio >= 1.2 ? `成交量放大 ${ratio?.toFixed(1)}倍均量 → 買賣力道增強，方向更可信`
+                 : ratio <= 0.6 ? `成交量萎縮 (${ratio?.toFixed(1)}倍) → 市場觀望，訊號可信度低`
+                 : `成交量正常 (${ratio?.toFixed(1)}倍) → 沒有特殊異常`;
+    rows.push({ icon:'📦', name:'成交量', val: volStr,
+      color: ratio >= 1.8 ? 'var(--purple)' : ratio >= 1.2 ? 'var(--green2)' : ratio <= 0.6 ? 'var(--t3)' : 'var(--t2)' });
+  }
+
+  if(!rows.length) return '';
+  return `
+  <details style="margin-bottom:14px">
+    <summary style="
+      background:var(--card2);border:1px solid var(--border);border-radius:10px;
+      padding:10px 16px;font-size:.8rem;font-weight:700;color:var(--purple);cursor:pointer;
+      list-style:none;display:flex;align-items:center;gap:8px;
+    ">💬 指標白話解讀 — 這些數字對我代表什麼？
+      <span style="margin-left:auto;font-size:.68rem;color:var(--t3)">點擊展開</span>
+    </summary>
+    <div style="
+      background:var(--card);border:1px solid var(--border);border-top:none;
+      border-radius:0 0 10px 10px;padding:12px 16px;display:flex;flex-direction:column;gap:8px;
+    ">
+      ${rows.map(r => `
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;
+             background:var(--card2);border-radius:8px;border-left:3px solid ${r.color}">
+          <span style="font-size:1.1rem;flex-shrink:0">${r.icon}</span>
+          <div>
+            <div style="font-size:.68rem;font-weight:700;color:var(--t3);margin-bottom:2px">${r.name}</div>
+            <div style="font-size:.78rem;color:var(--t1);line-height:1.5">${r.val}</div>
+          </div>
+        </div>
+      `).join('')}
+      <div style="font-size:.65rem;color:var(--t3);text-align:center;padding-top:4px">
+        ⚠️ 白話解讀僅為教學輔助，完整判斷請以上方操作結論為準
+      </div>
+    </div>
+  </details>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Task 17 — 新手 30 天學習路徑
+   ═══════════════════════════════════════════════════════════════ */
+function renderLearningPath(){
+  const dismissed = localStorage.getItem('tsmc_lp_dismissed') === '1';
+  if(dismissed) return '';
+  const mode = localStorage.getItem('tsmc_view_mode') || 'beginner';
+  if(mode !== 'beginner') return '';
+
+  const startDateStr = localStorage.getItem('tsmc_lp_start');
+  const startDate    = startDateStr ? new Date(startDateStr) : (() => {
+    const d = new Date(); localStorage.setItem('tsmc_lp_start', d.toISOString()); return d;
+  })();
+  const dayNum = Math.min(30, Math.max(1, Math.floor((Date.now() - startDate.getTime()) / 86400000) + 1));
+  const pct    = Math.round((dayNum / 30) * 100);
+
+  const weeks = [
+    { week:1, days:'第 1–7 天', title:'📖 認識系統架構', focus:'搞懂每個區塊的用途，不急著操作',
+      tasks:['每天看「今日操作一句話」，理解它的依據','找到「多空訊號燈」和「進出場評分」的位置','了解 MTF（多時間框架）是什麼意思'] },
+    { week:2, days:'第 8–14 天', title:'🎯 看懂關鍵指標', focus:'只學 KD/RSI/MACD 三個指標，其他先跳過',
+      tasks:['KD < 20 是超賣，KD > 80 是超買，記住這兩條線','RSI < 30 恐慌低點，RSI > 70 貪婪高點','MACD 柱狀圖由負翻正 = 動能反轉訊號'] },
+    { week:3, days:'第 15–21 天', title:'💰 學習風險管理', focus:'任何操作之前先設好停損',
+      tasks:['用「部位計算機」算每次最多損失多少錢','停損價 = ATR × 1.5（系統自動建議）','每次損失不超過總資金 2%，這是鐵律'] },
+    { week:4, days:'第 22–30 天', title:'🧪 模擬操作練習', focus:'用紙上交易練習，不用真錢',
+      tasks:['每天開盤前寫下「今天我的判斷是多/空/觀望」','收盤後對照系統訊號，看你判斷對幾次','連續 10 天紀錄，再評估是否開始真實操作'] },
+  ];
+
+  const curWeek = Math.ceil(dayNum / 7);
+  const w = weeks[Math.min(3, curWeek - 1)];
+
+  return `
+  <div class="lp-card" id="lp-card">
+    <div class="lp-header">
+      <span class="lp-week-badge">第 ${w.week} 週</span>
+      <span class="lp-title">${w.title}</span>
+      <span class="lp-day">Day ${dayNum}/30</span>
+      <button class="lp-dismiss" onclick="localStorage.setItem('tsmc_lp_dismissed','1');document.getElementById('lp-card').remove()" title="關閉學習路徑">✕</button>
+    </div>
+    <div class="lp-progress"><div class="lp-progress-fill" style="width:${pct}%"></div></div>
+    <div class="lp-focus">🎯 本週重點：${w.focus}</div>
+    <div class="lp-tasks">
+      ${w.tasks.map(t => `
+        <div class="lp-task">
+          <div class="lp-task-dot"></div>
+          <span>${t}</span>
+        </div>
+      `).join('')}
+    </div>
+    <div style="font-size:.65rem;color:var(--t3);margin-top:10px;text-align:right">
+      30天學習計劃 · 從今日起算 · 已進行 ${dayNum} 天
+      <span style="cursor:pointer;color:var(--purple);margin-left:8px" 
+        onclick="if(confirm('重置學習進度？'))
+          {localStorage.removeItem('tsmc_lp_start');localStorage.removeItem('tsmc_lp_dismissed');App.render();}">
+        重置進度
+      </span>
+    </div>
+  </div>`;
+}
+
+
 /* ═══════════════════════════════════════════════════════════════
    今日學習重點 — 自動選出最值得學的指標現象並解說
    ═══════════════════════════════════════════════════════════════ */
@@ -5848,8 +6207,16 @@ let App = {
     document.getElementById('app').innerHTML =
       // ── Header ──
       renderHeader(ctx) +
+      // ✦ 新手/進階模式切換
+      renderModeToggle() +
+      // ✦ 今日一句話決策橫幅（Task 13）
+      renderOneLiner(ctx) +
       // ✦ 五步決策引導列（最高勝率閱讀順序）
       renderDecisionGuide() +
+      // ✦ 交易前五問清單按鈕（Task 15）
+      renderChecklistBtn() +
+      // ✦ 新手 30 天學習路徑（Task 17，僅新手模式顯示）
+      renderLearningPath() +
       renderBeginnerFlow() +
       renderDailySummary(ctx) +
       renderLearnCard(ctx) +
@@ -5885,6 +6252,8 @@ let App = {
         '根據技術指標告訴你現在適不適合進場，以及建議的分批操作方式',
         '操作建議','strategy') +
       renderBuySellPanel(ctx) +
+      // ✦ 指標白話解讀（Task 16，新手友善）
+      renderIndicatorMeaning(ctx) +
       renderEntryPanel(ctx) +
       renderDailyBrief(ctx) +
 
@@ -8937,12 +9306,108 @@ function renderGroupHeader(zone, emoji, title, desc, badgeText='', badgeClass=''
   </div>`;
 }
 
+/* ─── Task 14: 模式切換 ─── */
+function setViewMode(mode){
+  localStorage.setItem('tsmc_view_mode', mode === 'beginner' ? 'beginner' : 'advanced');
+  // 在進階模式顯示深度分析區塊；新手模式折疊它們
+  const advancedIds = ['sec-analysis','sec-indicators','sec-ma','sec-volume','sec-sr'];
+  const isAdv = mode === 'advanced';
+  advancedIds.forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    const body = el.querySelector('.sec-body');
+    const tog  = el.querySelector('.sec-toggle');
+    if(!body) return;
+    if(isAdv){
+      body.classList.remove('collapsed');
+      if(tog) tog.classList.remove('collapsed');
+    } else {
+      body.classList.add('collapsed');
+      if(tog) tog.classList.add('collapsed');
+    }
+  });
+  App.render();
+}
+
+/* ─── Task 15: 交易前五問清單 Modal ─── */
+function openChecklistModal(){
+  const existing = document.getElementById('tsmc-checklist-modal');
+  if(existing){ existing.remove(); return; }
+
+  const questions = [
+    { q:'大方向是否一致？',     sub:'MTF 日/週/月三線方向是否都偏多（或都偏空）？' },
+    { q:'進出場分數是否足夠？', sub:'ES ≥ 60 才考慮出手，低於 40 一律等待不操作' },
+    { q:'停損點設好了嗎？',     sub:'下單前先決定「在哪個價格認輸」，單次損失不超過總資金 2%' },
+    { q:'大盤與SOX沒有逆風？', sub:'台灣加權指數走勢和費城半導體指數不要出現明顯下行背離' },
+    { q:'今天沒有重大事件風險？', sub:'聯準會決議、台積電法說、地緣政治等重大事件前，縮手或不做' }
+  ];
+
+  const el = document.createElement('div');
+  el.id = 'tsmc-checklist-modal';
+  el.innerHTML = `
+  <div class="checklist-modal" onclick="if(event.target.classList.contains('checklist-modal'))closeChecklistModal()">
+    <div class="checklist-box">
+      <div class="checklist-title">📋 交易前五問清單</div>
+      <div class="checklist-sub">每次下單前先把這五題全部打勾。<strong>五問全過</strong>才允許自己開倉，這是紀律，不是建議。</div>
+      ${questions.map((q,i) => `
+        <div class="checklist-item" id="ci-${i}" onclick="toggleCheckItem(${i})">
+          <input type="checkbox" id="cb-${i}" onclick="event.stopPropagation();toggleCheckItem(${i})">
+          <div>
+            <div class="checklist-item-text"><strong>${q.q}</strong></div>
+            <div class="checklist-item-sub">${q.sub}</div>
+          </div>
+        </div>
+      `).join('')}
+      <button class="checklist-btn notready" id="checklist-go-btn" disabled>
+        ✅ 五問全過，可以進入下單流程
+      </button>
+      <div style="text-align:center;margin-top:10px">
+        <button onclick="closeChecklistModal()" style="background:none;border:none;color:var(--t3);font-size:.72rem;cursor:pointer">取消 / 關閉</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(el);
+  window._clChecked = new Set();
+  window._clTotal   = questions.length;
+}
+
+function toggleCheckItem(i){
+  if(!window._clChecked) window._clChecked = new Set();
+  const cb   = document.getElementById('cb-' + i);
+  const item = document.getElementById('ci-' + i);
+  if(window._clChecked.has(i)){
+    window._clChecked.delete(i);
+    if(cb)   cb.checked = false;
+    if(item) item.classList.remove('checked');
+  } else {
+    window._clChecked.add(i);
+    if(cb)   cb.checked = true;
+    if(item) item.classList.add('checked');
+  }
+  const btn = document.getElementById('checklist-go-btn');
+  if(btn){
+    const allDone = window._clChecked.size >= window._clTotal;
+    btn.classList.toggle('ready',    allDone);
+    btn.classList.toggle('notready', !allDone);
+    btn.disabled = !allDone;
+    if(allDone) btn.onclick = () => { closeChecklistModal(); };
+  }
+}
+
+function closeChecklistModal(){
+  const el = document.getElementById('tsmc-checklist-modal');
+  if(el) el.remove();
+}
+
 Theme.init();
 App.init().finally(() => {
   AutoRefresh.start();
   LivePrice.start();
   IntradayChart.start();
   initKeyboardShortcuts();
+  // 初始化時套用已儲存的模式
+  const savedMode = localStorage.getItem('tsmc_view_mode') || 'beginner';
+  if(savedMode === 'advanced') setViewMode('advanced');
 });
 </script>
 </body>
