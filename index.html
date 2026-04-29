@@ -1270,6 +1270,267 @@ body.light .zone-header{background:linear-gradient(135deg,rgba(59,130,246,.06),r
   .foot{ font-size: .68rem; }
   .legend{ font-size: .72rem; line-height: 1.7; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   📱 MOBILE OPTIMIZATION — 全面手機優化
+   Breakpoints: 700px (tablet), 480px (phone), 380px (small phone)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── 底部固定導覽列（手機專用） ── */
+.mob-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;z-index:500;
+  background:var(--card);border-top:1px solid var(--border);
+  padding:0 0 env(safe-area-inset-bottom,0);
+  box-shadow:0 -4px 20px rgba(0,0,0,.3);
+}
+.mob-nav-inner{
+  display:flex;align-items:stretch;height:56px;
+}
+.mob-nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;background:none;border:none;cursor:pointer;
+  color:var(--t3);font-size:.6rem;font-weight:700;letter-spacing:.02em;
+  transition:color .15s,background .15s;padding:0;
+  -webkit-tap-highlight-color:transparent;
+  min-height:44px;
+}
+.mob-nav-btn .mn-icon{font-size:1.2rem;line-height:1}
+.mob-nav-btn:active,.mob-nav-btn.mn-active{
+  color:var(--purple);background:rgba(139,92,246,.1);
+}
+.mob-nav-btn.mn-top .mn-icon{font-size:1rem}
+
+@media(max-width:700px){
+  .mob-nav{display:block}
+  /* body 底部加 padding 避免被底部導覽列遮住 */
+  body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0))!important}
+  /* theme 按鈕上移，不擋導覽列 */
+  .theme-btn{bottom:calc(68px + env(safe-area-inset-bottom,0))}
+}
+
+/* ═══════════════════
+   700px — Tablet/大手機
+   ═══════════════════ */
+@media(max-width:700px){
+  body{padding:8px;font-size:14px}
+
+  /* ── Header 壓縮 ── */
+  .hd{padding:10px 14px;gap:8px;border-radius:12px}
+  .hd-left .name{font-size:1.25rem;letter-spacing:.5px}
+  .hd-left .sub{font-size:0.72rem;margin-top:1px}
+  .hd-right{gap:10px;flex-wrap:wrap}
+  .price .now{font-size:1.9rem}
+  .price .chg{font-size:.85rem}
+  .price .ts{font-size:0.72rem}
+  /* 即時小工具縮小 */
+  .live-widget{padding:8px 12px;min-width:120px;border-radius:10px}
+  .lw-price{font-size:1.5rem}
+  .lw-chg{font-size:.75rem}
+
+  /* ── 頂部操作橫幅 ── */
+  .top-action-bar{
+    flex-direction:column;align-items:stretch;gap:10px;
+    padding:12px 14px;border-radius:12px;
+  }
+  .tab-verdict{gap:10px}
+  .tab-icon{font-size:1.8rem}
+  .tab-text{font-size:.95rem}
+  .tab-sub{font-size:.72rem;white-space:normal;overflow:visible;text-overflow:unset}
+  .tab-controls{justify-content:flex-end}
+
+  /* ── 決策引導列 —手機改橫向捲動 ── */
+  .decision-guide{
+    overflow-x:auto;flex-wrap:nowrap;padding:8px 10px;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;gap:0;
+  }
+  .decision-guide::-webkit-scrollbar{display:none}
+  .dg-step{white-space:nowrap;padding:6px 10px;font-size:.72rem}
+  .dg-arrow{display:inline-block;padding:0}
+
+  /* ── Zone Header 壓縮 ── */
+  .zone-header{padding:10px 12px;gap:10px;margin:20px 0 10px;border-radius:10px}
+  .zh-letter{width:28px;height:28px;font-size:.78rem;border-radius:6px}
+  .zh-emoji{font-size:1.2rem}
+  .zh-title{font-size:.88rem}
+  .zh-desc{font-size:.72rem;line-height:1.5}
+  .zh-badge{font-size:.65rem;padding:2px 7px}
+
+  /* ── 通用卡片內距 ── */
+  .hd,.chart-card,.predict-panel,.entry-panel,
+  .analysis-card,.poscalc,.journal-card,.morning-card,
+  .signal-light-card,.re-panel,.intraday-card{
+    padding:14px !important;border-radius:12px
+  }
+
+  /* ── 多空訊號燈 ── */
+  .sl-main{flex-wrap:wrap;gap:10px}
+  .sl-emoji{font-size:1.8rem}
+  .sl-signal{font-size:1.3rem}
+  .sl-bars{width:100%}
+
+  /* ── 方向評分 (gauge) ── */
+  .gauge-svg{width:170px;height:120px}
+  .sent-label{font-size:1.1rem}
+  .sig-row{gap:12px;margin-top:10px}
+  .sig-item .n{font-size:1.1rem}
+
+  /* ── 進出場評分 ── */
+  .entry-top{gap:12px}
+  .entry-score-ring{width:88px;height:88px}
+  .entry-score-ring .score-num .big{font-size:1.4rem}
+
+  /* ── 即時盤中卡 ── */
+  .id-cur{font-size:1.7rem}
+  .intraday-chart-wrap{height:180px}
+  #pc{height:200px!important}
+  .chart-wrap{height:200px!important}
+  .intraday-hd{gap:8px}
+  .intraday-chips{gap:4px}
+  .id-chip{padding:4px 7px;font-size:.7rem}
+
+  /* ── 即時評估信號格 ── */
+  .re-signals{grid-template-columns:1fr 1fr;gap:6px}
+  .re-sig{padding:8px 10px}
+  .re-verdict-score{font-size:2.2rem;min-width:50px}
+  .re-verdict-label{font-size:1rem}
+
+  /* ── MTF 三框 ── */
+  .mtf-grid{grid-template-columns:repeat(3,1fr);gap:8px}
+  .mtf-card{padding:12px 10px}
+  .mtf-card .mtf-dir{font-size:1.2rem}
+  .mtf-card .mtf-tf{font-size:.68rem}
+  .mtf-resonance{padding:10px 12px;font-size:.8rem}
+
+  /* ── 明日預測 ── */
+  .predict-head .ph-title{font-size:.95rem}
+  .pred-card{padding:14px}
+  .pred-card .pc-big{font-size:1.6rem}
+  .pred-card .pc-label{font-size:.7rem}
+
+  /* ── 指標卡片 ── */
+  .ind-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .ic{padding:10px 12px}
+
+  /* ── 買賣面板 ── */
+  .bs-grid{grid-template-columns:1fr!important}
+
+  /* ── 日誌表格 ── */
+  .trade-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .trade-table{min-width:480px}
+  .trade-table th,.trade-table td{padding:5px 6px;font-size:.72rem;white-space:nowrap}
+
+  /* ── 部位計算機 ── */
+  .poscalc-out{grid-template-columns:1fr 1fr}
+  .poscalc-form .pf-row label{min-width:72px;font-size:.75rem}
+
+  /* ── 按鈕 ── */
+  .btn{min-height:40px;padding:9px 14px;font-size:.8rem}
+  .journal-tabs{gap:4px;flex-wrap:wrap}
+  .journal-tab{padding:6px 10px;font-size:.75rem}
+
+  /* ── 早盤 SOX 輸入 ── */
+  .morning-card{gap:10px;padding:12px 14px!important}
+  .morning-card .mc-body{min-width:0}
+  .morning-card .mc-title{font-size:.85rem}
+  .morning-card .mc-sub{font-size:.72rem}
+
+  /* ── 五問清單 Modal ── */
+  .checklist-box{padding:20px 16px;border-radius:14px}
+  .checklist-item{padding:10px 12px}
+  .checklist-title{font-size:.95rem}
+
+  /* ── 學習路徑 ── */
+  .lp-card{padding:12px 14px}
+  .lp-title{font-size:.82rem}
+  .lp-task{font-size:.72rem;padding:6px 8px}
+
+  /* ── 新手引導折疊 ── */
+  .guide-collapsible summary{padding:8px 12px;font-size:.75rem}
+
+  /* ── 分時走勢圖 ── */
+  .session-bar{padding:5px 10px;font-size:.72rem;border-radius:8px}
+
+  /* ── 深度分析、籌碼 ── */
+  .du-kd-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .du-foreign-card{flex-direction:column;gap:8px}
+  .pyramid-table{font-size:.72rem}
+}
+
+/* ═══════════════════
+   480px — 一般手機
+   ═══════════════════ */
+@media(max-width:480px){
+  body{padding:6px;padding-bottom:calc(64px + env(safe-area-inset-bottom,0))!important}
+
+  /* Header 更緊湊 */
+  .hd{flex-direction:column;align-items:flex-start;gap:8px;padding:10px 12px!important}
+  .hd-right{width:100%;justify-content:space-between;gap:8px}
+  .price .now{font-size:1.65rem}
+  .live-widget{flex-direction:row;gap:10px;padding:7px 10px;min-width:0;width:100%}
+  .lw-price{font-size:1.3rem}
+
+  /* 頂部橫幅更緊湊 */
+  .tab-text{font-size:.88rem}
+  .tab-icon{font-size:1.5rem}
+
+  /* MTF → 單欄（太窄時） */
+  .mtf-grid{grid-template-columns:1fr}
+  .mtf-card{padding:10px 12px}
+
+  /* 指標 → 單欄 */
+  .ind-grid{grid-template-columns:1fr}
+  .du-kd-grid{grid-template-columns:1fr}
+
+  /* 即時信號格 → 單欄 */
+  .re-signals{grid-template-columns:1fr}
+
+  /* predict → 單欄 */
+  .predict-grid{grid-template-columns:1fr!important}
+  .pred-scenarios{grid-template-columns:1fr!important}
+
+  /* 部位計算機 → 單欄 */
+  .poscalc-out{grid-template-columns:1fr!important}
+
+  /* Zone header 更小 */
+  .zone-header{margin:16px 0 8px;padding:8px 10px}
+  .zh-desc{display:none} /* 手機隱藏副說明，節省空間 */
+
+  /* sec 標題摺疊 */
+  .sec{font-size:.85rem}
+  .sec-cnt{font-size:.72rem}
+
+  /* 圖表再縮 */
+  .intraday-chart-wrap{height:160px}
+  #pc{height:180px!important}
+
+  /* 日誌：隱藏次要欄位 */
+  .trade-table th:nth-child(n+6),
+  .trade-table td:nth-child(n+6){display:none}
+
+  /* 更小間距 */
+  .hd,.chart-card,.predict-panel,.entry-panel,
+  .analysis-card,.poscalc,.journal-card,.signal-light-card,.re-panel{
+    margin-bottom:8px!important;border-radius:10px
+  }
+}
+
+/* ═══════════════════
+   380px — 小手機
+   ═══════════════════ */
+@media(max-width:380px){
+  body{padding:4px}
+  .hd-left .name{font-size:1.05rem}
+  .price .now{font-size:1.4rem}
+  .tab-text{font-size:.82rem}
+  .tab-icon{font-size:1.3rem}
+  .zone-header{padding:7px 8px}
+  .zh-letter{width:24px;height:24px;font-size:.7rem}
+  .mob-nav-btn{font-size:.55rem}
+  .mob-nav-btn .mn-icon{font-size:1.1rem}
+}
+
 </style>
 </head>
 <body>
@@ -5854,7 +6115,7 @@ function renderJournal(ctx){
     <div class="j-section" data-js="history">
       ${closedPositions.length === 0
         ? '<div class="trade-empty">尚無已平倉交易。</div>'
-        : `<table class="trade-table">
+        : `<div class="trade-table-wrap"><table class="trade-table">
             <thead><tr>
               <th>進/出場日</th><th>價位</th><th>股數</th><th class="right">持有</th>
               <th class="right">損益</th><th class="right">%</th><th>當時 ES</th><th>當時 RSI</th>
@@ -5871,7 +6132,7 @@ function renderJournal(ctx){
                 <td>${p.openSnapshot?.rsi ? p.openSnapshot.rsi.toFixed(0) : '-'}</td>
               </tr>`).join('')}
             </tbody>
-          </table>`
+          </table></div>`
       }
     </div>
 
@@ -6342,6 +6603,26 @@ let App = {
        <button class="theme-btn" id="theme-toggle" onclick="Theme.toggle()" title="切換淺色／深色模式">
          ${Theme.isLight() ? '🌙' : '☀️'}
        </button>
+       <!-- 📱 手機底部快捷導覽列 -->
+       <nav class="mob-nav" id="mob-nav" aria-label="快速導覽">
+         <div class="mob-nav-inner">
+           <button class="mob-nav-btn mn-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到頂部">
+             <span class="mn-icon">⬆️</span><span>頂部</span>
+           </button>
+           <button class="mob-nav-btn" onclick="scrollToAnchor('anchor-mtf')" title="大方向 MTF">
+             <span class="mn-icon">🔭</span><span>大方向</span>
+           </button>
+           <button class="mob-nav-btn" onclick="scrollToAnchor('anchor-gauge')" title="方向評分">
+             <span class="mn-icon">🌡️</span><span>評分</span>
+           </button>
+           <button class="mob-nav-btn" onclick="scrollToAnchor('anchor-entry')" title="進場位置">
+             <span class="mn-icon">🎯</span><span>進場</span>
+           </button>
+           <button class="mob-nav-btn" onclick="scrollToAnchor('anchor-poscalc')" title="風險設定">
+             <span class="mn-icon">💰</span><span>風控</span>
+           </button>
+         </div>
+       </nav>
        <div class="kbd-overlay" id="kbd-overlay" onclick="if(event.target===this)this.classList.remove('open')">
          <div class="kbd-box">
            <h3>⌨️ 鍵盤快捷鍵</h3>
