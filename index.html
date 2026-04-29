@@ -5726,6 +5726,7 @@ function renderExportBar(ctx){
     <button class="btn btn-sm" onclick="App.exportJSON()">⬇ 匯出 JSON</button>
     <button class="btn btn-sm" style="border-color:var(--purple);color:var(--purple)" onclick="App.exportJournalBackup()" title="備份交易日誌、規則與評分歷史">💾 備份日誌</button>
     <button class="btn btn-sm" style="border-color:var(--cyan);color:var(--cyan)" onclick="App.importJournalBackup()" title="還原已備份的交易日誌">📥 匯入日誌</button>
+    <button class="btn btn-sm" style="border-color:var(--yellow);color:var(--yellow)" onclick="App.showWeeklyReport()" title="自動生成本週操作週報">📅 週報</button>
   </div>`;
 }
 
@@ -6735,6 +6736,7 @@ let App = {
         '預測參考','strategy') +
       renderPredictionPanel(ctx) +
       renderScoreHistory() +
+      renderPatternMatch(ctx) +
 
       // ══ G 深度分析（進階；新手模式整區隱藏）══
       `<div class="adv-only">` +
@@ -6959,6 +6961,125 @@ let App = {
       this.showToastMsg('✅ 已複製到剪貼簿');
     });
   },
+  // ─── 週報摘要自動生成 ───
+  showWeeklyReport(){
+    const rows   = this.rows || [];
+    const I      = this.ind;
+    const j      = Journal.state;
+    if(!rows.length || !I) { this.showToastMsg('⚠️ 請先載入資料'); return; }
+
+    // 取得最近 5 個交易日
+    const n       = rows.length;
+    const week    = rows.slice(Math.max(0, n - 5));
+    const wStart  = week[0]?.date || '';
+    const wEnd    = week[week.length - 1]?.date || '';
+    const wOpen   = week[0]?.open  ?? week[0]?.close;
+    const wClose  = week[week.length - 1]?.close;
+    const wHigh   = Math.max(...week.map(r => r.high));
+    const wLow    = Math.min(...week.map(r => r.low));
+    const wChg    = wOpen ? ((wClose - wOpen) / wOpen * 100) : 0;
+    const wArr    = wChg >= 0 ? '▲' : '▼';
+
+    // 計算週均量
+    const wVols    = week.map(r => r.vol || 0);
+    const wAvgVol  = wVols.length ? wVols.reduce((a,b)=>a+b,0) / wVols.length : 0;
+
+    // 本週日誌交易（按日期過濾）
+    const wTrades  = (j.positions || []).filter(p => p.openDate >= wStart && p.openDate <= wEnd || (p.closeDate >= wStart && p.closeDate <= wEnd));
+    const wPnl     = wTrades.filter(p => p.status === 'closed' && p.pnl != null).reduce((s, p) => s + p.pnl, 0);
+    const wWins    = wTrades.filter(p => p.status === 'closed' && p.pnl > 0).length;
+    const wClosed  = wTrades.filter(p => p.status === 'closed').length;
+
+    // 每日訊號觸發摘要（使用指標陣列）
+    const dailyRows = week.map((r, idx) => {
+      const i   = n - 5 + idx;
+      const K   = I.K?.[i] ?? '--';
+      const rsi = I.rsi?.[i] ?? '--';
+      const psy = I.psy?.[i] ?? '--';
+      const chg = idx === 0 ? 0 : ((r.close - week[idx-1]?.close) / week[idx-1]?.close * 100);
+      const sig = [];
+      if(typeof K === 'number'   && K   < 20)  sig.push('KD超賣');
+      if(typeof rsi === 'number' && rsi < 30)  sig.push('RSI超賣');
+      if(typeof psy === 'number' && psy < 25)  sig.push('PSY弱勢');
+      if(typeof K === 'number'   && K   > 80)  sig.push('KD超買');
+      if(typeof rsi === 'number' && rsi > 70)  sig.push('RSI超買');
+      if(typeof psy === 'number' && psy > 75)  sig.push('PSY強勢');
+      return { date: r.date, close: r.close, chg, sig };
+    });
+
+    const dailyHtml = dailyRows.map(d => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border);font-size:.78rem;flex-wrap:wrap">
+        <span style="min-width:80px;color:var(--t3);font-variant-numeric:tabular-nums">${d.date}</span>
+        <span style="min-width:65px;font-weight:700;color:var(--t1)">${d.close?.toFixed(2) ?? '--'}</span>
+        <span style="min-width:65px;font-weight:600;color:${d.chg >= 0 ? 'var(--green)':'var(--red)'}">${d.chg >= 0?'+':''}${d.chg.toFixed(2)}%</span>
+        <span style="flex:1;color:var(--t2)">${d.sig.length ? d.sig.join(' · ') : '—'}</span>
+      </div>`).join('');
+
+    const tradesHtml = wTrades.length
+      ? wTrades.map(p => `
+        <div style="display:flex;gap:10px;padding:7px 14px;border-bottom:1px solid var(--border);font-size:.75rem;flex-wrap:wrap;align-items:center">
+          <span style="color:${p.status==='open'?'var(--yellow)':'var(--t3)'}">${p.openDate}${p.closeDate?` → ${p.closeDate}`:''}</span>
+          <span style="color:var(--t2)">買 ${p.openPrice?.toFixed(1) ?? '--'}${p.closePrice ? ` / 賣 ${p.closePrice.toFixed(1)}` : ''}</span>
+          ${p.status === 'closed' && p.pnl != null
+            ? `<span style="font-weight:700;color:${p.pnl>=0?'var(--green)':'var(--red)'}">${p.pnl>=0?'+':''}${p.pnl.toFixed(0)} 元（${p.pnlPct?.toFixed(2) ?? '--'}%）</span>`
+            : `<span style="color:var(--yellow)">持倉中</span>`}
+        </div>`).join('')
+      : `<div style="padding:10px 14px;font-size:.75rem;color:var(--t3)">本週無操作記錄</div>`;
+
+    const html = `
+    <div style="max-width:600px">
+      <!-- 週報標題 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div>
+          <div style="font-size:1.1rem;font-weight:800;color:var(--t1)">📅 週報摘要</div>
+          <div style="font-size:.75rem;color:var(--t3);margin-top:2px">${wStart} ～ ${wEnd}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:1.4rem;font-weight:800;color:${wChg>=0?'var(--green)':'var(--red)'}">${wArr} ${Math.abs(wChg).toFixed(2)}%</div>
+          <div style="font-size:.72rem;color:var(--t3)">${wOpen?.toFixed(1)} → ${wClose?.toFixed(1)}</div>
+        </div>
+      </div>
+      <!-- 週統計 chips -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+        ${[
+          ['週高', wHigh?.toFixed(1), 'var(--green)'],
+          ['週低', wLow?.toFixed(1),  'var(--red)'],
+          ['均量', (wAvgVol/1000).toFixed(0)+'K', 'var(--t2)'],
+          wClosed ? ['本週盈虧', (wPnl>=0?'+':'')+wPnl.toFixed(0)+'元', wPnl>=0?'var(--green)':'var(--red)'] : null,
+          wClosed ? ['本週勝率', wClosed?((wWins/wClosed*100).toFixed(0)+'%'):'—', 'var(--cyan)'] : null,
+        ].filter(Boolean).map(([k,v,c]) => `
+          <div style="padding:6px 12px;background:var(--card2);border-radius:8px;border:1px solid var(--border)">
+            <div style="font-size:.65rem;color:var(--t3)">${k}</div>
+            <div style="font-size:.88rem;font-weight:800;color:${c}">${v}</div>
+          </div>`).join('')}
+      </div>
+      <!-- 每日明細 -->
+      <div style="font-size:.72rem;font-weight:700;color:var(--t2);margin-bottom:6px">📊 每日走勢 &amp; 訊號</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px">
+        ${dailyHtml}
+      </div>
+      <!-- 操作記錄 -->
+      <div style="font-size:.72rem;font-weight:700;color:var(--t2);margin-bottom:6px">💼 本週操作記錄</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        ${tradesHtml}
+      </div>
+    </div>`;
+
+    // 顯示 modal
+    const overlay = document.getElementById('modal-overlay');
+    const content = document.getElementById('modal-content');
+    if(!overlay || !content){ this.showToastMsg('⚠️ 找不到 Modal'); return; }
+    content.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <span style="font-weight:700;font-size:1rem;color:var(--t1)">📅 週報</span>
+        <button onclick="document.getElementById('modal-overlay').style.display='none'"
+          style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--t2);cursor:pointer;font-size:.8rem">✕ 關閉</button>
+      </div>
+      ${html}`;
+    overlay.style.display = 'flex';
+    overlay.onclick = e => { if(e.target === overlay) overlay.style.display='none'; };
+  },
+
   showToastMsg(msg){
     const t = document.createElement('div');
     t.style.cssText = `
@@ -7600,9 +7721,91 @@ let App = {
       return isUp ? 'rgba(239,68,68,0.55)' : 'rgba(16,185,129,0.55)';
     });
 
+    // ── 停利/停損警示線 + 日誌進出場標記 ──
+    const journalPositions = (Journal.state && Journal.state.positions) ? Journal.state.positions : [];
+    const allLabels = I.labels;
+
+    const journalMarkerPlugin = {
+      id: 'journalMarkers',
+      afterDatasetsDraw(chart){
+        const c2  = chart.ctx;
+        const yAx = chart.scales.y;
+        const xAx = chart.scales.x;
+        if(!yAx || !xAx) return;
+        c2.save();
+        c2.font = 'bold 10px sans-serif';
+        c2.textAlign = 'center';
+        const visLabels = I.labels.slice(-N);
+
+        journalPositions.forEach(pos => {
+          // ── 買進標記（綠色向上三角）──
+          const buyIdx = visLabels.indexOf(pos.openDate);
+          if(buyIdx >= 0 && pos.openPrice){
+            const x = xAx.getPixelForValue(buyIdx);
+            const y = yAx.getPixelForValue(pos.openPrice);
+            c2.fillStyle = '#10b981';
+            c2.strokeStyle = '#fff';
+            c2.lineWidth = 1.2;
+            c2.beginPath();
+            c2.moveTo(x, y + 2);
+            c2.lineTo(x - 6, y + 14);
+            c2.lineTo(x + 6, y + 14);
+            c2.closePath();
+            c2.fill();
+            c2.stroke();
+            c2.fillStyle = '#10b981';
+            c2.fillText('B', x, y + 26);
+          }
+          // ── 賣出標記（紅色向下三角）──
+          if(pos.status === 'closed' && pos.closeDate && pos.closePrice){
+            const sellIdx = visLabels.indexOf(pos.closeDate);
+            if(sellIdx >= 0){
+              const x = xAx.getPixelForValue(sellIdx);
+              const y = yAx.getPixelForValue(pos.closePrice);
+              c2.fillStyle = '#ef4444';
+              c2.strokeStyle = '#fff';
+              c2.lineWidth = 1.2;
+              c2.beginPath();
+              c2.moveTo(x, y - 2);
+              c2.lineTo(x - 6, y - 14);
+              c2.lineTo(x + 6, y - 14);
+              c2.closePath();
+              c2.fill();
+              c2.stroke();
+              c2.fillStyle = '#ef4444';
+              c2.fillText('S', x, y - 18);
+            }
+          }
+          // ── 停利/停損水平線（持倉中的部位）──
+          if(pos.status === 'open'){
+            const yMin = yAx.min, yMax = yAx.max;
+            const drawHLine = (price, color, label) => {
+              if(price == null || price < yMin || price > yMax) return;
+              const yp = yAx.getPixelForValue(price);
+              c2.strokeStyle = color;
+              c2.lineWidth = 1.5;
+              c2.setLineDash([6, 3]);
+              c2.beginPath();
+              c2.moveTo(xAx.left, yp);
+              c2.lineTo(xAx.right, yp);
+              c2.stroke();
+              c2.setLineDash([]);
+              c2.fillStyle = color;
+              c2.font = '9px monospace';
+              c2.textAlign = 'right';
+              c2.fillText(label + ' ' + price.toFixed(0), xAx.right - 4, yp - 3);
+            };
+            drawHLine(pos.takeProfit, 'rgba(16,185,129,0.85)', '🎯TP');
+            drawHLine(pos.stopLoss,   'rgba(239,68,68,0.85)',  '🛑SL');
+          }
+        });
+        c2.restore();
+      }
+    };
+
     pchart = new Chart(ctx, {
       type: 'line',
-      plugins: [srZonePlugin, roundLevelPlugin, divergencePlugin],
+      plugins: [srZonePlugin, roundLevelPlugin, divergencePlugin, journalMarkerPlugin],
       data: {
         labels: I.labels.slice(-N),
         datasets: [
@@ -9182,6 +9385,108 @@ const ScoreHistory = {
 };
 
 /* ═══════════════════════════════════════════════════════════════
+   FEATURE: 相似 K 線型態比對（Pattern Matching）
+   取近 5 根 K 棒，在歷史中找最相似的段落，展示後續走勢
+   ═══════════════════════════════════════════════════════════════ */
+function renderPatternMatch(ctx){
+  const I = App.ind;
+  const rows = App.rows;
+  if(!I || !rows || rows.length < 40) return '';
+
+  const WIN = 5;   // 比對窗格大小
+  const FWD = 5;   // 展望天數
+  const n   = rows.length;
+  if(n < WIN + FWD + 5) return '';
+
+  // 正規化 n 個收盤的向量（0~1）
+  function normalize(arr){
+    const mn = Math.min(...arr), mx = Math.max(...arr);
+    if(mx === mn) return arr.map(() => 0.5);
+    return arr.map(v => (v - mn) / (mx - mn));
+  }
+
+  // 計算歐氏距離
+  function dist(a, b){
+    return Math.sqrt(a.reduce((s, v, i) => s + (v - b[i]) ** 2, 0));
+  }
+
+  // 目前最後 WIN 根 K 棒（收盤 + 成交量一起比對）
+  const curCloses  = rows.slice(n - WIN).map(r => r.close);
+  const curVols    = rows.slice(n - WIN).map(r => r.vol || 0);
+  const nrmClose   = normalize(curCloses);
+  const nrmVol     = normalize(curVols);
+  const curVec     = nrmClose.map((v, i) => v * 0.7 + nrmVol[i] * 0.3);
+
+  // 掃描歷史（跳過最後 WIN + FWD 根，以確保有完整後續窗格）
+  const candidates = [];
+  for(let i = WIN; i < n - WIN - FWD; i++){
+    const hCloses = rows.slice(i - WIN, i).map(r => r.close);
+    const hVols   = rows.slice(i - WIN, i).map(r => r.vol || 0);
+    const hVec    = normalize(hCloses).map((v, j) => v * 0.7 + normalize(hVols)[j] * 0.3);
+    const d       = dist(curVec, hVec);
+    const fwdRet  = (rows[i + FWD - 1].close - rows[i - 1].close) / rows[i - 1].close * 100;
+    candidates.push({ i, d, fwdRet, endDate: rows[i - 1]?.date || '' });
+  }
+
+  // 取距離最近的 TOP-5，去除相鄰重疊（間距 ≥ WIN）
+  candidates.sort((a, b) => a.d - b.d);
+  const top = [];
+  for(const c of candidates){
+    if(top.every(t => Math.abs(t.i - c.i) >= WIN)) top.push(c);
+    if(top.length >= 5) break;
+  }
+
+  if(!top.length) return '';
+
+  const avgRet = top.reduce((s, t) => s + t.fwdRet, 0) / top.length;
+  const upCount = top.filter(t => t.fwdRet > 0).length;
+  const upPct   = (upCount / top.length * 100).toFixed(0);
+  const verdict = upCount >= 4 ? { text:'偏多機率高', color:'var(--green)' }
+                : upCount >= 3 ? { text:'略偏多', color:'var(--green2)' }
+                : upCount >= 2 ? { text:'偏空', color:'var(--yellow)' }
+                : { text:'空方佔優', color:'var(--red)' };
+
+  const rowsHtml = top.map((t, idx) => {
+    const clr = t.fwdRet >= 0 ? 'var(--green)' : 'var(--red)';
+    const sim = Math.max(0, 100 - t.d * 200).toFixed(0);
+    return `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border);font-size:.75rem;flex-wrap:wrap">
+      <span style="min-width:18px;color:var(--t3);font-size:.7rem">${idx+1}.</span>
+      <span style="min-width:80px;color:var(--t2);font-variant-numeric:tabular-nums">${t.endDate}</span>
+      <div style="flex:1;min-width:80px">
+        <div style="height:4px;border-radius:2px;background:var(--border);overflow:hidden">
+          <div style="height:100%;width:${sim}%;background:var(--accent);border-radius:2px"></div>
+        </div>
+        <span style="font-size:.62rem;color:var(--t3)">相似度 ${sim}%</span>
+      </div>
+      <span style="min-width:70px;font-weight:700;color:${clr};text-align:right">${t.fwdRet>=0?'+':''}${t.fwdRet.toFixed(2)}% <span style="font-size:.65rem;color:var(--t3)">後${FWD}日</span></span>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="ic" style="margin-top:14px;padding:0">
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:.88rem;font-weight:800;color:var(--t1)">🔍 相似 K 線型態比對</span>
+      <span style="font-size:.7rem;color:var(--t3);margin-left:auto">近 ${WIN} 根 K 棒 × 後 ${FWD} 日走勢參考</span>
+    </div>
+    <div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+      <div>
+        <div style="font-size:.7rem;color:var(--t3)">歷史相似段後 ${FWD} 日看多機率</div>
+        <div style="font-size:1.3rem;font-weight:800;color:${verdict.color}">${upPct}%　<span style="font-size:.8rem">${verdict.text}</span></div>
+      </div>
+      <div>
+        <div style="font-size:.7rem;color:var(--t3)">平均報酬（後 ${FWD} 日）</div>
+        <div style="font-size:1.1rem;font-weight:800;color:${avgRet>=0?'var(--green)':'var(--red)'}">${avgRet>=0?'+':''}${avgRet.toFixed(2)}%</div>
+      </div>
+    </div>
+    ${rowsHtml}
+    <div style="padding:8px 14px;font-size:.68rem;color:var(--t3)">
+      ⚠️ 型態比對基於收盤價 × 成交量正規化向量，相似歷史段僅供參考，非未來保證。
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
    RENDERER: SCORE HISTORY CHART
    ═══════════════════════════════════════════════════════════════ */
 function renderScoreHistory(){
@@ -10301,6 +10606,80 @@ function renderComboBacktest(ctx){
     ${rowHtml}
     <div style="padding:8px 14px;font-size:.72rem;color:var(--t3)">
       ⚠️ 回測基於歷史資料，未來勝率不代表過去績效的延伸。觸發次數越多（>20次）統計越可靠。看多組合計算次日收紅，看空組合計算次日收黑。
+    </div>
+  </div>
+  ${renderKDMatrix(rows, I)}`;
+}
+
+/* ── KD 買進區間 × 持有天數 勝率矩陣 ── */
+function renderKDMatrix(rows, I){
+  if(!rows || !I || rows.length < 80) return '';
+  const n = rows.length;
+  const KD_THRESHOLDS = [15, 20, 25, 30];
+  const HOLD_DAYS     = [3, 5, 10, 15];
+
+  // 建構矩陣
+  const matrix = KD_THRESHOLDS.map(kd => {
+    return HOLD_DAYS.map(hold => {
+      let hits = 0, wins = 0, sumRet = 0;
+      for(let i = 25; i < n - hold; i++){
+        const K = I.K[i], D = I.D[i];
+        if(K == null || D == null) continue;
+        if(K <= kd && D <= kd){
+          hits++;
+          const ret = (rows[i + hold].close - rows[i].close) / rows[i].close * 100;
+          if(ret > 0) wins++;
+          sumRet += ret;
+        }
+      }
+      const wr  = hits > 0 ? wins / hits * 100 : null;
+      const avg = hits > 0 ? sumRet / hits : null;
+      return { hits, wr, avg };
+    });
+  });
+
+  const cellStyle = (wr) => {
+    if(wr == null) return 'background:var(--card2);color:var(--t3)';
+    if(wr >= 65)   return 'background:rgba(16,185,129,.18);color:var(--green);font-weight:800';
+    if(wr >= 55)   return 'background:rgba(16,185,129,.08);color:var(--green2)';
+    if(wr >= 45)   return 'background:rgba(234,179,8,.08);color:var(--yellow)';
+    return 'background:rgba(239,68,68,.08);color:var(--red2)';
+  };
+
+  const headerRow = `<tr><th style="padding:6px 10px;font-size:.68rem;color:var(--t3);text-align:left">KD ≤ N \\ 持有天</th>`
+    + HOLD_DAYS.map(h => `<th style="padding:6px 10px;font-size:.72rem;text-align:center;color:var(--t2)">${h}天</th>`).join('')
+    + `</tr>`;
+
+  const bodyRows = KD_THRESHOLDS.map((kd, ki) => {
+    const cells = HOLD_DAYS.map((_, hi) => {
+      const cell = matrix[ki][hi];
+      if(cell.hits < 3) return `<td style="padding:7px 10px;text-align:center;font-size:.7rem;${cellStyle(null)}">—</td>`;
+      return `<td style="padding:7px 10px;text-align:center;font-size:.72rem;${cellStyle(cell.wr)}">
+        <div style="font-weight:700">${cell.wr.toFixed(0)}%</div>
+        <div style="font-size:.63rem;opacity:.75">${cell.avg >= 0 ? '+' : ''}${cell.avg.toFixed(1)}%</div>
+        <div style="font-size:.6rem;color:var(--t3)">${cell.hits}次</div>
+      </td>`;
+    }).join('');
+    return `<tr><td style="padding:7px 10px;font-size:.72rem;font-weight:700;color:var(--t2);white-space:nowrap">KD ≤ ${kd}</td>${cells}</tr>`;
+  }).join('');
+
+  return `
+  <div class="false-signal-card ic" style="margin-top:10px">
+    <div class="fs-header" style="margin-bottom:0">
+      <span class="fs-title">📐 KD 超賣區間 × 持有天數 勝率矩陣</span>
+      <span style="font-size:.68rem;color:var(--t3);margin-left:auto">綠=高勝率 黃=中 紅=低</span>
+    </div>
+    <div style="font-size:.7rem;color:var(--t2);padding:8px 14px 4px">
+      KD 同時 ≤ N 時買進，持有指定天數後勝率。格內：勝率 / 平均報酬 / 觸發次數
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse">
+        <thead style="background:var(--card2)">${headerRow}</thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    </div>
+    <div style="padding:8px 14px;font-size:.68rem;color:var(--t3)">
+      ⚠️ 觸發次數 ≥ 5 才顯示。此為歷史統計，非保證績效。
     </div>
   </div>`;
 }
