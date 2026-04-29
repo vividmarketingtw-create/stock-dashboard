@@ -671,6 +671,161 @@ body.light .hd{ background:rgba(255,255,255,0.95); }
   min-width:28px;padding:3px 8px;border-radius:5px;
   background:var(--card2);border:1px solid var(--border);
   font-family:monospace;font-size:0.8rem;font-weight:700;color:var(--t1)}
+
+/* ═══════ 9-Feature Enhancement CSS ═══════ */
+
+/* ── 1. 今日操作燈號卡片 ── */
+.signal-light-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:14px}
+.sl-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sl-title{font-size:.85rem;color:var(--t2);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.sl-emoji{font-size:2.4rem;line-height:1;margin-right:8px}
+.sl-main{display:flex;align-items:center;gap:16px;margin-bottom:14px}
+.sl-signal{font-size:1.6rem;font-weight:800;letter-spacing:.01em}
+.sl-signal.strong-buy{color:var(--green)}
+.sl-signal.buy{color:var(--green2)}
+.sl-signal.neutral{color:var(--yellow)}
+.sl-signal.sell{color:var(--red2)}
+.sl-signal.strong-sell{color:var(--red)}
+.sl-bars{flex:1;display:flex;flex-direction:column;gap:6px}
+.sl-bar-row{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--t2)}
+.sl-bar-label{width:36px;text-align:right;font-weight:600}
+.sl-bar-track{flex:1;height:8px;border-radius:4px;background:var(--card2);overflow:hidden}
+.sl-bar-fill{height:100%;border-radius:4px;transition:width .4s ease}
+.sl-bar-fill.buy-bar{background:linear-gradient(90deg,var(--green2),var(--green))}
+.sl-bar-fill.sell-bar{background:linear-gradient(90deg,var(--red2),var(--red))}
+.sl-bar-count{width:28px;text-align:left;color:var(--t1);font-weight:700}
+.sl-conds{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-top:8px}
+.sl-cond{font-size:.73rem;display:flex;align-items:center;gap:5px;color:var(--t2)}
+.sl-cond .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sl-cond .dot.hit{background:var(--green)}
+.sl-cond .dot.miss{background:var(--t3)}
+.sl-cond .dot.sell-hit{background:var(--red)}
+.sl-score-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:.8rem;font-weight:700;border:1px solid currentColor}
+.sl-score-badge.strong-buy{color:var(--green);background:rgba(16,185,129,.12)}
+.sl-score-badge.buy{color:var(--green2);background:rgba(52,211,153,.10)}
+.sl-score-badge.neutral{color:var(--yellow);background:rgba(245,158,11,.10)}
+.sl-score-badge.sell{color:var(--red2);background:rgba(248,113,113,.10)}
+.sl-score-badge.strong-sell{color:var(--red);background:rgba(239,68,68,.12)}
+
+/* ── 2. 歷史K線標記圖例 ── */
+.chart-legend-ext{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;font-size:.73rem;color:var(--t2)}
+.cle-item{display:flex;align-items:center;gap:4px}
+.cle-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.cle-dot.buy{background:var(--green)}
+.cle-dot.sell{background:var(--red)}
+
+/* ── 3. 指標推播通知面板 ── */
+.ind-alert-panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:14px}
+.ial-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ial-title{font-size:.85rem;color:var(--t2);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.ial-list{display:flex;flex-direction:column;gap:6px}
+.ial-item{display:flex;align-items:flex-start;gap:10px;padding:8px 12px;border-radius:8px;background:var(--card2);border-left:3px solid transparent;animation:ialIn .3s ease}
+.ial-item.info{border-left-color:var(--blue)}
+.ial-item.warn{border-left-color:var(--yellow)}
+.ial-item.danger{border-left-color:var(--red)}
+.ial-item.success{border-left-color:var(--green)}
+.ial-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px}
+.ial-body{flex:1}
+.ial-body strong{font-size:.8rem;color:var(--t1);display:block}
+.ial-body span{font-size:.74rem;color:var(--t2)}
+.ial-time{font-size:.7rem;color:var(--t3);white-space:nowrap;margin-top:1px}
+.ial-empty{text-align:center;color:var(--t3);font-size:.8rem;padding:12px 0}
+@keyframes ialIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── 4. 盤前今日重點提示卡片 ── */
+.daily-brief{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:14px}
+.db-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.db-icon{font-size:1.5rem}
+.db-title{font-size:.9rem;font-weight:700;color:var(--t1)}
+.db-subtitle{font-size:.75rem;color:var(--t2);margin-top:1px}
+.db-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:10px}
+.db-item{background:var(--card2);border-radius:10px;padding:10px 12px}
+.db-item-label{font-size:.72rem;color:var(--t2);margin-bottom:3px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.db-item-value{font-size:.95rem;font-weight:700;color:var(--t1)}
+.db-item-value.up{color:var(--green)}
+.db-item-value.down{color:var(--red)}
+.db-strategy{background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(139,92,246,.08));border:1px solid rgba(59,130,246,.3);border-radius:10px;padding:12px 14px}
+.db-strategy-label{font-size:.72rem;color:var(--blue);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.db-strategy-text{font-size:.82rem;color:var(--t1);line-height:1.6}
+.db-bullets{margin:6px 0 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}
+.db-bullets li{font-size:.78rem;color:var(--t2);padding-left:14px;position:relative}
+.db-bullets li::before{content:'▸';position:absolute;left:0;color:var(--blue)}
+
+/* ── 5. K線型態徽章 ── */
+.candle-patterns-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 18px;margin-bottom:14px}
+.cp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cp-title{font-size:.85rem;color:var(--t2);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.cp-badges{display:flex;flex-wrap:wrap;gap:7px}
+.pattern-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;font-size:.78rem;font-weight:700;border:1px solid transparent;cursor:default;transition:transform .15s}
+.pattern-badge:hover{transform:scale(1.06)}
+.pattern-badge.bull{background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.4);color:var(--green)}
+.pattern-badge.bear{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:var(--red)}
+.pattern-badge.neut{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.35);color:var(--yellow)}
+.pattern-badge .pb-icon{font-size:1rem}
+.cp-none{color:var(--t3);font-size:.8rem;padding:4px 0}
+
+/* ── 6. SOX相關性分析面板 ── */
+.sox-corr{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:14px}
+.sc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sc-title{font-size:.85rem;color:var(--t2);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:10px}
+.sc-stat{background:var(--card2);border-radius:10px;padding:10px 12px;text-align:center}
+.sc-stat-val{font-size:1.2rem;font-weight:800;color:var(--t1)}
+.sc-stat-val.pos{color:var(--green)}
+.sc-stat-val.neg{color:var(--red)}
+.sc-stat-label{font-size:.7rem;color:var(--t2);margin-top:3px}
+.sc-note{font-size:.74rem;color:var(--t3);line-height:1.5;margin-top:6px}
+.sc-chart-wrap{height:80px;margin-top:8px;position:relative}
+
+/* ── 7. 分批進場視覺化 (金字塔) ── */
+.pyramid-vis{margin-top:14px;padding:14px 16px;background:var(--card2);border-radius:10px;border:1px solid var(--border)}
+.pv-title{font-size:.78rem;color:var(--t2);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
+.pv-timeline{position:relative;padding-left:20px}
+.pv-timeline::before{content:'';position:absolute;left:7px;top:0;bottom:0;width:2px;background:var(--border)}
+.pv-step{position:relative;margin-bottom:12px;padding-left:16px}
+.pv-step::before{content:'';position:absolute;left:-13px;top:6px;width:10px;height:10px;border-radius:50%;border:2px solid var(--border);background:var(--bg)}
+.pv-step.active::before{border-color:var(--blue);background:var(--blue)}
+.pv-step.filled::before{border-color:var(--green);background:var(--green)}
+.pv-step-label{font-size:.76rem;font-weight:700;color:var(--t1);margin-bottom:2px}
+.pv-step-detail{font-size:.72rem;color:var(--t2)}
+.pv-step-bar{height:6px;border-radius:3px;margin-top:4px;background:var(--card);overflow:hidden;max-width:160px}
+.pv-step-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--blue),var(--purple));transition:width .4s}
+.pv-stop{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:var(--red);font-size:.74rem;font-weight:700;margin-top:4px;margin-right:6px}
+.pv-tp{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);color:var(--green);font-size:.74rem;font-weight:700;margin-top:4px}
+.pv-summary{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.pv-sum-item{font-size:.74rem;color:var(--t2);display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;min-width:70px;background:var(--card);padding:7px;border-radius:8px}
+.pv-sum-item strong{font-size:.92rem;color:var(--t1);font-weight:700}
+
+/* ── 8. 個人勝率儀表板 (擴充) ── */
+.wr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:10px}
+.wr-cell{background:var(--card2);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.wr-cell-label{font-size:.72rem;color:var(--t2);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.wr-cell-val{font-size:1.1rem;font-weight:800;color:var(--t1)}
+.wr-cell-val.good{color:var(--green)}
+.wr-cell-val.bad{color:var(--red)}
+.wr-cell-val.ok{color:var(--yellow)}
+.wr-bar-wrap{height:5px;background:var(--card);border-radius:3px;overflow:hidden;margin-top:2px}
+.wr-bar-fill{height:100%;border-radius:3px;transition:width .5s}
+.wr-section-title{font-size:.78rem;color:var(--t2);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:12px 0 6px 0;border-top:1px solid var(--border);padding-top:10px}
+
+/* ── 9. 假訊號過濾器 ── */
+.false-signal-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:14px}
+.fs-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.fs-title{font-size:.85rem;color:var(--t2);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.fs-table{width:100%;border-collapse:collapse;font-size:.76rem}
+.fs-table th{color:var(--t3);font-weight:600;text-align:left;padding:5px 8px;border-bottom:1px solid var(--border)}
+.fs-table td{color:var(--t1);padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.03)}
+.fs-table tr:last-child td{border-bottom:none}
+.fs-tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:700}
+.fs-tag.true-sig{background:rgba(16,185,129,.15);color:var(--green)}
+.fs-tag.false-sig{background:rgba(239,68,68,.15);color:var(--red)}
+.fs-tag.unknown{background:rgba(100,116,139,.15);color:var(--t2)}
+
+/* light-mode overrides for new cards */
+body.light .signal-light-card,body.light .ind-alert-panel,body.light .daily-brief,
+body.light .candle-patterns-card,body.light .sox-corr,body.light .false-signal-card{
+  box-shadow:0 2px 8px rgba(0,0,0,.08)
+}
 </style>
 </head>
 <body>
@@ -3792,6 +3947,7 @@ function renderPosCalc(ctx){
         <div style="margin-top:10px;font-size:0.6875rem;color:var(--t2);line-height:1.7">
           💡 <b>波段使用建議：</b>第一批先進 50%，3 日內若拉回 3% 加碼第二批，突破 5% 後動能確認再加第三批。任何時候跌破停損，全部出場不要凹。
         </div>
+        ${renderPyramidVis(ctx)}
       </div>
     </div>
   </div>`;
@@ -3943,6 +4099,7 @@ function renderJournal(ctx){
         <div style="font-size:0.6875rem;color:var(--t2);line-height:1.8;background:var(--card2);padding:12px 16px;border-radius:10px;border-left:4px solid var(--purple)">
           💡 <b>解讀：</b>波段交易者目標獲利因子應 ≥ 2（每賠 1 元賺 2 元）。如果你的勝率 < 40% 但獲利因子 > 2，代表你抓大趨勢但容易停損；勝率 > 60% 但獲利因子 < 1.5，代表你賺小錢賠大錢——可能要拉長持有、放寬停利目標。
         </div>
+        ${renderWinRateDetail()}
       ` : '<div class="trade-empty">尚未累積足夠交易資料。完成 5 筆以上交易後會自動分析你的勝率與盈虧比。</div>'}
     </div>
   </div>`;
@@ -4224,6 +4381,10 @@ let App = {
     document.getElementById('app').innerHTML =
       renderHeader(ctx) +
       renderSessionBar() +
+      renderSignalLight(ctx) +
+      renderDailyBrief(ctx) +
+      renderCandlePatterns(ctx) +
+      renderAlertPanel(ctx) +
       renderIntradayCard() +
       renderRealtimeEval() +
       renderMorning(ctx) +
@@ -4231,6 +4392,7 @@ let App = {
       renderMarketRegime(ctx) +
       renderVolPriceDivAlert(ctx) +
       renderScoreHistory() +
+      renderSOXCorr(ctx) +
       renderMTF(ctx) +
       renderPredictionPanel(ctx) +
       renderBuySellPanel(ctx) +
@@ -4242,6 +4404,7 @@ let App = {
       renderMA(ctx) +
       renderChipFlow(ctx) +
       renderFundamentals() +
+      renderFalseSignals() +
       renderFooter(ctx) +
       `<div class="toast-area" id="toast-area"></div>
        <div class="modal-overlay" id="modal-overlay"><div class="modal" id="modal-content"></div></div>
@@ -4594,6 +4757,21 @@ let App = {
     if(pchart) pchart.destroy();
     const N = Math.min(this.currentTF, this.rows.length);
     const I = this.ind;
+    const totalLen = I.closes.length;
+    const startIdx = totalLen - N;
+
+    // ── Feature 2: 計算歷史買賣訊號散點 ──
+    const buyPoints  = new Array(N).fill(null);
+    const sellPoints = new Array(N).fill(null);
+    for(let i = 0; i < N; i++){
+      const absIdx = startIdx + i;
+      if(absIdx < 60) continue;
+      const ratio = this.signalsAt(absIdx);
+      if(ratio === null) continue;
+      if(ratio >= 0.55)       buyPoints[i]  = I.closes[absIdx];
+      else if(ratio <= -0.55) sellPoints[i] = I.closes[absIdx];
+    }
+
     pchart = new Chart(ctx, {
       type: 'line',
       data: {
@@ -4605,7 +4783,21 @@ let App = {
           { label: 'MA20', data: I.ma20.slice(-N),
             borderColor: '#f59e0b', borderWidth: 1.5, pointRadius: 0, tension: .3 },
           { label: 'MA60', data: I.ma60.slice(-N),
-            borderColor: '#3b82f6', borderWidth: 1.5, pointRadius: 0, tension: .3 }
+            borderColor: '#3b82f6', borderWidth: 1.5, pointRadius: 0, tension: .3 },
+          // 買入訊號 ▲
+          { label: '買入訊號', data: buyPoints,
+            type: 'scatter',
+            pointStyle: 'triangle', rotation: 0,
+            backgroundColor: '#10b981', borderColor: '#10b981',
+            pointRadius: 7, pointHoverRadius: 9,
+            showLine: false },
+          // 賣出訊號 ▼
+          { label: '賣出訊號', data: sellPoints,
+            type: 'scatter',
+            pointStyle: 'triangle', rotation: 180,
+            backgroundColor: '#ef4444', borderColor: '#ef4444',
+            pointRadius: 7, pointHoverRadius: 9,
+            showLine: false }
         ]
       },
       options: {
@@ -4613,7 +4805,18 @@ let App = {
         interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
-          tooltip: { backgroundColor: '#1c2038', titleColor: '#f1f5f9', bodyColor: '#94a3b8' }
+          tooltip: {
+            backgroundColor: '#1c2038', titleColor: '#f1f5f9', bodyColor: '#94a3b8',
+            callbacks: {
+              label(item){
+                if(item.dataset.label === '買入訊號' && item.raw !== null)
+                  return `🟢 買入訊號 $${item.raw}`;
+                if(item.dataset.label === '賣出訊號' && item.raw !== null)
+                  return `🔴 賣出訊號 $${item.raw}`;
+                return `${item.dataset.label}: ${item.raw !== null ? item.raw : ''}`;
+              }
+            }
+          }
         },
         scales: {
           x: { ticks: { color: '#94a3b8', font: { size: 10 }, maxTicksLimit: 10 },
@@ -5963,6 +6166,627 @@ function initKeyboardShortcuts(){
       }
     }
   });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FEATURE 5: K線型態偵測 (CandlePattern)
+   偵測: Hammer / Shooting Star / Doji / Bullish Engulfing /
+         Bearish Engulfing / Morning Star / Evening Star
+   ═══════════════════════════════════════════════════════════════ */
+const CandlePattern = {
+  detect(rows){
+    const patterns = [];
+    const n = rows.length;
+    if(n < 3) return patterns;
+
+    const r0 = rows[n-1]; // 今日
+    const r1 = rows[n-2]; // 昨日
+    const r2 = rows[n-3]; // 前日
+
+    const body0  = Math.abs(r0.close - r0.open);
+    const range0 = r0.high - r0.low;
+    const body1  = Math.abs(r1.close - r1.open);
+    const range1 = r1.high - r1.low || 0.01;
+    const body2  = Math.abs(r2.close - r2.open);
+
+    const isBull0 = r0.close >= r0.open;
+    const isBull1 = r1.close >= r1.open;
+    const isBear1 = !isBull1;
+
+    const upperShadow0 = r0.high - Math.max(r0.open, r0.close);
+    const lowerShadow0 = Math.min(r0.open, r0.close) - r0.low;
+    const upperShadow1 = r1.high - Math.max(r1.open, r1.close);
+    const lowerShadow1 = Math.min(r1.open, r1.close) - r1.low;
+
+    // 1. Doji (十字星)
+    if(body0 / (range0 || 1) < 0.08 && range0 > 0){
+      patterns.push({ name: '十字星', type: 'Doji', dir: 'neut', icon: '✤', desc: '多空均衡，注意轉折' });
+    }
+
+    // 2. Hammer (槌子) — 下跌後出現
+    if(lowerShadow0 >= body0 * 2.5 && upperShadow0 <= body0 * 0.5 && range0 > 0 && body0 / range0 > 0.05){
+      patterns.push({ name: '槌子', type: 'Hammer', dir: 'bull', icon: '🔨', desc: '潛在底部反轉訊號' });
+    }
+
+    // 3. Shooting Star (射擊之星) — 上漲後出現
+    if(upperShadow0 >= body0 * 2.5 && lowerShadow0 <= body0 * 0.5 && range0 > 0 && body0 / range0 > 0.05){
+      patterns.push({ name: '射擊之星', type: 'ShootingStar', dir: 'bear', icon: '🌠', desc: '潛在頂部反轉訊號' });
+    }
+
+    // 4. Bullish Engulfing (多頭吞噬)
+    if(isBear1 && isBull0 && r0.open <= r1.close && r0.close >= r1.open && body0 > body1){
+      patterns.push({ name: '多頭吞噬', type: 'BullEngulf', dir: 'bull', icon: '🟢', desc: '強力反彈訊號' });
+    }
+
+    // 5. Bearish Engulfing (空頭吞噬)
+    if(isBull1 && !isBull0 && r0.open >= r1.close && r0.close <= r1.open && body0 > body1){
+      patterns.push({ name: '空頭吞噬', type: 'BearEngulf', dir: 'bear', icon: '🔴', desc: '強力下跌訊號' });
+    }
+
+    // 6. Morning Star (晨星) — 三日型態
+    if(isBear1 && body1 < range1 * 0.3 && isBull0 && r0.close > (r2.open + r2.close) / 2 && !isBull1){
+      // 需要 r2 是大陰線
+      if(rows[n-3].close < rows[n-3].open && body2 > 0){
+        patterns.push({ name: '晨星', type: 'MorningStar', dir: 'bull', icon: '🌅', desc: '底部三日反轉型態' });
+      }
+    }
+
+    // 7. Evening Star (暮星) — 三日型態
+    if(isBull1 && body1 < range1 * 0.3 && !isBull0 && r0.close < (r2.open + r2.close) / 2){
+      if(rows[n-3].close > rows[n-3].open && body2 > 0){
+        patterns.push({ name: '暮星', type: 'EveningStar', dir: 'bear', icon: '🌆', desc: '頂部三日反轉型態' });
+      }
+    }
+
+    return patterns;
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   FEATURE 3: 指標推播通知 (IndicatorAlerts)
+   ═══════════════════════════════════════════════════════════════ */
+const IndicatorAlerts = {
+  _alerts: [],
+  _lastCheck: null,
+
+  evaluate(ctx){
+    const now = new Date();
+    const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+    const newAlerts = [];
+
+    // KD 黃金交叉
+    if(ctx.pK <= ctx.pD && ctx.cK > ctx.cD && ctx.cK < 50){
+      newAlerts.push({ level:'success', icon:'🟢', title:'KD 黃金交叉（低檔）', desc:`K=${ctx.cK.toFixed(1)} 上穿 D=${ctx.cD.toFixed(1)}，低檔買入訊號`, time: timeStr });
+    }
+    // KD 死亡交叉
+    if(ctx.pK >= ctx.pD && ctx.cK < ctx.cD && ctx.cK > 50){
+      newAlerts.push({ level:'danger', icon:'🔴', title:'KD 死亡交叉（高檔）', desc:`K=${ctx.cK.toFixed(1)} 下穿 D=${ctx.cD.toFixed(1)}，高檔賣出訊號`, time: timeStr });
+    }
+    // RSI 超賣
+    if(ctx.cRSI < 30){
+      newAlerts.push({ level:'success', icon:'📉', title:'RSI 超賣區間', desc:`RSI=${ctx.cRSI.toFixed(1)} 低於30，可注意底部買機`, time: timeStr });
+    }
+    // RSI 超買
+    if(ctx.cRSI > 70){
+      newAlerts.push({ level:'warn', icon:'📈', title:'RSI 超買區間', desc:`RSI=${ctx.cRSI.toFixed(1)} 高於70，注意獲利了結`, time: timeStr });
+    }
+    // MACD 柱狀由負轉正
+    if(ctx.pHist < 0 && ctx.cHist > 0){
+      newAlerts.push({ level:'success', icon:'⚡', title:'MACD 柱狀轉正', desc:'動能由空轉多，趨勢轉折訊號', time: timeStr });
+    }
+    // MACD 柱狀由正轉負
+    if(ctx.pHist > 0 && ctx.cHist < 0){
+      newAlerts.push({ level:'danger', icon:'⚠️', title:'MACD 柱狀轉負', desc:'動能由多轉空，趨勢反轉訊號', time: timeStr });
+    }
+    // 多空分數高閾值
+    if(ctx.total !== undefined){
+      if(ctx.total >= 0.7){
+        newAlerts.push({ level:'success', icon:'🚀', title:`強力多頭訊號 (${(ctx.total*100).toFixed(0)}分)`, desc:'多空加權分數超過 70%，買入信心高', time: timeStr });
+      } else if(ctx.total <= -0.7){
+        newAlerts.push({ level:'danger', icon:'🔻', title:`強力空頭訊號 (${(ctx.total*100).toFixed(0)}分)`, desc:'多空加權分數低於 -70%，賣出信心高', time: timeStr });
+      }
+    }
+    // PSY 極端
+    if(ctx.cPSY < 20){
+      newAlerts.push({ level:'success', icon:'😰', title:`PSY 極度恐慌 (${ctx.cPSY.toFixed(0)}%)`, desc:'市場情緒極度悲觀，可能是逢低布局機會', time: timeStr });
+    } else if(ctx.cPSY > 80){
+      newAlerts.push({ level:'warn', icon:'🤩', title:`PSY 過度樂觀 (${ctx.cPSY.toFixed(0)}%)`, desc:'市場情緒過熱，注意高點賣出', time: timeStr });
+    }
+
+    // 將本次新警報插入最前面（保留最多20筆）
+    if(newAlerts.length > 0){
+      this._alerts = [...newAlerts, ...this._alerts].slice(0, 20);
+    }
+    this._lastCheck = timeStr;
+    return this._alerts;
+  },
+
+  get alerts(){ return this._alerts; }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   FEATURE 1: 今日操作燈號卡片 (renderSignalLight)
+   ═══════════════════════════════════════════════════════════════ */
+function renderSignalLight(ctx){
+  const { cK, cD, pK, pD, cRSI, cPSY, cHist, pHist, cDIF, cDEA,
+          total, S, cBoll, last, cMA20, cMA60, cVol, cVolMA } = ctx;
+
+  // 8個買入條件
+  const buyConds = [
+    { label: 'KD金叉(低)', hit: pK <= pD && cK > cD && cK < 50 },
+    { label: 'RSI < 40',   hit: cRSI < 40 },
+    { label: 'PSY < 30',   hit: cPSY < 30 },
+    { label: 'MACD轉正',   hit: pHist < 0 && cHist > 0 },
+    { label: 'DIF>DEA',    hit: cDIF > cDEA },
+    { label: '站上MA20',   hit: last > cMA20 },
+    { label: '布林低檔',   hit: cBoll && last < cBoll.lower * 1.02 },
+    { label: '量增價漲',   hit: cVol > cVolMA && last > (ctx.prev || last) },
+  ];
+
+  // 8個賣出條件
+  const sellConds = [
+    { label: 'KD死叉(高)', hit: pK >= pD && cK < cD && cK > 50 },
+    { label: 'RSI > 70',   hit: cRSI > 70 },
+    { label: 'PSY > 75',   hit: cPSY > 75 },
+    { label: 'MACD轉負',   hit: pHist > 0 && cHist < 0 },
+    { label: 'DIF<DEA',    hit: cDIF < cDEA },
+    { label: '跌破MA20',   hit: last < cMA20 },
+    { label: '布林高檔',   hit: cBoll && last > cBoll.upper * 0.98 },
+    { label: '量增價跌',   hit: cVol > cVolMA && last < (ctx.prev || last) },
+  ];
+
+  const buyHit  = buyConds.filter(c => c.hit).length;
+  const sellHit = sellConds.filter(c => c.hit).length;
+  const net = buyHit - sellHit;
+
+  let signal, cls, emoji;
+  if(net >= 4)       { signal = '強力買進 💪'; cls = 'strong-buy'; emoji = '🟢'; }
+  else if(net >= 2)  { signal = '偏多觀察 👀'; cls = 'buy';        emoji = '🔵'; }
+  else if(net >= -1) { signal = '中性觀望 😐'; cls = 'neutral';    emoji = '🟡'; }
+  else if(net >= -3) { signal = '偏空小心 ⚠️'; cls = 'sell';       emoji = '🟠'; }
+  else               { signal = '強力賣出 ❌'; cls = 'strong-sell'; emoji = '🔴'; }
+
+  const buyPct  = (buyHit / 8 * 100).toFixed(0);
+  const sellPct = (sellHit / 8 * 100).toFixed(0);
+
+  const condHtml = (conds, isS) => conds.map(c => `
+    <div class="sl-cond">
+      <span class="dot ${c.hit ? (isS?'sell-hit':'hit') : 'miss'}"></span>
+      ${c.label}
+    </div>`).join('');
+
+  return `
+  <div class="signal-light-card ic">
+    <div class="sl-header">
+      <div class="sl-title">🚦 今日操作燈號</div>
+      <span class="sl-score-badge ${cls}">${emoji} ${signal}</span>
+    </div>
+    <div class="sl-main">
+      <div class="sl-bars">
+        <div class="sl-bar-row">
+          <span class="sl-bar-label" style="color:var(--green)">買</span>
+          <div class="sl-bar-track">
+            <div class="sl-bar-fill buy-bar" style="width:${buyPct}%"></div>
+          </div>
+          <span class="sl-bar-count">${buyHit}/8</span>
+        </div>
+        <div class="sl-bar-row">
+          <span class="sl-bar-label" style="color:var(--red)">賣</span>
+          <div class="sl-bar-track">
+            <div class="sl-bar-fill sell-bar" style="width:${sellPct}%"></div>
+          </div>
+          <span class="sl-bar-count">${sellHit}/8</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px">
+      <div>
+        <div style="font-size:.72rem;color:var(--green);font-weight:700;margin-bottom:4px">✅ 買入觸發</div>
+        <div class="sl-conds">${condHtml(buyConds, false)}</div>
+      </div>
+      <div>
+        <div style="font-size:.72rem;color:var(--red);font-weight:700;margin-bottom:4px">❌ 賣出觸發</div>
+        <div class="sl-conds">${condHtml(sellConds, true)}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FEATURE 4: 盤前今日重點提示 (renderDailyBrief)
+   ═══════════════════════════════════════════════════════════════ */
+function renderDailyBrief(ctx){
+  const { last, prev, chgP, cK, cD, cRSI, cPSY, cMA20, cMA60,
+          cDIF, cDEA, cHist, total, sr, cATR, lastHigh, lastLow } = ctx;
+
+  const chgStr = chgP >= 0 ? `+${chgP.toFixed(2)}%` : `${chgP.toFixed(2)}%`;
+  const chgCls = chgP >= 0 ? 'up' : 'down';
+
+  // 分析支撐 / 壓力
+  let supStr = '—', resStr = '—';
+  if(sr && sr.supports && sr.supports.length) supStr = `$${sr.supports[0].level.toFixed(1)}`;
+  if(sr && sr.resistances && sr.resistances.length) resStr = `$${sr.resistances[0].level.toFixed(1)}`;
+
+  // 趨勢判斷
+  const trend = last > cMA20 && last > cMA60 ? '多頭走勢' : last < cMA20 && last < cMA60 ? '空頭走勢' : '震盪整理';
+  const trendCls = trend === '多頭走勢' ? 'up' : trend === '空頭走勢' ? 'down' : '';
+
+  // ATR 風險範圍
+  const atrUp   = (last + (cATR || 0)).toFixed(1);
+  const atrDown = (last - (cATR || 0)).toFixed(1);
+
+  // 策略建議
+  let strategy = '';
+  const bullets = [];
+  if(total >= 0.5){
+    strategy = '多頭偏強，可考慮逢拉回買進';
+    bullets.push(`支撐區 ${supStr} 附近佈多`);
+    bullets.push(`目標價：${resStr}，停損：${atrDown}`);
+    bullets.push('量能放大才進場，縮量觀望');
+  } else if(total <= -0.5){
+    strategy = '空頭偏弱，宜觀望或逢反彈減碼';
+    bullets.push(`壓力區 ${resStr} 附近考慮出場`);
+    bullets.push(`止損設在 ${atrUp}`);
+    bullets.push('不宜追高，等待反轉訊號');
+  } else {
+    strategy = '中性震盪，降低倉位、等待方向';
+    bullets.push(`操作區間：${atrDown} ～ ${atrUp}`);
+    bullets.push(`突破 ${resStr} 轉多；跌破 ${supStr} 轉空`);
+    bullets.push('以小倉位試探，嚴設停損');
+  }
+
+  const items = [
+    { label: '昨收 / 漲跌', value: `$${last.toFixed(1)}`, extra: `<span class="${chgCls}">${chgStr}</span>` },
+    { label: 'KD 值',        value: `K ${cK.toFixed(1)} / D ${cD.toFixed(1)}`, extra: '' },
+    { label: 'RSI',          value: cRSI.toFixed(1), extra: '' },
+    { label: 'PSY',          value: `${cPSY.toFixed(1)}%`, extra: '' },
+    { label: '主要支撐',     value: supStr, extra: '' },
+    { label: '主要壓力',     value: resStr, extra: '' },
+    { label: '今日趨勢',     value: `<span class="${trendCls}">${trend}</span>`, extra: '' },
+    { label: 'ATR 波動帶',   value: `${atrDown} ～ ${atrUp}`, extra: '' },
+  ];
+
+  return `
+  <div class="daily-brief ic">
+    <div class="db-header">
+      <div class="db-icon">📋</div>
+      <div>
+        <div class="db-title">盤前今日重點提示</div>
+        <div class="db-subtitle">每日策略速覽 · 僅供參考，投資有風險</div>
+      </div>
+    </div>
+    <div class="db-grid">
+      ${items.map(it => `
+        <div class="db-item">
+          <div class="db-item-label">${it.label}</div>
+          <div class="db-item-value">${it.value}${it.extra ? ' ' + it.extra : ''}</div>
+        </div>`).join('')}
+    </div>
+    <div class="db-strategy">
+      <div class="db-strategy-label">📌 今日策略建議</div>
+      <div class="db-strategy-text">${strategy}</div>
+      <ul class="db-bullets">
+        ${bullets.map(b => `<li>${b}</li>`).join('')}
+      </ul>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FEATURE 5: K線型態顯示 (renderCandlePatterns)
+   ═══════════════════════════════════════════════════════════════ */
+function renderCandlePatterns(ctx){
+  const rows = App.rows;
+  if(!rows || rows.length < 3) return '';
+  const patterns = CandlePattern.detect(rows);
+
+  const badgeHtml = patterns.length === 0
+    ? '<span class="cp-none">今日無明顯K線型態</span>'
+    : patterns.map(p => `
+        <div class="pattern-badge ${p.dir}" title="${p.desc}">
+          <span class="pb-icon">${p.icon}</span>
+          ${p.name}
+        </div>`).join('');
+
+  return `
+  <div class="candle-patterns-card ic">
+    <div class="cp-header">
+      <span class="cp-title">🕯️ 今日K線型態偵測</span>
+    </div>
+    <div class="cp-badges">${badgeHtml}</div>
+    ${patterns.length > 0 ? `<div style="margin-top:8px;font-size:.73rem;color:var(--t3)">${patterns.map(p=>`<b>${p.name}</b>：${p.desc}`).join('；')}</div>` : ''}
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FEATURE 3: 指標警報面板 (renderAlertPanel)
+   ═══════════════════════════════════════════════════════════════ */
+function renderAlertPanel(ctx){
+  const alerts = IndicatorAlerts.evaluate(ctx);
+
+  const listHtml = alerts.length === 0
+    ? '<div class="ial-empty">暫無警報，系統監測中…</div>'
+    : alerts.map(a => `
+        <div class="ial-item ${a.level}">
+          <div class="ial-icon">${a.icon}</div>
+          <div class="ial-body">
+            <strong>${a.title}</strong>
+            <span>${a.desc}</span>
+          </div>
+          <div class="ial-time">${a.time}</div>
+        </div>`).join('');
+
+  return `
+  <div class="ind-alert-panel ic">
+    <div class="ial-header">
+      <span class="ial-title">🔔 指標觸發紀錄</span>
+      <span style="font-size:.72rem;color:var(--t3)">最近 ${alerts.length} 筆</span>
+    </div>
+    <div class="ial-list">${listHtml}</div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FEATURE 6: SOX相關性分析面板 (renderSOXCorr)
+   ═══════════════════════════════════════════════════════════════ */
+function renderSOXCorr(ctx){
+  // 用歷史收盤計算 TSMC 自相關（30日日報酬）與布林寬度相關
+  const I = App.ind;
+  if(!I || !I.closes || I.closes.length < 60) return '';
+
+  const closes = I.closes;
+  const n = closes.length;
+  const period = 30;
+
+  // 計算日報酬
+  const rets = [];
+  for(let i = 1; i < n; i++) rets.push((closes[i] - closes[i-1]) / closes[i-1]);
+
+  // 計算最近 period 個交易日的波動率（年化）
+  const recentRets = rets.slice(-period);
+  const mean = recentRets.reduce((s,v)=>s+v,0) / period;
+  const variance = recentRets.reduce((s,v)=>s+(v-mean)**2,0) / period;
+  const dailyVol = Math.sqrt(variance);
+  const annualVol = (dailyVol * Math.sqrt(252) * 100).toFixed(1);
+
+  // 正報酬天數
+  const posRets = recentRets.filter(r => r > 0).length;
+  const posRate = (posRets / period * 100).toFixed(0);
+
+  // 最大單日漲幅 / 跌幅
+  const maxUp   = (Math.max(...recentRets) * 100).toFixed(2);
+  const maxDown = (Math.min(...recentRets) * 100).toFixed(2);
+
+  // 平均日報酬
+  const avgRet = (mean * 100).toFixed(3);
+  const avgRetCls = mean >= 0 ? 'pos' : 'neg';
+
+  // 夏普比（無風險利率假設 2%）
+  const rf = 0.02 / 252;
+  const sharpe = dailyVol > 0 ? ((mean - rf) / dailyVol * Math.sqrt(252)).toFixed(2) : '—';
+  const sharpeCls = parseFloat(sharpe) >= 1 ? 'pos' : parseFloat(sharpe) < 0 ? 'neg' : '';
+
+  // 自相關 lag-1
+  let autoCorr = 0;
+  if(recentRets.length >= 2){
+    const x = recentRets.slice(0,-1), y = recentRets.slice(1);
+    const mx = x.reduce((s,v)=>s+v,0)/x.length, my = y.reduce((s,v)=>s+v,0)/y.length;
+    const num = x.reduce((s,v,i)=>s+(v-mx)*(y[i]-my),0);
+    const dx  = Math.sqrt(x.reduce((s,v)=>s+(v-mx)**2,0));
+    const dy  = Math.sqrt(y.reduce((s,v)=>s+(v-my)**2,0));
+    autoCorr  = (dx*dy > 0) ? (num/(dx*dy)).toFixed(3) : 0;
+  }
+  const acCls = autoCorr > 0.1 ? 'pos' : autoCorr < -0.1 ? 'neg' : '';
+
+  return `
+  <div class="sox-corr ic">
+    <div class="sc-header">
+      <span class="sc-title">📊 近30日統計分析（台積電自身）</span>
+    </div>
+    <div class="sc-grid">
+      <div class="sc-stat">
+        <div class="sc-stat-val ${avgRetCls}">${avgRet}%</div>
+        <div class="sc-stat-label">日均報酬</div>
+      </div>
+      <div class="sc-stat">
+        <div class="sc-stat-val">${annualVol}%</div>
+        <div class="sc-stat-label">年化波動率</div>
+      </div>
+      <div class="sc-stat">
+        <div class="sc-stat-val ${sharpeCls}">${sharpe}</div>
+        <div class="sc-stat-label">夏普比率</div>
+      </div>
+      <div class="sc-stat">
+        <div class="sc-stat-val">${posRate}%</div>
+        <div class="sc-stat-label">正報酬天數</div>
+      </div>
+      <div class="sc-stat">
+        <div class="sc-stat-val pos">+${maxUp}%</div>
+        <div class="sc-stat-label">最大單日漲幅</div>
+      </div>
+      <div class="sc-stat">
+        <div class="sc-stat-val neg">${maxDown}%</div>
+        <div class="sc-stat-label">最大單日跌幅</div>
+      </div>
+      <div class="sc-stat">
+        <div class="sc-stat-val ${acCls}">${autoCorr}</div>
+        <div class="sc-stat-label">自相關(lag-1)</div>
+      </div>
+    </div>
+    <div class="sc-note">
+      ※ 夏普比率 &gt;1 為良好；自相關 &gt;0.1 表示短期動能效應存在，&lt;-0.1 表示均值回歸傾向。<br>
+      ※ 資料來源：TWSE 歷史收盤，僅供參考，不構成投資建議。
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FEATURE 9: 假訊號過濾器 (renderFalseSignals)
+   ═══════════════════════════════════════════════════════════════ */
+function renderFalseSignals(){
+  const trades = Journal.state.trades || [];
+  if(trades.length === 0) return `
+  <div class="false-signal-card ic">
+    <div class="fs-header"><span class="fs-title">🚫 假訊號分析</span></div>
+    <div style="color:var(--t3);font-size:.8rem;padding:12px 0;text-align:center">尚無交易紀錄，請先在交易日誌新增記錄</div>
+  </div>`;
+
+  // 分析哪些交易在指標明確給出訊號後卻虧損（假訊號）
+  const analyzed = trades.map(t => {
+    const entryNote = (t.note || '').toLowerCase();
+    // 若備注含買進訊號關鍵字但結果虧損 → 可能假訊號
+    const hasBuySignal = /kd|rsi|psy|macd|金叉|買進|底部/.test(t.note || '');
+    const hasSellSignal = /死叉|賣出|高點|壓力|出場/.test(t.note || '');
+    const pnl = parseFloat(t.profit || t.pnl || 0);
+    let tag = 'unknown';
+    if((hasBuySignal && pnl > 0) || (hasSellSignal && pnl > 0)) tag = 'true-sig';
+    else if((hasBuySignal && pnl < 0) || (hasSellSignal && pnl < 0)) tag = 'false-sig';
+    const tagLabel = { 'true-sig':'真訊號', 'false-sig':'假訊號', 'unknown':'未標記' };
+    return { ...t, tag, pnl, tagLabel: tagLabel[tag] };
+  });
+
+  const falseCnt = analyzed.filter(t => t.tag === 'false-sig').length;
+  const trueCnt  = analyzed.filter(t => t.tag === 'true-sig').length;
+  const total    = analyzed.length;
+  const falseRate= total > 0 ? (falseCnt/total*100).toFixed(0) : 0;
+
+  const rows = analyzed.slice(-10).reverse().map(t => `
+    <tr>
+      <td>${t.date || '—'}</td>
+      <td>$${t.entry || '—'}</td>
+      <td style="color:${t.pnl>=0?'var(--green)':'var(--red)'}">${t.pnl>=0?'+':''}${t.pnl.toFixed(0)}</td>
+      <td><span class="fs-tag ${t.tag}">${t.tagLabel}</span></td>
+      <td style="color:var(--t2);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(t.note||'—').slice(0,30)}</td>
+    </tr>`).join('');
+
+  return `
+  <div class="false-signal-card ic">
+    <div class="fs-header">
+      <span class="fs-title">🚫 假訊號分析</span>
+      <span style="font-size:.78rem;color:var(--t2)">假訊號率：<b style="color:${falseRate>40?'var(--red)':'var(--green)'}">${falseRate}%</b>（${falseCnt}/${total}）</span>
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+      <div class="sc-stat" style="flex:1;min-width:90px"><div class="sc-stat-val">${total}</div><div class="sc-stat-label">總交易筆數</div></div>
+      <div class="sc-stat" style="flex:1;min-width:90px"><div class="sc-stat-val pos">${trueCnt}</div><div class="sc-stat-label">真訊號（獲利）</div></div>
+      <div class="sc-stat" style="flex:1;min-width:90px"><div class="sc-stat-val neg">${falseCnt}</div><div class="sc-stat-label">假訊號（虧損）</div></div>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="fs-table">
+        <thead><tr><th>日期</th><th>進場</th><th>損益</th><th>訊號</th><th>備注</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="5" style="color:var(--t3);text-align:center">暫無資料</td></tr>'}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FEATURE 7: 分批進場視覺化 (renderPyramidVis)
+   ═══════════════════════════════════════════════════════════════ */
+function renderPyramidVis(ctx){
+  const { last, cATR, sr } = ctx;
+  if(!last || !cATR) return '';
+
+  // 計算三批進場價格
+  const atr = cATR || last * 0.015;
+  const entry1 = last;
+  const entry2 = last - atr * 0.5;
+  const entry3 = last - atr * 1.2;
+  const stop   = last - atr * 2;
+  const tp1    = last + atr * 1.5;
+  const tp2    = last + atr * 3;
+
+  // 假設當前進場狀態（可擴展為從 Journal 讀取）
+  const steps = [
+    { label: '第一批 30%', price: entry1, ratio: 30, active: true,  filled: false, desc: `入場價 $${entry1.toFixed(1)}，試水溫` },
+    { label: '第二批 40%', price: entry2, ratio: 40, active: false, filled: false, desc: `回落至 $${entry2.toFixed(1)} 加碼` },
+    { label: '第三批 30%', price: entry3, ratio: 30, active: false, filled: false, desc: `強力支撐 $${entry3.toFixed(1)} 重押` },
+  ];
+
+  const stepsHtml = steps.map(s => `
+    <div class="pv-step ${s.active?'active':''} ${s.filled?'filled':''}">
+      <div class="pv-step-label">${s.label}</div>
+      <div class="pv-step-detail">${s.desc}</div>
+      <div class="pv-step-bar"><div class="pv-step-bar-fill" style="width:${s.ratio}%"></div></div>
+    </div>`).join('');
+
+  return `
+  <div class="pyramid-vis">
+    <div class="pv-title">📐 分批進場規劃</div>
+    <div class="pv-timeline">${stepsHtml}</div>
+    <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+      <span class="pv-stop">🛑 停損 $${stop.toFixed(1)}</span>
+      <span class="pv-tp">🎯 TP1 $${tp1.toFixed(1)}</span>
+      <span class="pv-tp">🎯 TP2 $${tp2.toFixed(1)}</span>
+    </div>
+    <div class="pv-summary">
+      <div class="pv-sum-item"><strong>$${entry1.toFixed(1)}</strong>均成本(第1批)</div>
+      <div class="pv-sum-item"><strong>${((tp1-entry1)/entry1*100).toFixed(1)}%</strong>TP1 報酬</div>
+      <div class="pv-sum-item"><strong>${((entry1-stop)/entry1*100).toFixed(1)}%</strong>最大虧損</div>
+      <div class="pv-sum-item"><strong>${((tp1-entry1)/(entry1-stop)).toFixed(2)}</strong>風報比</div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FEATURE 8: 個人勝率儀表板擴充 (renderWinRateDetail)
+   ═══════════════════════════════════════════════════════════════ */
+function renderWinRateDetail(){
+  const trades = Journal.state.trades || [];
+  if(trades.length < 3) return '';
+
+  // 按 RSI 區間分組
+  const groups = { '超賣(<30)':[],  '中性(30-70)':[], '超買(>70)':[] };
+  trades.forEach(t => {
+    const rsi = parseFloat(t.rsi || t.entryRsi || 0);
+    const pnl = parseFloat(t.profit || t.pnl || 0);
+    if(rsi < 30)       groups['超賣(<30)'].push(pnl);
+    else if(rsi <= 70) groups['中性(30-70)'].push(pnl);
+    else               groups['超買(>70)'].push(pnl);
+  });
+
+  const cellHtml = Object.entries(groups).map(([label, pnls]) => {
+    if(pnls.length === 0) return '';
+    const wins = pnls.filter(p=>p>0).length;
+    const wr = (wins/pnls.length*100).toFixed(0);
+    const cls = wr >= 60 ? 'good' : wr >= 40 ? 'ok' : 'bad';
+    return `<div class="wr-cell">
+      <div class="wr-cell-label">${label}</div>
+      <div class="wr-cell-val ${cls}">${wr}%</div>
+      <div class="wr-bar-wrap"><div class="wr-bar-fill" style="width:${wr}%;background:${wr>=60?'var(--green)':wr>=40?'var(--yellow)':'var(--red)'}"></div></div>
+      <div style="font-size:.7rem;color:var(--t3)">${wins}勝/${pnls.length-wins}負，共${pnls.length}筆</div>
+    </div>`;
+  }).join('');
+
+  if(!cellHtml.trim()) return '';
+
+  // 持有天數分析
+  const byDays = { '≤3天':[], '4-10天':[], '>10天':[] };
+  trades.forEach(t => {
+    const d = parseInt(t.holdDays || t.days || 0);
+    const pnl = parseFloat(t.profit || t.pnl || 0);
+    if(d <= 3)      byDays['≤3天'].push(pnl);
+    else if(d <= 10) byDays['4-10天'].push(pnl);
+    else             byDays['>10天'].push(pnl);
+  });
+
+  const dayHtml = Object.entries(byDays).map(([label, pnls]) => {
+    if(pnls.length === 0) return '';
+    const wins = pnls.filter(p=>p>0).length;
+    const wr = (wins/pnls.length*100).toFixed(0);
+    const cls = wr >= 60 ? 'good' : wr >= 40 ? 'ok' : 'bad';
+    return `<div class="wr-cell">
+      <div class="wr-cell-label">${label}</div>
+      <div class="wr-cell-val ${cls}">${wr}%</div>
+      <div class="wr-bar-wrap"><div class="wr-bar-fill" style="width:${wr}%;background:${wr>=60?'var(--green)':wr>=40?'var(--yellow)':'var(--red)'}"></div></div>
+      <div style="font-size:.7rem;color:var(--t3)">${pnls.length}筆</div>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="wr-section-title">📊 按入場時 RSI 分析勝率</div>
+    <div class="wr-grid">${cellHtml}</div>
+    ${dayHtml ? `<div class="wr-section-title">⏱ 按持有天數分析勝率</div><div class="wr-grid">${dayHtml}</div>` : ''}
+  `;
 }
 
 Theme.init();
