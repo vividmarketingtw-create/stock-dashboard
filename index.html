@@ -317,7 +317,7 @@ a:hover{text-decoration:underline}
 
 /* ─── section ─── */
 .sec{font-size:1rem;font-weight:700;margin:18px 0 10px;padding-left:10px;border-left:4px solid var(--purple);display:flex;align-items:center;gap:10px}
-.sec-cnt{font-size:0.75rem;color:var(--t2);font-weight:400}
+.sec-cnt{font-size:0.78rem;color:var(--t2);font-weight:400;line-height:1.4}
 
 /* ─── indicator cards ─── */
 .ind-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:10px;margin-bottom:14px}
@@ -745,23 +745,24 @@ body.light .hd{ background:rgba(255,255,255,0.95); }
 /* ── 今日盤面速讀卡 ── */
 .summary-card{
   background:var(--card);border:1px solid var(--border);
-  border-radius:14px;padding:16px 20px;margin-bottom:14px;
+  border-radius:16px;padding:20px 24px;margin-bottom:18px;
   position:relative;overflow:hidden;
+  box-shadow:0 2px 12px rgba(0,0,0,.08);
 }
 .summary-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
   background:linear-gradient(90deg,var(--blue),var(--purple),var(--cyan));
 }
-.summary-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
-.summary-label{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);flex:1}
-.summary-tag{font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:12px;white-space:nowrap}
+.summary-top{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.summary-label{font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t2);flex:1}
+.summary-tag{font-size:.78rem;font-weight:700;padding:4px 12px;border-radius:14px;white-space:nowrap}
 .summary-tag.bull{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.3)}
 .summary-tag.bear{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)}
 .summary-tag.neut{background:rgba(245,158,11,.12);color:var(--yellow);border:1px solid rgba(245,158,11,.3)}
-.summary-main{font-size:.92rem;color:var(--t1);line-height:1.8;margin-bottom:10px}
+.summary-main{font-size:1rem;color:var(--t1);line-height:1.9;margin-bottom:12px;font-weight:400}
 .summary-main strong{color:var(--t1);font-weight:700}
-.summary-chips{display:flex;flex-wrap:wrap;gap:6px}
-.summary-chip{font-size:.72rem;padding:3px 9px;border-radius:10px;
+.summary-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+.summary-chip{font-size:.75rem;padding:4px 10px;border-radius:10px;
   background:var(--card2);color:var(--t2);border:1px solid var(--border)}
 .summary-chip.g{color:var(--green);border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.08)}
 .summary-chip.r{color:var(--red);border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
@@ -2596,7 +2597,7 @@ const TIPS = {
 function renderRealtimeEval(){
   return `
   <div class="sec">⚡ 即時買賣評估
-    <span class="sec-cnt">RSI × KD × MACD × 布林 × 均線 × 量能 ｜ 每 60 秒同步更新</span>
+    <span class="sec-cnt">綜合六大指標自動判斷「現在適合買？賣？還是觀望？」— 每 60 秒更新</span>
   </div>
   <div class="re-panel" id="re-panel">
     <!-- 大型評分展示 -->
@@ -3390,7 +3391,7 @@ function renderBuySellPanel(ctx){
   //  渲染輸出
   // ══════════════════════════════════════════════
   return `
-  <div class="sec">💹 買賣訊號總覽 <span class="sec-cnt">KD · RSI · MACD · 布林 · 均線 · 量能 — 綠色＝買進訊號，紅色＝賣出訊號，數量越多代表訊號越強</span></div>
+  <div class="sec">💹 買賣訊號總覽 <span class="sec-cnt">目前同時有幾個「買進訊號」vs「賣出訊號」— 綠色＝看多，紅色＝看空，訊號越多越可信</span></div>
   <div class="sec" style="display:none">💹 逢高賣出 ／ 逢低買進 訊號
     <span class="sec-cnt">v5 · 七大條件 · MFI資金流 · 吞噬型態 · 量能高潮 · 費波那契關卡</span>
   </div>
@@ -3560,7 +3561,7 @@ function renderEntryPanel(ctx){
   const bollPct = ctx.bollPct;
   const cBoll = ctx.cBoll, last = ctx.last;
   return `
-  <div class="sec">🎯 進出場時機評分 <span class="sec-cnt">綜合量能、位置、布林帶給出 0-100 分的進場評估，分數越高越適合進場</span></div>
+  <div class="sec">🎯 進出場時機評分 <span class="sec-cnt">0~100 分評估「現在是好的進場時機嗎？」— 分數越高越適合買進，低於 40 分建議等待</span></div>
   <div class="entry-panel">
     <div class="entry-top">
       <div class="entry-score-ring">
@@ -3886,10 +3887,10 @@ function renderIndicators(ctx){
 
   return `
   <div class="sec collapsible-hd" onclick="(function(el){const b=document.getElementById('ind-body');b.classList.toggle('col-closed');el.querySelector('.col-toggle').textContent=b.classList.contains('col-closed')?'▶ 展開':'▼ 收折'})(this)">
-    📊 所有技術指標數值 <span class="sec-cnt">PSY·KD·RSI·MACD·布林·OBV·ATR — 滑鼠移到「?」可看說明；綠色表示多頭，紅色表示空頭</span>
-    <span class="col-toggle">▼ 收折</span>
+    📊 技術指標細項 <span class="sec-cnt">各項買賣力道的精確數字（KD·RSI·MACD·布林等）— 綠色＝多頭看漲，紅色＝空頭看跌；滑鼠移到「?」可看白話說明</span>
+    <span class="col-toggle">▶ 展開</span>
   </div>
-  <div id="ind-body" class="collapsible-body" style="max-height:9999px">
+  <div id="ind-body" class="collapsible-body col-closed" style="max-height:9999px">
   <!-- 共識摘要列 -->
   <div class="ind-summary">
     <div class="ind-sum-verdict" style="color:${summaryClr}">${summaryVerdict}</div>
@@ -3958,10 +3959,10 @@ function renderMA(ctx){
   ];
   return `
   <div class="sec collapsible-hd" onclick="(function(el){const b=document.getElementById('ma-body');b.classList.toggle('col-closed');el.querySelector('.col-toggle').textContent=b.classList.contains('col-closed')?'▶ 展開':'▼ 收折'})(this)">
-    📈 均線系統 <span class="sec-cnt">短中長期均線多空排列</span>
-    <span class="col-toggle">▼ 收折</span>
+    📈 均線多空排列 <span class="sec-cnt">股價與 5·20·60·120·240 日平均線的位置 — 站在均線之上＝多頭佔優，跌破均線＝空頭壓力</span>
+    <span class="col-toggle">▶ 展開</span>
   </div>
-  <div id="ma-body" class="collapsible-body" style="max-height:9999px">
+  <div id="ma-body" class="collapsible-body col-closed" style="max-height:9999px">
   <div class="ma2">
     <div class="ic ${sc(S.ma20)}">
       <div class="nm">均線 vs 現價（${F.int(last)}）<span class="tip" data-tip="${TIPS.ma}">?</span></div>
@@ -4029,7 +4030,7 @@ function renderMarketRegime(ctx){
         ⚠️ ${todaySpecial}：KNN 預測可信度降低
       </span>` : '';
   return `
-  <div class="sec">🏗️ 市場結構判斷 <span class="sec-cnt">趨勢盤 = 追漲殺跌有效；盤整盤 = 高賣低買；ADX 指標判斷目前屬於哪一種</span></div>
+  <div class="sec">🏗️ 市場結構判斷 <span class="sec-cnt">現在是「趨勢行情」還是「盤整行情」？策略不同：趨勢盤跟風追漲，盤整盤高賣低買</span></div>
   <div style="background:var(--card2);border-left:4px solid ${regimeCol};border-radius:10px;
     padding:12px 20px;margin-bottom:14px;display:flex;align-items:center;gap:18px;flex-wrap:wrap">
     <div>
@@ -4386,7 +4387,7 @@ function renderMTF(ctx){
     </div>`;
   };
   return `
-  <div class="sec">🔭 多週期共振分析 <span class="sec-cnt">日線（短期）× 週線（中期）× 月線（長期）三個時框方向一致時，訊號最可靠</span></div>
+  <div class="sec">🔭 多週期共振分析 <span class="sec-cnt">短中長線方向是否一致？三個時框都看漲才是最強買進訊號，方向分歧則暫緩操作</span></div>
   <div class="mtf-grid">
     ${tf('日線（短期）', mtfResult.daily)}
     ${tf('週線（中期）', mtfResult.weekly)}
@@ -4509,7 +4510,7 @@ function renderDuKDResonance(ctx){
   };
 
   return `
-  <div class="sec">🎯 杜金龍 KD 多週期共振 <span class="sec-cnt">日 × 週 × 月三線 KD 同步出現黃金交叉，是杜老師最看重的最強多頭進場訊號</span></div>
+  <div class="sec">🎯 杜金龍 KD 共振 <span class="sec-cnt">日·週·月三個時框同時發出 KD 黃金交叉 → 杜老師最強進場訊號，三線共振才出手</span></div>
   <div class="du-kd-grid">
     ${kdCard('📅 日線 KD（短期）', cK, cD, dailyBull)}
     ${kdCard('📆 週線 KD（中期）', wK, wD, weeklyBull)}
@@ -7093,6 +7094,19 @@ function initCollapsible(){
   let collapsed = {};
   try{ collapsed = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch{}
 
+  // Sections collapsed by default for first-time visitors (key prefix match)
+  const DEFAULT_COLLAPSED = new Set([
+    '即時買賣評估',
+    '今日完整盤後解析',
+    '延伸閱讀資源',
+    '市場結構判斷',
+    '法人籌碼流向',
+    '多週期共振分析',
+    '杜金龍KD多週期共振',
+    '進出場時機評分',
+    '盤後明日預估',
+  ]);
+
   const app = document.getElementById('app');
   if(!app) return;
 
@@ -7107,7 +7121,7 @@ function initCollapsible(){
     }
     if(!siblings.length) return;
 
-    // unique key from section text (first 30 chars, strip emoji)
+    // unique key from section text (first 20 chars, strip emoji/punctuation)
     const key = sec.textContent.trim().replace(/[^\w\u4e00-\u9fff]/g,'').slice(0,20);
 
     // wrap siblings in a sec-body div
@@ -7117,9 +7131,14 @@ function initCollapsible(){
     sec.parentNode.insertBefore(wrap, siblings[0]);
     siblings.forEach(s => wrap.appendChild(s));
 
+    // determine initial collapsed state:
+    // use saved localStorage value if exists; otherwise use DEFAULT_COLLAPSED
+    const isDefaultCollapsed = Array.from(DEFAULT_COLLAPSED).some(prefix => key.startsWith(prefix));
+    const shouldCollapse = (key in collapsed) ? collapsed[key] : isDefaultCollapsed;
+
     // toggle button
     const btn = document.createElement('button');
-    btn.className = 'sec-toggle' + (collapsed[key] ? ' collapsed' : '');
+    btn.className = 'sec-toggle' + (shouldCollapse ? ' collapsed' : '');
     btn.title = '收折 / 展開';
     btn.innerHTML = '▾';
     btn.addEventListener('click', () => {
@@ -7130,8 +7149,8 @@ function initCollapsible(){
     });
     sec.appendChild(btn);
 
-    // restore saved state
-    if(collapsed[key]) wrap.classList.add('collapsed');
+    // apply initial state
+    if(shouldCollapse) wrap.classList.add('collapsed');
   });
 }
 
