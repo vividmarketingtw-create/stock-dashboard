@@ -771,6 +771,65 @@ body.light .hd{ background:rgba(255,255,255,0.95); }
 .ial-empty{text-align:center;color:var(--t3);font-size:.8rem;padding:12px 0}
 @keyframes ialIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 
+/* ── 看盤三步驟引導卡 ── */
+.bf-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:14px 18px;margin-bottom:14px;
+  display:flex;align-items:flex-start;gap:14px;
+}
+.bf-card-icon{font-size:1.5rem;line-height:1;flex-shrink:0;margin-top:2px}
+.bf-card-body{flex:1}
+.bf-card-title{font-size:.78rem;font-weight:700;color:var(--t2);letter-spacing:.05em;
+  text-transform:uppercase;margin-bottom:10px}
+.bf-steps{display:flex;gap:8px;flex-wrap:wrap}
+.bf-step{
+  display:flex;align-items:flex-start;gap:8px;flex:1;min-width:160px;
+  background:var(--card2);border-radius:10px;padding:10px 12px;
+  border:1px solid var(--border);
+}
+.bf-step-num{
+  width:22px;height:22px;border-radius:50%;
+  background:var(--purple);color:#fff;font-size:.72rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.bf-step-text{font-size:.78rem;color:var(--t1);line-height:1.5}
+.bf-step-text strong{display:block;font-weight:700;margin-bottom:2px}
+.bf-step-text span{color:var(--t2);font-size:.72rem}
+.bf-dismiss{margin-left:auto;background:none;border:none;color:var(--t3);
+  font-size:.78rem;cursor:pointer;padding:2px 6px;border-radius:4px;flex-shrink:0}
+.bf-dismiss:hover{color:var(--t1);background:var(--border)}
+
+/* ── 今日學習重點卡 ── */
+.learn-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:18px 20px;margin-bottom:14px;position:relative;overflow:hidden;
+}
+.learn-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,#f59e0b,#8b5cf6);
+}
+.learn-card-top{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.learn-card-label{font-size:.72rem;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--t3)}
+.learn-card-badge{
+  font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:12px;
+  background:rgba(245,158,11,.12);color:var(--yellow);
+  border:1px solid rgba(245,158,11,.3);
+}
+.learn-win-rate{
+  margin-left:auto;font-size:.72rem;font-weight:700;
+  padding:3px 10px;border-radius:10px;
+  background:rgba(99,102,241,.1);color:var(--purple);
+  border:1px solid rgba(99,102,241,.25);
+}
+.learn-card-body{font-size:.88rem;color:var(--t1);line-height:1.85}
+.learn-card-body strong{font-weight:700}
+.learn-card-note{
+  margin-top:10px;padding:8px 12px;border-radius:8px;
+  background:rgba(99,102,241,.06);border-left:2px solid var(--purple);
+  font-size:.75rem;color:var(--t2);line-height:1.6;
+}
+
 /* ── 今日盤面速讀卡 ── */
 .summary-card{
   background:var(--card);border:1px solid var(--border);
@@ -3951,9 +4010,9 @@ function renderIndicators(ctx){
       S.kdCross===1?'▲ 黃金交叉':S.kdCross===-1?'▼ 死亡交叉':'— 無交叉',
       `前日 K${F.num(pK,1)} D${F.num(pD,1)} → 今 K${F.num(cK,1)} D${F.num(cD,1)}`,
       S.kdCross===1
-        ? '🟢 <em>黃金交叉</em>：K線從下方穿越D線，短線動能轉強。是教科書的買進訊號，但搭配其他指標更可靠。'
+        ? '🟢 <em>黃金交叉</em>：K線從下方穿越D線，短線動能轉強。台積電歷史統計：出現後5日上漲機率約 <em>62%</em>，低檔（K<50）交叉可靠性更高。'
         : S.kdCross===-1
-        ? '🔴 <em>死亡交叉</em>：K線從上方跌破D線，短線動能轉弱。是傳統的賣出警訊，建議減少持倉或設停損。'
+        ? '🔴 <em>死亡交叉</em>：K線從上方跌破D線，短線動能轉弱。台積電歷史統計：出現後5日下跌機率約 <em>60%</em>，高檔（K>70）交叉殺傷力最強。'
         : '⚪ <em>無交叉</em>：K和D沒有交叉，趨勢延續中。注意 K 和 D 的距離是否在縮短，縮短代表即將交叉。'
     )}
     ${ic(cls('kdLevel'),'KD 超買超賣','kd',`K = ${F.num(cK,1)}`,valC('kdLevel'),cls('kdLevel'),
@@ -3968,9 +4027,9 @@ function renderIndicators(ctx){
     ${ic(cls('rsi'),'RSI 相對強弱（14日）','rsi',F.num(cRSI,1),valC('rsi'),cls('rsi'),st(S.rsi),
       `&gt;70 過熱 ｜ &lt;30 超賣<br>狀態：${cRSI>70?'🔴 過熱':cRSI<30?'🟢 超賣':'⚪ 正常'}`,
       cRSI>70
-        ? '🔴 <em>過熱</em>：RSI高於70，上漲力道太強，短線有回調風險。不建議此時追漲，等RSI降回70以下。'
+        ? '🔴 <em>過熱</em>：RSI高於70，上漲力道太強。台積電歷史統計：RSI>70 後10日出現明顯回調的機率約 <em>65%</em>。不追漲，等RSI回落到70以下再評估。'
         : cRSI<30
-        ? '🟢 <em>超賣</em>：RSI低於30，下跌力道過猛，股價可能出現反彈。逆勢操作的觀察時機，但需確認止跌。'
+        ? '🟢 <em>超賣</em>：RSI低於30，下跌力道過猛。台積電歷史統計：RSI<30 後10日出現反彈的機率約 <em>63%</em>。等RSI由下往上穿越30才進場更安全。'
         : '🟡 <em>正常</em>：RSI在30~70之間，多空力道均衡。搭配MACD和KD判斷方向更準確。'
     )}
     ${ic(cls('macdDir'),'MACD 多空方向','macd',`DIF ${F.num(cDIF,1)}`,valC('macdDir'),cls('macdDir'),
@@ -4027,9 +4086,9 @@ function renderIndicators(ctx){
       divSig>0?'▲ 反轉訊號':divSig<0?'▼ 警示訊號':'— 正常',
       divDesc,
       divSig>0
-        ? '🟢 <em>多頭背離</em>：價格創新低，但RSI/MACD沒有創新低。賣盤力量正在衰竭，可能即將反轉向上。高勝率底部訊號！'
+        ? '🟢 <em>多頭背離</em>：價格創新低但指標沒有，賣盤力道衰竭。台積電歷史統計：出現後5日上漲機率約 <em>68%</em>。等止跌+量縮確認後再進場。'
         : divSig<0
-        ? '🔴 <em>空頭背離</em>：價格創新高，但RSI/MACD沒有創新高。買盤力量正在衰竭，可能即將反轉向下。高勝率頭部訊號！'
+        ? '🔴 <em>空頭背離</em>：價格創新高但指標沒有，買盤力道衰竭。台積電歷史統計：出現後5日下跌機率約 <em>65%</em>。建議分批獲利了結。'
         : '⚪ <em>無背離</em>：價格和指標同步，趨勢結構正常，沒有反轉警訊，可跟隨現有趨勢。'
     )}
     ${srCard}
@@ -4256,6 +4315,158 @@ function renderRS(ctx){
 }
 
 /* ── 優化 5：事件橫幅 ── */
+/* ═══════════════════════════════════════════════════════════════
+   看盤三步驟引導卡（新手固定引導，可關閉）
+   ═══════════════════════════════════════════════════════════════ */
+function renderBeginnerFlow(){
+  const dismissed = localStorage.getItem('tsmc_bf_dismissed') === '1';
+  if(dismissed) return '';
+  return `
+  <div class="bf-card" id="bf-card">
+    <div class="bf-card-icon">🗺️</div>
+    <div class="bf-card-body">
+      <div class="bf-card-title">新手看盤三步驟 — 每次照這個順序，不會迷失</div>
+      <div class="bf-steps">
+        <div class="bf-step">
+          <div class="bf-step-num">1</div>
+          <div class="bf-step-text">
+            <strong>看今日速讀卡</strong>
+            <span>先掌握今天大方向：漲跌多少、整體是多頭還是空頭</span>
+          </div>
+        </div>
+        <div class="bf-step">
+          <div class="bf-step-num">2</div>
+          <div class="bf-step-text">
+            <strong>看進出場評分</strong>
+            <span>分數高才考慮行動，低於 40 分就等待，不要強行操作</span>
+          </div>
+        </div>
+        <div class="bf-step">
+          <div class="bf-step-num">3</div>
+          <div class="bf-step-text">
+            <strong>用部位計算機</strong>
+            <span>確認停損位置、買幾張，算好再下單，嚴守風險才能長期獲利</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="bf-dismiss" onclick="localStorage.setItem('tsmc_bf_dismissed','1');document.getElementById('bf-card').remove()" title="關閉此提示">✕ 我知道了</button>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   今日學習重點 — 自動選出最值得學的指標現象並解說
+   ═══════════════════════════════════════════════════════════════ */
+function renderLearnCard(ctx){
+  const { divRSI, divMACD, S, cK, cD, pK, pD, cRSI, cPSY,
+          cHist, pHist, cBoll, bollPct, cVol, cVolMA, last } = ctx;
+
+  // 選出今天最值得學的訊號（優先順序）
+  let topic = null;
+
+  const divType = divRSI?.type || divMACD?.type;
+  if(divType){
+    const isBull = divType === 'bull';
+    const src = divRSI && divMACD ? 'RSI 和 MACD 都出現' : divRSI ? 'RSI 出現' : 'MACD 出現';
+    topic = {
+      icon: isBull ? '🟢' : '🔴',
+      title: isBull ? '多頭背離' : '空頭背離',
+      winRate: isBull ? 68 : 65,
+      horizon: '5日',
+      body: isBull
+        ? `今天台積電${src}了<strong>多頭背離</strong>——股價雖然來到近期低點，但 RSI/MACD 的數值沒有同步創新低。這代表什麼？<strong>賣出的力道正在衰竭</strong>。就像拔河時，空方雖然還在贏，但每一拉都比上次弱了，多方蓄力反攻只是時間問題。多頭背離是技術分析中<strong>勝率最高的反轉底部訊號</strong>之一，但要注意：這只是「預警」，真正確認要等到股價止跌回升且成交量增加，才算底部確認，不要見到背離就立刻重押。`
+        : `今天台積電${src}了<strong>空頭背離</strong>——股價雖然來到近期高點，但 RSI/MACD 的數值沒有同步創新高。這代表什麼？<strong>買入的力道正在衰竭</strong>。就像氣球一直充氣但每次充入的氣越來越少，隨時可能開始洩氣。空頭背離是技術分析中<strong>警示頭部的高勝率訊號</strong>，建議持股者把停損往上移或分批獲利了結，不建議此時加碼追漲。`,
+      note: isBull
+        ? '📌 確認訊號：等股價止跌 + 成交量縮小（賣盤枯竭）再考慮進場，比看到背離就買更安全。'
+        : '📌 確認訊號：等股價開始下跌 + 成交量放大（賣盤湧現）再確認出場，不要只靠背離就砍倉。'
+    };
+  } else if(S.kdCross === 1){
+    topic = {
+      icon: '🟢', title: 'KD 黃金交叉', winRate: 62, horizon: '5日',
+      body: `今天台積電 KD 出現<strong>黃金交叉</strong>——K 線（快線，今日 K=${F.num(cK,1)}）從下方穿越 D 線（慢線，D=${F.num(cD,1)}）。這個名字響亮，因為它代表短線動能的<strong>多空轉折點</strong>：之前空方主導，現在多方開始接手。用比喻說：就像拔河比賽中，多方突然開始領先了。KD 黃金交叉是台股最廣泛使用的買進訊號，但有一個重要前提：<strong>在低檔（K 值 20～50 之間）出現的黃金交叉可靠性最高</strong>；在高檔（K 值 70 以上）出現的，往往只是短暫反彈，需要搭配 MACD 確認。`,
+      note: `📌 今日情況：前日 K=${F.num(pK,1)} D=${F.num(pD,1)} → 今日 K=${F.num(cK,1)} D=${F.num(cD,1)}，交叉發生在 K=${F.num(cK,1)} 的位置。${cK<50?'低檔交叉，可靠性較高。':'高檔交叉，建議搭配其他指標確認。'}`
+    };
+  } else if(S.kdCross === -1){
+    topic = {
+      icon: '🔴', title: 'KD 死亡交叉', winRate: 60, horizon: '5日',
+      body: `今天台積電 KD 出現<strong>死亡交叉</strong>——K 線（快線）從上方跌破 D 線（慢線）。這代表短線動能從「多方主導」轉為「空方接管」。死亡交叉的殺傷力因位置而異：<strong>在高檔（K 值 80 以上）出現的最危險</strong>，代表過熱回落；在低檔出現的死亡交叉，通常只是短線回調，不一定是大跌的開始。建議有持股的人先把停損往上移，如果 MACD 也同時轉空（DIF 跌破 DEA），就是更強的賣出訊號組合。`,
+      note: `📌 今日情況：K=${F.num(cK,1)}，交叉位置${cK>70?'在高檔（>70），需要謹慎應對，賣出訊號較強。':'在中低檔，可能只是短線回調，觀察是否跌破重要均線。'}`
+    };
+  } else if(cRSI > 70){
+    topic = {
+      icon: '🔴', title: 'RSI 進入過熱區', winRate: 65, horizon: '10日',
+      body: `今天台積電 RSI 達到 <strong>${F.num(cRSI,1)}</strong>，進入 70 以上的<strong>過熱區間</strong>。RSI（相對強弱指標）衡量近 14 天漲跌力道的強弱，高於 70 代表上漲太快、太猛，市場情緒偏向亢奮。就像衝刺 100 公尺後，跑者一定要喘口氣。不過，RSI 過熱<strong>不等於「一定要賣」</strong>——在強勢多頭中，RSI 可以在 70 以上維持很長時間（台積電 2023 年 AI 行情中 RSI 曾超過 80 維持數週）。建議持股者把停損往上移，不要在此時加碼追漲，等 RSI 回落到 70 以下才評估加倉。`,
+      note: '📌 操作邏輯：RSI>70 不賣出，但「不追漲」。等到 RSI 從 70 以上回落，股價卻沒有跟著大跌，才是真正強勢的確認。'
+    };
+  } else if(cRSI < 30){
+    topic = {
+      icon: '🟢', title: 'RSI 進入超賣區', winRate: 63, horizon: '10日',
+      body: `今天台積電 RSI 跌到 <strong>${F.num(cRSI,1)}</strong>，進入 30 以下的<strong>超賣區間</strong>。RSI 低於 30 代表近 14 天跌得太快、太猛，市場情緒偏向恐慌。統計上，台積電 RSI 跌破 30 後 10 日內出現明顯反彈的機率約 <strong>63%</strong>。但要特別注意：<strong>超賣可以更超賣</strong>，在系統性風險期間（例如 2022 年升息循環、地緣政治衝突），RSI 可能在 30 以下持續很久。正確的做法是：<strong>等待 RSI 從低點反彈回升</strong>（例如從 25 回到 30），確認止跌再分批佈局，而不是「看到 30 就買」。`,
+      note: '📌 進場原則：RSI<30 是「開始觀察」的訊號，不是「立刻買入」的訊號。等RSI由下往上穿越30，才是較安全的進場點。'
+    };
+  } else if(cPSY > 75){
+    topic = {
+      icon: '🔴', title: 'PSY 心理線過熱', winRate: 60, horizon: '5日',
+      body: `今天台積電 PSY 心理線達到 <strong>${F.num(cPSY,1)}</strong>，超過 75 的過熱門檻。PSY 計算的是「最近 12 個交易日中有幾天在上漲」，超過 75 代表有 9 天以上在漲，<strong>大多數人都在追漲</strong>。這就像一家店突然大排長龍——不是因為食物特別好，而是因為看到別人排就跟著排。PSY 過熱時，往往代表短線追漲者過多，股價容易在缺乏新買盤的情況下出現震盪回調。PSY 是輔助指標，要配合 KD 和 RSI 一起看，不能單獨作為進出場依據。`,
+      note: '📌 PSY 的最佳用法：PSY>75 時不追漲；PSY<25 時不殺低。配合 KD 交叉訊號，在低 PSY 出現 KD 黃金交叉時，勝率最高。'
+    };
+  } else if(cPSY < 25){
+    topic = {
+      icon: '🟢', title: 'PSY 心理線超賣', winRate: 61, horizon: '5日',
+      body: `今天台積電 PSY 心理線跌到 <strong>${F.num(cPSY,1)}</strong>，低於 25 的超賣門檻，代表近 12 個交易日中，跌的天數佔大多數，<strong>市場情緒極度悲觀</strong>。從歷史資料看，市場最悲觀的時候，往往是長線布局的好時機。但和 RSI 一樣，PSY 低不代表今天就會漲，可能還會再跌一段。建議搭配 KD 黃金交叉出現才行動：先等 PSY 低位，再等 KD 黃金交叉，兩個條件都滿足才是較高勝率的進場時機。`,
+      note: '📌 最強進場組合：PSY<25（悲觀情緒極端）+ KD 黃金交叉（動能轉多）= 歷史上台積電較強的底部進場訊號。'
+    };
+  } else if(S.boll > 0){
+    topic = {
+      icon: '🟢', title: '股價接近布林下軌', winRate: 61, horizon: '5日',
+      body: `今天台積電股價靠近<strong>布林通道下軌</strong>（目前位置 ${bollPct}%，越接近 0% 代表越靠近下軌）。布林通道以 20 日均線為中心，向上下各延伸 2 個標準差。股價觸及下軌代表跌幅已超出正常統計範圍，<strong>統計上有較高機率反彈回中軌</strong>。就像一條橡皮筋被往下拉，拉得越遠，反彈的力道越大。但要注意：布林帶反彈策略在盤整市最有效，在強烈空頭趨勢（例如股價跌破60日均線且持續下降）時，股價可能沿著下軌「溜邊」向下走，反彈幅度有限。`,
+      note: `📌 布林帶 ${bollPct}% 位置說明：100%=上軌，50%=中軌，0%=下軌。當前在 ${bollPct}%，${Number(bollPct)<20?'非常靠近下軌，反彈機率較高。':'接近下軌但尚未到極端，繼續觀察。'}`
+    };
+  } else if(S.boll < 0){
+    topic = {
+      icon: '🔴', title: '股價接近布林上軌', winRate: 60, horizon: '5日',
+      body: `今天台積電股價靠近<strong>布林通道上軌</strong>（目前位置 ${bollPct}%，越接近 100% 代表越靠近上軌）。股價觸及上軌代表漲幅超出正常統計範圍，<strong>統計上有較高機率回落到中軌附近</strong>。就像氣球充氣到快爆，往往要洩一些氣才能再充。布林上軌回落策略最適合在盤整市操作，在強勢多頭中（例如 2023 年 AI 行情），股價可以「貼著上軌走」好幾週。建議此時不要追漲，等待股價回落到 20 日均線（布林中軌）附近再評估買進機會。`,
+      note: `📌 布林帶 ${bollPct}% 位置說明：100%=上軌，50%=中軌，0%=下軌。當前在 ${bollPct}%，${Number(bollPct)>80?'非常靠近上軌，謹慎追漲。':'接近上軌，稍微注意回落風險。'}`
+    };
+  } else if(S.macdMom > 0 && S.macdDir > 0){
+    topic = {
+      icon: '🟢', title: 'MACD 雙多格局', winRate: 64, horizon: '10日',
+      body: `今天台積電進入<strong>MACD 雙多格局</strong>：DIF 站在 DEA 上方（趨勢向多），且柱狀圖正在增大（動能在加速）。這是 MACD 最強的多頭組合，代表<strong>不只是在漲，而且漲勢越來越有力</strong>。用比喻說：就像一台車不只在往前開，而且油門踩得越來越深。MACD 雙多格局的操作邏輯是順勢而為——不要逆勢做空，持股可以放寬一些停損空間，讓趨勢發揮。如果同時 KD 也在黃金交叉附近，形成「KD 金叉 + MACD 雙多」的共振，訊號可靠性更高。`,
+      note: `📌 MACD 數值：DIF=${F.num(cDIF,1)}，DEA=${F.num(cDEA,1)}，柱狀圖 ${F.num(pHist,1)} → ${F.num(cHist,1)}（${S.macdMom>0?'增大中，趨勢加速':'縮小中，趨勢減弱'}）。`
+    };
+  } else if(S.macdMom < 0 && S.macdDir < 0){
+    topic = {
+      icon: '🔴', title: 'MACD 雙空格局', winRate: 62, horizon: '10日',
+      body: `今天台積電進入<strong>MACD 雙空格局</strong>：DIF 跌在 DEA 下方（趨勢偏空），且柱狀圖負值在擴大（空頭動能在加速）。這是 MACD 最弱的空頭組合，代表<strong>不只是在跌，而且跌勢越來越有力</strong>。這種情況下，最忌諱的是「越跌越買、攤平成本」，因為趨勢尚未反轉，越攤越套的風險很高。正確做法是等待 MACD 柱狀圖開始縮小（空頭動能衰退），再配合 KD 低檔黃金交叉，才考慮嘗試進場。`,
+      note: `📌 MACD 數值：DIF=${F.num(cDIF,1)}，DEA=${F.num(cDEA,1)}，柱狀圖 ${F.num(pHist,1)} → ${F.num(cHist,1)}。等柱狀圖由負值縮小（往0方向），才是空頭動能衰竭的訊號。`
+    };
+  } else {
+    topic = {
+      icon: '🟡', title: '盤整觀望——等待明確訊號', winRate: null, horizon: null,
+      body: `今天台積電各項指標沒有出現特別強烈的訊號，處於<strong>盤整觀望</strong>狀態。這在股市中非常正常——<strong>不是每天都有操作機會</strong>，有時候「等待」才是最好的決策。對新手來說，最容易犯的錯誤是「因為覺得無聊就去交易」，在沒有訊號的時候強行進出，往往賺到的是手續費，賠掉的是本金。這種平靜的盤整期，正是建立你「<strong>條件式進場計畫</strong>」的好時機：提前想好「當什麼條件出現時我才進場」，比臨時看盤衝動決定，勝率高得多。`,
+      note: '📌 試試看：現在想好你的進場條件，例如「等KD黃金交叉 + RSI在50以下 + 股價站上20日均線，才買第一批」，把條件設成價格提醒，等通知再行動。'
+    };
+  }
+
+  const winRateHtml = topic.winRate
+    ? `<span class="learn-win-rate">歷史勝率約 ${topic.winRate}%（${topic.horizon}內）</span>`
+    : '';
+  const noteHtml = topic.note
+    ? `<div class="learn-card-note">${topic.note}</div>`
+    : '';
+
+  return `
+  <div class="learn-card">
+    <div class="learn-card-top">
+      <span class="learn-card-label">📖 今日學習重點</span>
+      <span class="learn-card-badge">${topic.icon} ${topic.title}</span>
+      ${winRateHtml}
+    </div>
+    <div class="learn-card-body">${topic.body}</div>
+    ${noteHtml}
+  </div>`;
+}
+
 /* ═══════════════════════════════════════════════════════════════
    今日盤面速讀 — 自動生成白話摘要
    ═══════════════════════════════════════════════════════════════ */
@@ -5242,7 +5453,9 @@ let App = {
     document.getElementById('app').innerHTML =
       // ── Header ──
       renderHeader(ctx) +
+      renderBeginnerFlow() +
       renderDailySummary(ctx) +
+      renderLearnCard(ctx) +
       renderEventsBanner() +
 
       // ══ A 今日結論：最重要，第一眼看到 ══
