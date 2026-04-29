@@ -5515,6 +5515,20 @@ const IntradayChart = {
    ═══════════════════════════════════════════════════════════════ */
 const RealtimeEval = {
 
+  // ── 平滑機制：保留最近 5 次原始分數，用加權平均避免跳動 ──
+  _scoreHistory: [],
+  _smoothScore(rawScore){
+    this._scoreHistory.push(rawScore);
+    if(this._scoreHistory.length > 5) this._scoreHistory.shift();
+    // 加權平均：越新的權重越高 (1,1,2,3,5)
+    const weights = [1, 1, 2, 3, 5];
+    const n = this._scoreHistory.length;
+    const w = weights.slice(weights.length - n);
+    const wSum = w.reduce((a, b) => a + b, 0);
+    const weighted = this._scoreHistory.reduce((acc, s, i) => acc + s * w[i], 0) / wSum;
+    return Math.round(weighted * 10) / 10; // 保留 1 位小數
+  },
+
   /** 從 Yahoo Finance 分時結果 + App.ind 計算評分 */
   update(intradayResult){
     const g = id => document.getElementById(id);
@@ -5630,8 +5644,9 @@ const RealtimeEval = {
       clr: maScore.score > 0 ? 'g' : maScore.score < 0 ? 'r' : 'n'
     });
 
-    // 夾緊到 -10 ~ +10
-    score = Math.max(-10, Math.min(10, +score.toFixed(1)));
+    // 夾緊到 -10 ~ +10，並套用平滑（避免每次重整跳動）
+    const rawScore = Math.max(-10, Math.min(10, +score.toFixed(1)));
+    score = this._smoothScore(rawScore);
 
     // ═══ 對應建議 ═══
     let emoji, rec, recClr;
@@ -5780,7 +5795,9 @@ const RealtimeEval = {
         clr: vs>0?'g':vs<0?'r':'n' });
     }
 
-    score = Math.max(-10, Math.min(10, +score.toFixed(1)));
+    // 套用平滑（與 update() 共用同一段歷史，避免盤後值跳動）
+    const rawScore2 = Math.max(-10, Math.min(10, +score.toFixed(1)));
+    score = this._smoothScore(rawScore2);
 
     let emoji, rec, recClr;
     if(score>=4)        { emoji='🟢'; rec='建議偏多';   recClr='var(--green)'; }
