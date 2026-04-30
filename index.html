@@ -491,6 +491,65 @@ a:hover{text-decoration:underline}
   border-left:4px solid var(--purple)
 }
 
+
+/* ═══ 四象限圖 ═══ */
+.quadrant-wrap{
+  background:var(--card2);border:1px solid var(--border);border-radius:14px;
+  padding:18px;margin-bottom:12px;
+}
+.quadrant-title{font-size:.78rem;font-weight:700;color:var(--t2);margin-bottom:12px;letter-spacing:.3px}
+.quadrant-grid{
+  display:grid;grid-template-columns:auto 1fr;grid-template-rows:1fr auto;
+  gap:6px;
+}
+.quadrant-svg-wrap{grid-column:2;grid-row:1}
+.quadrant-yaxis{grid-column:1;grid-row:1;display:flex;flex-direction:column;
+  justify-content:space-between;align-items:flex-end;padding-right:6px;
+  font-size:.62rem;color:var(--t3);}
+.quadrant-xaxis{grid-column:2;grid-row:2;display:flex;justify-content:space-between;
+  font-size:.62rem;color:var(--t3);padding-top:4px}
+.quadrant-result{
+  display:flex;align-items:center;gap:10px;margin-top:12px;
+  padding:10px 14px;border-radius:10px;border:1.5px solid;
+  font-size:.82rem;line-height:1.6;
+}
+.quadrant-result .qr-label{font-size:1rem;font-weight:800;flex-shrink:0}
+.quadrant-result .qr-action{color:var(--t2);flex:1}
+
+/* ═══ RS 相對強度卡 ═══ */
+.rs-card{
+  background:var(--card2);border:1px solid var(--border);border-radius:12px;
+  padding:14px 18px;margin-bottom:14px;
+}
+.rs-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.rs-label{font-size:.75rem;font-weight:700;color:var(--t2);letter-spacing:.3px}
+.rs-badge{padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:700}
+.rs-periods{display:flex;gap:10px;flex-wrap:wrap}
+.rs-period{background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:8px 12px;flex:1;min-width:90px;text-align:center}
+.rs-period .rsp-label{font-size:.65rem;color:var(--t3);margin-bottom:4px}
+.rs-period .rsp-val{font-size:.95rem;font-weight:800;font-variant-numeric:tabular-nums}
+.rs-period .rsp-sub{font-size:.65rem;color:var(--t3);margin-top:2px}
+.rs-interpret{font-size:.75rem;color:var(--t2);margin-top:8px;line-height:1.6;
+  padding:8px 12px;background:var(--card);border-radius:8px;border-left:3px solid}
+
+/* ═══ 進出場評分：法人籌碼第四柱 ═══ */
+.pillars-4{grid-template-columns:repeat(4,1fr)!important}
+.pillar-chip{border-left:3px solid var(--purple)}
+@media(max-width:700px){.pillars-4{grid-template-columns:1fr 1fr!important}.market-regime-grid{grid-template-columns:1fr!important}}
+@media(max-width:480px){.pillars-4{grid-template-columns:1fr!important}.market-regime-grid{grid-template-columns:1fr!important}}
+
+/* ═══ K-NN 信心度強化顯示 ═══ */
+.conf-panel{
+  background:var(--card2);border-radius:10px;padding:12px 16px;
+  margin-top:10px;border-left:3px solid;
+}
+.conf-score-row{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.conf-score-badge{font-size:1.1rem;font-weight:800;font-variant-numeric:tabular-nums}
+.conf-warns{margin-top:6px;display:flex;flex-direction:column;gap:4px}
+.conf-warn-item{font-size:.72rem;color:var(--yellow);background:rgba(245,158,11,.08);
+  border-radius:6px;padding:3px 8px;line-height:1.5}
+
 /* ─── loading / error ─── */
 .loader{display:flex;flex-direction:column;align-items:center;justify-content:center;
         min-height:65vh;color:var(--t2);gap:14px;font-size:0.9rem}
@@ -1820,6 +1879,10 @@ body.light .zone-header{background:linear-gradient(135deg,rgba(59,130,246,.06),r
   .mob-nav{display:none!important}
   /* 顯示訊號摘要列 */
   #mob-sig-bar{display:flex}
+  /* 市場結構：手機改單欄 */
+  #mob-sig-bar + * [style*="grid-template-columns:1fr 1fr"] { grid-template-columns:1fr!important; }
+  .rs-periods{flex-wrap:wrap}
+  .rs-period{min-width:70px}
 
   /* Body 底部留空 */
   body{
@@ -1929,6 +1992,50 @@ body.light .zone-header{background:linear-gradient(135deg,rgba(59,130,246,.06),r
   .mob-tab-btn .mt-label{font-size:.52rem}
   #mob-sig-bar .sb-price{font-size:.95rem}
 }
+
+/* ────────── 泡泡說明按鈕 info-btn ────────── */
+.info-wrap{position:relative;display:inline-flex;align-items:center;vertical-align:middle}
+.info-btn{
+  width:17px;height:17px;border-radius:50%;
+  background:rgba(99,102,241,.18);border:1px solid rgba(99,102,241,.4);
+  color:var(--purple);font-size:.65rem;font-weight:800;
+  cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+  flex-shrink:0;padding:0;line-height:1;
+  transition:background .15s,transform .15s;
+  margin-left:5px;
+}
+.info-btn:hover{background:rgba(99,102,241,.35);transform:scale(1.12)}
+.info-popup{
+  position:absolute;bottom:calc(100% + 8px);left:0;
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:12px;padding:12px 14px;
+  font-size:.74rem;color:var(--t1);line-height:1.65;
+  width:290px;white-space:normal;
+  box-shadow:0 8px 28px rgba(0,0,0,.35);
+  opacity:0;pointer-events:none;
+  transition:opacity .18s;z-index:600;
+  text-align:left;font-weight:400;
+}
+.info-popup strong{color:var(--t1)}
+.info-popup .sg-tip{color:var(--yellow);font-size:.72rem;margin-top:6px;display:block}
+.info-wrap.open .info-popup,.info-wrap:focus-within .info-popup{opacity:1;pointer-events:auto}
+@media(max-width:600px){.info-popup{width:240px;left:auto;right:0}}
+
+/* ────────── 卡片結論層 card-conc ────────── */
+.card-conc{
+  display:flex;align-items:flex-start;gap:10px;
+  border-radius:10px;padding:10px 14px;margin-bottom:12px;
+  font-size:.8rem;line-height:1.6;
+}
+.card-conc .cc-label{
+  font-size:.65rem;font-weight:800;letter-spacing:.5px;
+  color:var(--t3);flex-shrink:0;padding-top:2px;text-transform:uppercase;white-space:nowrap;
+}
+.card-conc .cc-text{flex:1;font-weight:600;color:var(--t1)}
+.card-conc.cc-bull{border-left:3px solid var(--green);background:rgba(16,185,129,.07)}
+.card-conc.cc-bear{border-left:3px solid var(--red);background:rgba(239,68,68,.07)}
+.card-conc.cc-neut{border-left:3px solid var(--yellow);background:rgba(245,158,11,.07)}
+.card-conc.cc-info{border-left:3px solid var(--blue);background:rgba(59,130,246,.07)}
 </style>
 </head>
 <body>
@@ -2121,12 +2228,17 @@ const Data = {
       const prev = closes[n-2] || last;
       const chg5 = prev5avg > 0 ? (last5avg - prev5avg) / prev5avg * 100 : 0;
       const chg1 = prev > 0 ? (last - prev) / prev * 100 : 0;
+      // 計算各週期績效，供 RS 計算使用
+      const perf = (p) => closes.length > p && closes[closes.length-1-p] > 0
+        ? (closes[closes.length-1] / closes[closes.length-1-p] - 1) * 100 : null;
       return {
         last, chg1,
-        // 5日趨勢：正=市場偏多，負=市場偏空
         trend5: chg5,
-        // 方向分類
-        direction: chg5 > 2 ? 'bull' : chg5 < -2 ? 'bear' : 'neutral'
+        direction: chg5 > 2 ? 'bull' : chg5 < -2 ? 'bear' : 'neutral',
+        closes: closes.slice(-63),  // 保留最近 63 個交易日供 RS 計算
+        perf5:  perf(5),
+        perf20: perf(20),
+        perf60: perf(60)
       };
     }catch(e){ return null; }
   },
@@ -2846,14 +2958,66 @@ const Score = {
     }
     const layer3 = Math.round(F.clamp(distScore + bollScore, 0, 25));
 
+    // 層四：法人籌碼方向修正（中性基礎 10 分，買超可加至 20，賣超可降至 0）
+    let layer4 = 10;
+    if(p.chipStats){
+      const cs = p.chipStats;
+      const fC = cs.foreignConsec || 0;
+      const tC = cs.trustConsec   || 0;
+      const fCum = cs.foreignCum5 || 0;
+      const fAlign   = (isBull && fC > 0) || (!isBull && fC < 0);
+      const fDiverg  = (isBull && fC < 0) || (!isBull && fC > 0);
+      const fScore   = fAlign   ? (Math.abs(fC) >= 3 ? 5 : 2)
+                     : fDiverg  ? (Math.abs(fC) >= 3 ? -5 : -2) : 0;
+      const tAlign   = (isBull && tC > 0) || (!isBull && tC < 0);
+      const tScore   = tAlign ? (Math.abs(tC) >= 3 ? 3 : 1) : (tC !== 0 ? -1 : 0);
+      const cumBonus = (fAlign && Math.abs(fCum) > 50000) ? 2 : 0;
+      layer4 = Math.round(F.clamp(10 + fScore + tScore + cumBonus, 0, 20));
+    }
     return {
-      total: layer1 + layer2 + layer3,
+      total: Math.min(100, layer1 + layer2 + layer3 + (p.chipStats ? layer4 - 10 : 0)),
       layer1, layer1Max: 40,
       layer2, layer2Max: 35,
       layer3, layer3Max: 25,
+      layer4, layer4Max: 20,
       volRatio, distPct,
       psyExtreme: psyExt, kdExtreme: kdExt, rsiExtreme: rsiExt
     };
+  },
+
+  // ── 四象限：方向強度 × 進場時機 ──
+  quadrant({ dirRatio, cK, cRSI, cPSY, cBoll, last, cATR, cATRMean }){
+    const dirScore   = Math.round(F.clamp(dirRatio, -1, 1) * 100);
+    const isBull     = dirRatio >= 0;
+    const kdExt   = isBull ? Math.max(0,(40-cK)/40)    : Math.max(0,(cK-60)/40);
+    const rsiExt  = isBull ? Math.max(0,(45-cRSI)/45)  : Math.max(0,(cRSI-55)/45);
+    const psyExt  = isBull ? Math.max(0,(38-cPSY)/38)  : Math.max(0,(cPSY-62)/38);
+    const bollExt = cBoll ? (() => {
+      const bp = (last-cBoll.lower)/(cBoll.upper-cBoll.lower);
+      return isBull ? Math.max(0,1-bp*2) : Math.max(0,bp*2-1);
+    })() : 0.5;
+    const atrBoost = (cATR && cATRMean && cATR > cATRMean*1.1) ? 0.12 : 0;
+    const rawT = kdExt*0.30 + rsiExt*0.25 + psyExt*0.20 + bollExt*0.25 + atrBoost;
+    const timingScore = Math.round(Math.min(100, rawT * 100));
+    const isTiming = timingScore >= 45;
+    let quad, label, color, action, bgColor;
+    if(dirScore >= 20 && isTiming){
+      quad=1; label='積極布局 🚀'; color='#10b981'; bgColor='rgba(16,185,129,.1)';
+      action='方向明確偏多，多項指標同時到達超賣區，進場時機成熟，可積極佈局或加碼';
+    } else if(dirScore >= 20 && !isTiming){
+      quad=2; label='等待回測 ⏳'; color='#3b82f6'; bgColor='rgba(59,130,246,.1)';
+      action='方向偏多但震盪指標尚未超賣，等待價格回測支撐或指標降至超賣再進場';
+    } else if(dirScore < -20 && isTiming){
+      quad=4; label='考慮減碼 ⚠️'; color='#ef4444'; bgColor='rgba(239,68,68,.1)';
+      action='空頭訊號明確且指標超買，現有多單宜考慮減碼或出場，規避下行風險';
+    } else if(dirScore < -20 && !isTiming){
+      quad=3; label='觀望為主 👁'; color='#f59e0b'; bgColor='rgba(245,158,11,.1)';
+      action='方向偏空但指標未達超買，繼續觀察，等待空頭訊號更明確後再做決策';
+    } else {
+      quad=0; label='訊號中性 —'; color='#94a3b8'; bgColor='rgba(148,163,184,.1)';
+      action='多空訊號均衡，無明確方向，不宜貿然操作，等待指標共振後再行動';
+    }
+    return { dirScore, timingScore, quad, label, color, bgColor, action };
   },
 
   // ── 歷史百分位（項目 14） ──
@@ -3004,21 +3168,41 @@ const Predict = {
     };
   },
 
-  // 信心度評估
-  confidence(prob, dirRatio, volRatio){
-    if(!prob) return { level: 'low', label: '低', color: '#94a3b8', desc: '相似日不足' };
-    // 三個因子：
-    // 1) 鄰居方向一致性（upProb 距離 50% 越遠越一致）
-    const consistency = Math.abs(prob.wUpProb - 0.5) * 2;  // 0~1
-    // 2) 與當前方向訊號一致性
-    const dirAlign = (prob.wUpProb > 0.5 && dirRatio > 0) ||
-                     (prob.wUpProb < 0.5 && dirRatio < 0) ? 1 : 0.3;
-    // 3) 量能正常（極端量能會干擾）
-    const volNormal = volRatio > 0.5 && volRatio < 3 ? 1 : 0.6;
-    const conf = consistency * 0.5 + dirAlign * 0.3 + volNormal * 0.2;
-    if(conf >= 0.65) return { level: 'high', label: '高', color: '#10b981', desc: '訊號一致性強' };
-    if(conf >= 0.4)  return { level: 'med',  label: '中等', color: '#f59e0b', desc: '部分指標分歧' };
-    return { level: 'low', label: '低', color: '#ef4444', desc: '訊號分歧明顯' };
+  // 信心度評估 v2（加入 ATR 正常性 + 鄰居距離品質 + 樣本充足性）
+  confidence(prob, dirRatio, volRatio, atrCtx){
+    if(!prob) return { level:'low', label:'低信心', color:'#94a3b8', score:0,
+      desc:'相似日不足', warn:'K-NN 無法找到足夠歷史相似日，此次預測不具參考性' };
+    // 因子 1: 鄰居方向一致性
+    const consistency = Math.abs(prob.wUpProb - 0.5) * 2;
+    // 因子 2: 與技術指標方向一致
+    const dirAlign = ((prob.wUpProb > 0.5 && dirRatio > 0) ||
+                      (prob.wUpProb < 0.5 && dirRatio < 0)) ? 1 : 0.3;
+    // 因子 3: 量能正常性
+    const volNormal = (volRatio > 0.5 && volRatio < 3) ? 1 : 0.6;
+    // 因子 4: K-NN 鄰居平均距離品質（越小越好）
+    const distQ = prob.avgDist != null ? Math.max(0.1, 1 - prob.avgDist/3) : 0.6;
+    // 因子 5: ATR 波動率正常性（超出歷史均值 1.5x 代表異常行情）
+    let atrQ = 1.0, atrWarn = null;
+    if(atrCtx?.cATR && atrCtx?.cATRMean){
+      const r = atrCtx.cATR / atrCtx.cATRMean;
+      if(r > 2.0){ atrQ = 0.5; atrWarn = `波動率異常偏高（ATR是均值的${r.toFixed(1)}倍），歷史樣本代表性降低`; }
+      else if(r > 1.5){ atrQ = 0.75; atrWarn = `波動率偏高（ATR=${atrCtx.cATR.toFixed(1)}），謹慎參考`; }
+    }
+    // 因子 6: 樣本數充足性
+    const sampleQ = prob.n >= 15 ? 1 : prob.n >= 8 ? 0.7 : 0.4;
+    const score = consistency*0.30 + dirAlign*0.25 + volNormal*0.12
+                + distQ*0.15 + atrQ*0.10 + sampleQ*0.08;
+    const warns = [];
+    if(dirAlign < 1) warns.push('⚠ K-NN 方向與技術指標相反');
+    if(atrWarn) warns.push('⚠ '+atrWarn);
+    if(distQ < 0.5) warns.push('⚠ 今日形態與歷史相似日吻合度偏低');
+    if(prob.n < 8)  warns.push('⚠ 相似日樣本數不足（'+prob.n+'個），統計誤差大');
+    if(score >= 0.65) return { level:'high', label:'高信心', color:'#10b981',
+      score:Math.round(score*100), desc:'多指標一致，預測可信度高', warns };
+    if(score >= 0.40) return { level:'med',  label:'中信心', color:'#f59e0b',
+      score:Math.round(score*100), desc:'部分指標分歧，參考為主', warns };
+    return { level:'low', label:'低信心', color:'#ef4444',
+      score:Math.round(score*100), desc:'指標分歧或行情異常', warns };
   },
 
   // ── 評分回測（項目：方法論可信度） ──
@@ -3299,7 +3483,8 @@ const Journal = {
         riskPct: 1.0,
         atrStopMult: 2.5,    // 波段預設
         rrRatio: 2.5,        // 波段預設
-        style: 'swing'
+        style: 'swing',
+        entryPrice: 0        // 0 = 使用最新收盤價，>0 = 使用自訂進場價
       }
     };
   },
@@ -3981,14 +4166,11 @@ function renderPredictionPanel(ctx){
 
   return `
   <div class="sec">🔮 盤後 & 明日預估 <span class="sec-cnt">基於 ${prob.n} 個歷史相似日 + ATR 波動率錐 + 評分回測</span></div>
-  <div class="sg">
-    <div class="sg-icon">ℹ️</div>
-    <div class="sg-body">
-      <strong>這個預測怎麼算？</strong> 系統在歷史資料中找出和「今天的技術指標組合」最相似的過去日期（K-NN 演算法），統計那些相似日之後一天的漲跌概率，再結合當前的波動幅度（ATR）估算明日可能的波動範圍。<br>
-      <strong>準確率如何？</strong> 統計上方向正確率約 55～65%，比亂猜（50%）高但並不完美。這個預測的價值在於「給你一個有依據的參考方向」，不是保證。<strong>絕對不要只憑這個預測就決定買賣</strong>，要搭配其他指標綜合判斷。<br>
-      <span class="sg-tip">⚠️ 盤中看這個意義不大，這是給盤後規劃明日策略用的</span>
-    </div>
+  <div class="card-conc ${upPct>=55?'cc-bull':upPct<=45?'cc-bear':'cc-neut'}">
+    <span class="cc-label">明日結論</span>
+    <span class="cc-text">明日<strong>${dirWord}</strong>機率 <strong style="color:${upColor}">${upPct}%</strong>，信心度 <strong style="color:${conf.color}">${conf.label}</strong>。${upPct>=55?'偏向多頭，可規劃隔日進場點。':upPct<=45?'偏向空頭，建議謹慎或觀望。':'方向中性，建議等待更明確訊號。'}</span>
   </div>
+  <span class="info-wrap" onclick="this.classList.toggle('open')"><button class="info-btn" aria-label="說明">？</button><div class="info-popup"><strong>這個預測怎麼算？</strong> 系統在歷史資料中找出和「今天的技術指標組合」最相似的過去日期（K-NN 演算法），統計那些相似日之後一天的漲跌概率，再結合當前的波動幅度（ATR）估算明日可能的波動範圍。<br> <strong>準確率如何？</strong> 統計上方向正確率約 55～65%，比亂猜（50%）高但並不完美。這個預測的價值在於「給你一個有依據的參考方向」，不是保證。<strong>絕對不要只憑這個預測就決定買賣</strong>，要搭配其他指標綜合判斷。<br> <span class="sg-tip">⚠️ 盤中看這個意義不大，這是給盤後規劃明日策略用的</span></div></span>
   <div class="predict-panel" id="anchor-predict">
     <div class="predict-head">
       <span class="ph-title">${dirIcon} ${dirWord}</span>
@@ -4059,6 +4241,15 @@ function renderPredictionPanel(ctx){
 
     <div class="predict-disclaimer">
       ⚠️ <b>方法論說明：</b>採 K-Nearest Neighbors 在過去 ${CFG.HISTORY_MONTHS} 個月歷史中找出與今日指標組合最相似的 ${prob.n} 個交易日，統計這些日子的次日漲跌機率，並以距離倒數加權。波動範圍由 ATR 計算。
+      <div class="conf-panel" style="border-color:${conf.color}">
+        <div class="conf-score-row">
+          <span class="conf-score-badge" style="color:${conf.color}">${conf.label}</span>
+          <span style="font-size:.72rem;color:var(--t2)">信心分：${conf.score ?? '--'}/100</span>
+          <span style="font-size:.72rem;color:var(--t3);margin-left:auto">參考 ${prob.n} 個歷史相似日</span>
+        </div>
+        <div style="font-size:.75rem;color:var(--t2)">${conf.desc}</div>
+        ${confWarnHtml}
+      </div>
       <b>此為機率推估、非預測</b>——基本面消息、國際盤、突發事件都會推翻此模型。請勿單獨作為交易依據。
     </div>
 
@@ -4072,6 +4263,9 @@ function renderPredictionPanel(ctx){
       const bullTarget  = cone ? F.int(cone.bullish)  : F.int(last + ATR * 1.5);
       const bearTarget  = cone ? F.int(cone.bearish)  : F.int(last - ATR * 1.5);
       const dirMain = prob.wUpProb >= 0.52 ? 'bull' : prob.wUpProb <= 0.48 ? 'bear' : 'neut';
+      // ── 強化信心度面板 ──
+      const confWarnHtml = conf.warns && conf.warns.length
+        ? `<div class="conf-warns">${conf.warns.map(w=>`<div class="conf-warn-item">${w}</div>`).join('')}</div>` : '';
       const bollPos = cBoll ? ((last - cBoll.lower) / (cBoll.upper - cBoll.lower)) : 0.5;
       const bollZone = bollPos > 0.8 ? '近上軌（壓力區）' : bollPos < 0.2 ? '近下軌（支撐區）' : '中軌附近（中性區）';
       return `
@@ -4627,14 +4821,7 @@ function renderBuySellPanel(ctx){
     <span class="sec-cnt">v5 · 七大條件 · MFI資金流 · 吞噬型態 · 量能高潮 · 費波那契關卡</span>
   </div>
 
-  <div class="sg">
-    <div class="sg-icon">ℹ️</div>
-    <div class="sg-body">
-      <strong>這個面板在看什麼？</strong> 用 7 個嚴格條件（如 RSI 需低於 30 才算超賣買訊）搭配背離、K線型態、OBV 能量潮，計算出 0～10 分的買進與賣出強度，分數越高代表訊號越強。<br>
-      <strong>怎麼解讀分數？</strong> 買進或賣出強度 ≥4 分才算「有效訊號」；≥5.5 分是強烈訊號，可積極應對。兩邊都低（各<2.5 分）代表市場無極端，觀望等待。<br>
-      <strong>盤中可用嗎？</strong> 可以，但最可靠的時間是<strong>收盤後</strong>，此時所有指標數值確定，不會因為盤中價格震盪而改變結論。
-    </div>
-  </div>
+  <span class="info-wrap" onclick="this.classList.toggle('open')"><button class="info-btn" aria-label="說明">？</button><div class="info-popup"><strong>這個面板在看什麼？</strong> 用 7 個嚴格條件（如 RSI 需低於 30 才算超賣買訊）搭配背離、K線型態、OBV 能量潮，計算出 0～10 分的買進與賣出強度，分數越高代表訊號越強。<br> <strong>怎麼解讀分數？</strong> 買進或賣出強度 ≥4 分才算「有效訊號」；≥5.5 分是強烈訊號，可積極應對。兩邊都低（各<2.5 分）代表市場無極端，觀望等待。<br> <strong>盤中可用嗎？</strong> 可以，但最可靠的時間是<strong>收盤後</strong>，此時所有指標數值確定，不會因為盤中價格震盪而改變結論。</div></span>
 
   <!-- ★★ 一眼看懂主橫幅 ★★ -->
   <div style="background:${sigBg};border:3px solid ${sigColor};border-radius:20px;padding:26px 28px;margin-bottom:14px">
@@ -4839,17 +5026,10 @@ function renderEntryPanel(ctx){
   const cBoll = ctx.cBoll, last = ctx.last;
   return `
   <div class="sec" id="anchor-entry">🎯 進出場時機評分 <span class="sec-cnt">0~100 分評估「現在是好的進場時機嗎？」— 分數越高越適合買進，低於 40 分建議等待</span></div>
-  <div class="sg">
-    <div class="sg-icon">ℹ️</div>
-    <div class="sg-body">
-      <strong>這個分數怎麼算？</strong> 綜合量能（今天的成交量是否配合）、位置（股價在均線和布林通道哪個位置）、趨勢方向三個維度，給出 0～100 分。<br>
-      <strong>分數怎麼用？</strong>
-      <strong class="c-g">78分以上</strong>＝強力訊號，可積極進場；
-      <strong class="c-g2">58～78分</strong>＝可考慮分批買；
-      <strong class="c-y">38～58分</strong>＝繼續觀察；
-      <strong class="c-t2">38分以下</strong>＝條件未成熟，等待。<br>
-      <strong>新手重點：</strong> 這個分數告訴你「現在的時機好不好」，但不保證之後一定漲。就算 90 分也要設好停損，因為股市沒有100%的事。
-    </div>
+  <span class="info-wrap" onclick="this.classList.toggle('open')"><button class="info-btn" aria-label="說明">？</button><div class="info-popup"><strong>這個分數怎麼算？</strong> 綜合量能（今天的成交量是否配合）、位置（股價在均線和布林通道哪個位置）、趨勢方向三個維度，給出 0～100 分。<br> <strong>分數怎麼用？</strong> <strong class="c-g">78分以上</strong>＝強力訊號，可積極進場； <strong class="c-g2">58～78分</strong>＝可考慮分批買； <strong class="c-y">38～58分</strong>＝繼續觀察； <strong class="c-t2">38分以下</strong>＝條件未成熟，等待。<br> <strong>新手重點：</strong> 這個分數告訴你「現在的時機好不好」，但不保證之後一定漲。就算 90 分也要設好停損，因為股市沒有100%的事。</div></span>
+  <div class="card-conc ${ES.total>=78?'cc-bull':ES.total>=58?'cc-bull':ES.total>=38?'cc-neut':'cc-bear'}">
+    <span class="cc-label">評分結論</span>
+    <span class="cc-text">進場評分 <strong>${ES.total} 分</strong> — ${ES.total>=78?'強力訊號，條件充分，可積極操作':ES.total>=58?'條件具備，可考慮分批進場':ES.total>=38?'部分條件到位，建議繼續觀察':'條件不足，耐心等待訊號'}。</span>
   </div>
   <div class="entry-panel">
     <div class="entry-top">
@@ -4869,16 +5049,14 @@ function renderEntryPanel(ctx){
         <div class="entry-pct">📍 此分數在過去一年的百分位：第 ${ES_pct ?? '--'}%（越高越罕見）</div>
       </div>
     </div>
-    <div class="pillars">
+    <div class="pillars pillars-4">
       <div class="pillar">
-        <div class="p-label">層一　技術指標共振強度</div>
+        <div class="p-label">層一　技術指標共振</div>
         <div class="p-val" style="color:${ES.layer1>=28?'var(--green)':ES.layer1>=18?'var(--yellow)':'var(--red)'}">${ES.layer1} <span style="font-size:0.75rem;color:var(--t2)">/ 40</span></div>
         ${SVG.pillarBar(ES.layer1, 40, ES.layer1>=28?'#10b981':ES.layer1>=18?'#f59e0b':'#ef4444')}
         <div class="p-detail">
-          指標同向率：${(Math.abs(dirRatio)*100).toFixed(0)}%
-          PSY：${(ES.psyExtreme*100).toFixed(0)}%
-          KD：${(ES.kdExtreme*100).toFixed(0)}%
-          RSI：${(ES.rsiExtreme*100).toFixed(0)}%
+          同向率 ${(Math.abs(dirRatio)*100).toFixed(0)}%<br>
+          PSY ${(ES.psyExtreme*100).toFixed(0)}% · KD ${(ES.kdExtreme*100).toFixed(0)}% · RSI ${(ES.rsiExtreme*100).toFixed(0)}%
         </div>
       </div>
       <div class="pillar">
@@ -4886,20 +5064,34 @@ function renderEntryPanel(ctx){
         <div class="p-val" style="color:${ES.layer2>=24?'var(--green)':ES.layer2>=14?'var(--yellow)':'var(--red)'}">${ES.layer2} <span style="font-size:0.75rem;color:var(--t2)">/ 35</span></div>
         ${SVG.pillarBar(ES.layer2, 35, ES.layer2>=24?'#10b981':ES.layer2>=14?'#f59e0b':'#ef4444')}
         <div class="p-detail">
-          量能倍率：${ES.volRatio.toFixed(2)}x（20日均量）<br>
-          今 ${volK}張 ｜ 均 ${volMAK}張
+          ${ES.volRatio.toFixed(2)}x 均量<br>
+          今 ${volK}張 均 ${volMAK}張<br>
           ${chg>0&&cVol>cVolMA?'✅ 量增價漲':chg<0&&cVol>cVolMA?'❌ 量增價跌':chg>0&&cVol<cVolMA?'⚠️ 量縮上漲':'⚪ 量縮整理'}
         </div>
       </div>
       <div class="pillar">
-        <div class="p-label">層三　價格位置適合度</div>
+        <div class="p-label">層三　價格位置</div>
         <div class="p-val" style="color:${ES.layer3>=17?'var(--green)':ES.layer3>=10?'var(--yellow)':'var(--red)'}">${ES.layer3} <span style="font-size:0.75rem;color:var(--t2)">/ 25</span></div>
         ${SVG.pillarBar(ES.layer3, 25, ES.layer3>=17?'#10b981':ES.layer3>=10?'#f59e0b':'#ef4444')}
         <div class="p-detail">
-          距 MA20：${ES.distPct>=0?'+':''}${ES.distPct.toFixed(1)}%
-          ${Math.abs(ES.distPct)<=5?'✅ 適中':Math.abs(ES.distPct)<=10?'⚠️ 偏離':'❌ 過遠'}<br>
-          布林位置：${bollPct}%
-          ${cBoll?(((last-cBoll.lower)/(cBoll.upper-cBoll.lower))<0.2?'✅ 近下軌':((last-cBoll.lower)/(cBoll.upper-cBoll.lower))>0.8?'❌ 近上軌':'⚪ 中間區'):'-'}
+          距MA20 ${ES.distPct>=0?'+':''}${ES.distPct.toFixed(1)}%
+          ${Math.abs(ES.distPct)<=5?'✅':Math.abs(ES.distPct)<=10?'⚠️':'❌'}<br>
+          布林位置 ${bollPct}%
+          ${cBoll?(((last-cBoll.lower)/(cBoll.upper-cBoll.lower))<0.2?'✅ 下軌':((last-cBoll.lower)/(cBoll.upper-cBoll.lower))>0.8?'❌ 上軌':'⚪ 中段'):'-'}
+        </div>
+      </div>
+      <div class="pillar pillar-chip">
+        <div class="p-label" style="color:var(--purple)">層四　法人籌碼方向</div>
+        <div class="p-val" style="color:${(ES.layer4??10)>=14?'var(--green)':(ES.layer4??10)>=7?'var(--yellow)':'var(--red)'}">${ES.layer4??'—'} <span style="font-size:0.75rem;color:var(--t2)">/ 20</span></div>
+        ${ES.layer4!=null ? SVG.pillarBar(ES.layer4, 20, (ES.layer4>=14)?'#8b5cf6':(ES.layer4>=7)?'#f59e0b':'#ef4444') : ''}
+        <div class="p-detail">
+          ${ctx.chipStats ? (() => {
+            const cs = ctx.chipStats;
+            const fc = cs.foreignConsec, tc = cs.trustConsec;
+            const fcStr = fc > 0 ? `外資連買 ${fc}天 ✅` : fc < 0 ? `外資連賣 ${Math.abs(fc)}天 ❌` : '外資中性';
+            const tcStr = tc > 0 ? `投信連買 ${tc}天 ✅` : tc < 0 ? `投信連賣 ${Math.abs(tc)}天 ❌` : '投信中性';
+            return `${fcStr}<br>${tcStr}`;
+          })() : '籌碼資料不足<br>（T+1 收盤後更新）'}
         </div>
       </div>
     </div>
@@ -5082,7 +5274,7 @@ function renderAnalysis(ctx){
 
 function ic(cls, name, tipKey, val, valCls, sigCls, sigTxt, detail, learn){
   const tip = tipKey && TIPS[tipKey] ? `<span class="tip" data-tip="${TIPS[tipKey]}">?</span>` : '';
-  const learnHtml = learn ? `<div class="ic-learn">💡 ${learn}</div>` : '';
+  const learnHtml = learn ? `<span class="info-wrap" onclick="this.classList.toggle('open')"><button class="info-btn" aria-label="說明">💡</button><div class="info-popup">${learn}</div></span>` : '';
   return `
     <div class="ic ${cls}">
       <div class="nm">${name}${tip}</div>
@@ -5182,14 +5374,7 @@ function renderIndicators(ctx){
     <span class="col-toggle">▶ 展開</span>
   </div>
   <div id="ind-body" class="collapsible-body col-closed" style="max-height:9999px">
-  <div class="sg">
-    <div class="sg-icon">ℹ️</div>
-    <div class="sg-body">
-      <strong>這裡有什麼？</strong> 每一張卡片顯示一個技術指標的當前數值、訊號強弱，以及 💡 白話解釋「現在這個數字代表什麼意思、你應該怎麼反應」。<br>
-      <strong>怎麼使用？</strong> 不需要每個都懂，新手建議先看懂三個：<strong>KD 交叉訊號</strong>（短線買賣點）、<strong>RSI 相對強弱</strong>（是否過熱超賣）、<strong>成交量能</strong>（漲跌是否有量支撐）。其他指標用來交叉確認，訊號越一致越可靠。<br>
-      滑鼠移到每張卡片的 <strong>?</strong> 符號，可以看到更詳細的技術說明。
-    </div>
-  </div>
+  <span class="info-wrap" onclick="this.classList.toggle('open')"><button class="info-btn" aria-label="說明">？</button><div class="info-popup"><strong>這裡有什麼？</strong> 每一張卡片顯示一個技術指標的當前數值、訊號強弱，以及 💡 白話解釋「現在這個數字代表什麼意思、你應該怎麼反應」。<br> <strong>怎麼使用？</strong> 不需要每個都懂，新手建議先看懂三個：<strong>KD 交叉訊號</strong>（短線買賣點）、<strong>RSI 相對強弱</strong>（是否過熱超賣）、<strong>成交量能</strong>（漲跌是否有量支撐）。其他指標用來交叉確認，訊號越一致越可靠。<br> 滑鼠移到每張卡片的 <strong>?</strong> 符號，可以看到更詳細的技術說明。</div></span>
   <!-- 共識摘要列 -->
   <div class="ind-summary">
     <div class="ind-sum-verdict" style="color:${summaryClr}">${summaryVerdict}</div>
@@ -5322,14 +5507,7 @@ function renderMA(ctx){
     <span class="col-toggle">▶ 展開</span>
   </div>
   <div id="ma-body" class="collapsible-body col-closed" style="max-height:9999px">
-  <div class="sg">
-    <div class="sg-icon">ℹ️</div>
-    <div class="sg-body">
-      <strong>均線是什麼？</strong> 把過去 N 天的收盤價平均，就是「N 日均線」。MA5（5日均線）反應快，代表短線趨勢；MA60（季線）反應慢，代表中長期趨勢。<strong>股價站在均線之上</strong>代表短/中/長線多頭；<strong>跌破均線</strong>代表該時框空頭壓力增加。<br>
-      <strong>新手最重要的兩條線：</strong> <strong class="c-b">MA20（月線）</strong>是短線多空分界，站上就偏多；<strong class="c-p">MA60（季線）</strong>是中線多空分界，跌破要謹慎。股價在所有均線之上且短均在長均之上（多頭排列），是最健康的多頭格局。<br>
-      <span class="sg-tip">📌 多頭排列：MA5 > MA20 > MA60 > MA120，每條均線都比下一條高，趨勢最強</span>
-    </div>
-  </div>
+  <span class="info-wrap" onclick="this.classList.toggle('open')"><button class="info-btn" aria-label="說明">？</button><div class="info-popup"><strong>均線是什麼？</strong> 把過去 N 天的收盤價平均，就是「N 日均線」。MA5（5日均線）反應快，代表短線趨勢；MA60（季線）反應慢，代表中長期趨勢。<strong>股價站在均線之上</strong>代表短/中/長線多頭；<strong>跌破均線</strong>代表該時框空頭壓力增加。<br> <strong>新手最重要的兩條線：</strong> <strong class="c-b">MA20（月線）</strong>是短線多空分界，站上就偏多；<strong class="c-p">MA60（季線）</strong>是中線多空分界，跌破要謹慎。股價在所有均線之上且短均在長均之上（多頭排列），是最健康的多頭格局。<br> <span class="sg-tip">📌 多頭排列：MA5 > MA20 > MA60 > MA120，每條均線都比下一條高，趨勢最強</span></div></span>
   <div class="ma2">
     <div class="ic ${sc(S.ma20)}">
       <div class="nm">均線 vs 現價（${F.int(last)}）<span class="tip" data-tip="${TIPS.ma}">?</span></div>
@@ -5377,45 +5555,135 @@ function renderFundamentals(){
 
 /* ── 市場情境（ADX） ── */
 function renderMarketRegime(ctx){
-  const { adxCtx, todaySpecial } = ctx;
+  const { adxCtx, todaySpecial, quadrant } = ctx;
   if(!adxCtx || adxCtx.cADX == null) return '';
-  const { cADX, cDiP, cDiM, adxRegime } = adxCtx;
-  const regimeLabel = adxRegime==='trend' ? '趨勢盤 🚀' : adxRegime==='weak' ? '趨勢萌芽 📈' : '盤整盤 🔄';
+  const { cADX, cDiP, cDiM, adxRegime, adxInterpretation } = adxCtx;
+  const regimeLabel = adxRegime==='trend' ? '趨勢盤' : adxRegime==='weak' ? '趨勢萌芽' : '震盪盤';
+  const regimeIcon  = adxRegime==='trend' ? '🚀' : adxRegime==='weak' ? '📈' : '🔄';
   const regimeCol   = adxRegime==='trend' ? 'var(--green)' : adxRegime==='weak' ? 'var(--yellow)' : 'var(--cyan)';
-  const tip = adxRegime==='trend'
-    ? '趨勢明確（ADX≥25），技術指標可信度高，順勢操作效果最佳。'
-    : adxRegime==='weak'
-    ? '趨勢剛起步（ADX 18-25），方向可能強化也可能夭折，部位宜輕。'
-    : '盤整震盪（ADX<18），技術訊號假突破頻率高，建議縮小部位或觀望。';
+  const diDir = cDiP > cDiM ? 'bull' : 'bear';
   const diTrend = cDiP != null && cDiM != null
-    ? (cDiP > cDiM ? `<span class="c-g">DI+ ${cDiP.toFixed(1)}</span> > DI− ${cDiM.toFixed(1)}（多頭主導）`
-                   : `DI+ ${cDiP.toFixed(1)} < <span class="c-r">DI− ${cDiM.toFixed(1)}</span>（空頭主導）`)
+    ? (diDir==='bull'
+      ? `<span class="c-g">▲ 多頭主導</span>　DI+ ${cDiP.toFixed(1)} / DI− ${cDiM.toFixed(1)}`
+      : `<span class="c-r">▼ 空頭主導</span>　DI+ ${cDiP.toFixed(1)} / DI− ${cDiM.toFixed(1)}`)
     : '';
   const specialBadge = todaySpecial
-    ? `<span style="background:rgba(245,158,11,.2);color:var(--yellow);font-size:0.7rem;
+    ? `<span style="background:rgba(245,158,11,.2);color:var(--yellow);font-size:.7rem;
         font-weight:700;padding:2px 8px;border-radius:10px;margin-left:8px">
-        ⚠️ ${todaySpecial}：KNN 預測可信度降低
+        ⚠️ ${todaySpecial}：K-NN 可信度降低
       </span>` : '';
+  const adxPct = Math.min(100, (cADX / 50) * 100);
+  const adxBarCol = adxRegime==='trend' ? '#10b981' : adxRegime==='weak' ? '#f59e0b' : '#06b6d4';
+  const strategyItems = adxRegime==='trend' ? [
+    diDir==='bull'
+      ? '✅ 上升趨勢：均線回測是加碼機會，不要過早出場'
+      : '🔻 下降趨勢：避免逢低接刀，等趨勢轉換（DI+>DI-）再做多',
+    '⚠️ 趨勢盤中 KD/RSI 可能長期超買，不宜以超買為由賣出',
+    '📌 MACD 方向 > KD 交叉，以 MACD 為主要判斷依據'
+  ] : adxRegime==='weak' ? [
+    '⚠️ 趨勢萌芽期：等 ADX 突破 25 再加大倉位',
+    '📌 此階段假突破多，停損需設緊',
+    '🔍 觀察成交量是否持續放大來確認方向'
+  ] : [
+    '📌 震盪格局：高賣低買，不宜追漲殺跌',
+    '✅ KD/RSI 超買超賣在震盪盤最可靠，是主要操作依據',
+    '⚠️ MACD 金叉/死叉在震盪盤假突破多，需配合量能確認'
+  ];
+
+  const regimeConcCls = adxRegime==='trend' ? (diDir==='bull' ? 'cc-bull' : 'cc-bear') : 'cc-neut';
+  const regimeConcText = adxRegime==='trend'
+    ? (diDir==='bull'
+        ? `目前為<strong>趨勢多頭盤</strong>（ADX ${cADX.toFixed(1)}），主力方向向上。均線回測是加碼機會，不要輕易出場。`
+        : `目前為<strong>趨勢空頭盤</strong>（ADX ${cADX.toFixed(1)}），主力方向向下。避免逆勢買入，等 DI+ 重新站上 DI− 再操作。`)
+    : adxRegime==='weak'
+      ? `目前為<strong>趨勢萌芽期</strong>（ADX ${cADX.toFixed(1)}），方向尚不明確。等待 ADX 突破 25 再加大倉位，此階段假突破多。`
+      : `目前為<strong>震盪整理盤</strong>（ADX ${cADX.toFixed(1)}），無明顯方向。適合「高賣低買」，KD/RSI 超買超賣最可靠。`;
+
   return `
-  <div class="sec">🏗️ 市場結構判斷 <span class="sec-cnt">現在是「趨勢行情」還是「盤整行情」？策略不同：趨勢盤跟風追漲，盤整盤高賣低買</span></div>
-  <div class="sg">
-    <div class="sg-icon">ℹ️</div>
-    <div class="sg-body">
-      <strong>為什麼要判斷市場結構？</strong> 同樣的操作策略，在趨勢盤和盤整盤效果完全不同。用 ADX 指標判斷：<strong class="c-b">ADX≥25 = 趨勢盤</strong>，此時追漲殺跌有效，順勢操作；<strong class="c-y">ADX&lt;20 = 盤整盤</strong>，此時高賣低買有效，逢高減碼逢低布局。<br>
-      <strong>新手重點：</strong> 盤整盤中，很多買進訊號都是「假突破」，訊號可靠性較低。看到 ADX 低於 20 時，所有訊號的參考價值要打折，等待 ADX 回升到 25 以上才是較可信的方向。
-    </div>
+  <div class="sec">🏗️ 市場結構 × 操作象限
+    <span class="sec-cnt">先判斷趨勢盤或震盪盤（策略完全不同），再看四象限確認方向與時機是否同時到位</span>
   </div>
-  <div style="background:var(--card2);border-left:4px solid ${regimeCol};border-radius:10px;
-    padding:12px 20px;margin-bottom:14px;display:flex;align-items:center;gap:18px;flex-wrap:wrap">
-    <div>
-      <span style="font-size:0.9rem;font-weight:800;color:${regimeCol}">${regimeLabel}</span>
-      <span style="font-size:0.8rem;font-weight:700;color:var(--t2);margin-left:10px">ADX ${cADX.toFixed(1)}</span>
-      ${specialBadge}
+  <div class="card-conc ${regimeConcCls}">
+    <span class="cc-label">市場結論</span>
+    <span class="cc-text">${regimeConcText}</span>
+  </div>
+  <div class="market-regime-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+
+    <!-- 左：ADX 市場結構 -->
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:.72rem;font-weight:700;color:var(--t2);margin-bottom:10px;letter-spacing:.3px">📊 ADX 市場結構判斷</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+        <span style="font-size:1.05rem;font-weight:800;color:${regimeCol}">${regimeIcon} ${regimeLabel}</span>
+        <span style="font-size:.85rem;font-weight:700;color:var(--t2)">ADX ${cADX.toFixed(1)}</span>
+        ${specialBadge}
+      </div>
+      <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:8px">
+        <div style="height:100%;width:${adxPct.toFixed(0)}%;background:${adxBarCol};border-radius:3px;transition:width .5s"></div>
+      </div>
+      <div style="font-size:.75rem;margin-bottom:8px">${diTrend}</div>
+      <div style="font-size:.72rem;color:var(--t1);font-weight:600;margin-bottom:8px;
+        padding:6px 10px;background:var(--card);border-radius:7px;border-left:2px solid ${regimeCol}">
+        ${adxInterpretation || ''}
+      </div>
+      ${strategyItems.map(s=>`<div style="font-size:.72rem;color:var(--t2);line-height:1.6;margin-bottom:3px">${s}</div>`).join('')}
     </div>
-    <div style="font-size:0.75rem;color:var(--t2);flex:1;min-width:200px">${tip}</div>
-    <div style="font-size:0.75rem;text-align:right;min-width:160px">${diTrend}</div>
+
+    <!-- 右：四象限視覺化 -->
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:.72rem;font-weight:700;color:var(--t2);margin-bottom:8px;letter-spacing:.3px">🎯 方向 × 時機　四象限分析</div>
+      ${quadrant ? renderQuadrantSVG(quadrant) : '<div style="color:var(--t3);font-size:.8rem;padding:20px 0;text-align:center">資料計算中…</div>'}
+      ${quadrant ? `<div style="display:flex;align-items:center;gap:8px;margin-top:10px;
+          padding:8px 12px;border-radius:8px;border:1.5px solid ${quadrant.color};
+          background:${quadrant.bgColor}">
+          <span style="font-size:.95rem;font-weight:800;color:${quadrant.color};flex-shrink:0">${quadrant.label}</span>
+          <span style="font-size:.72rem;color:var(--t2);flex:1;line-height:1.5">${quadrant.action}</span>
+        </div>` : ''}
+    </div>
   </div>`;
 }
+
+/* renderQuadrantSVG — 四象限 SVG 圖 */
+function renderQuadrantSVG(q){
+  const W=220, H=170, pad=12;
+  const cxPos = pad + (W-pad*2)*0.5;
+  const cyPos = pad + (H-pad*2)*0.5;
+  const px = pad + (W-pad*2) * (q.timingScore/100);
+  const py = pad + (H-pad*2) * (1 - (q.dirScore+100)/200);
+  const bg = [
+    { x:cxPos, y:pad,   label:'等待回測', c:'rgba(59,130,246,.15)' },
+    { x:W-pad, y:pad,   label:'積極布局', c:'rgba(16,185,129,.15)' },
+    { x:pad,   y:cyPos, label:'觀望為主', c:'rgba(245,158,11,.12)' },
+    { x:cxPos, y:cyPos, label:'考慮減碼', c:'rgba(239,68,68,.12)'  },
+  ];
+  const ql = [
+    { x:(pad+cxPos)/2, y:(pad+cyPos)/2-2, t:'等待回測', c:'#3b82f6' },
+    { x:(cxPos+W-pad)/2, y:(pad+cyPos)/2-2, t:'積極布局', c:'#10b981' },
+    { x:(pad+cxPos)/2, y:(cyPos+H-pad)/2+8, t:'觀望為主', c:'#f59e0b' },
+    { x:(cxPos+W-pad)/2, y:(cyPos+H-pad)/2+8, t:'考慮減碼', c:'#ef4444' },
+  ];
+  const dotX = Math.max(pad+4, Math.min(W-pad-4, px));
+  const dotY = Math.max(pad+4, Math.min(H-pad-4, py));
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;border-radius:8px">
+    <rect x="${pad}" y="${pad}" width="${(W-pad*2)/2}" height="${(H-pad*2)/2}" fill="rgba(59,130,246,.07)" rx="3"/>
+    <rect x="${cxPos}" y="${pad}" width="${(W-pad*2)/2}" height="${(H-pad*2)/2}" fill="rgba(16,185,129,.07)" rx="3"/>
+    <rect x="${pad}" y="${cyPos}" width="${(W-pad*2)/2}" height="${(H-pad*2)/2}" fill="rgba(245,158,11,.07)" rx="3"/>
+    <rect x="${cxPos}" y="${cyPos}" width="${(W-pad*2)/2}" height="${(H-pad*2)/2}" fill="rgba(239,68,68,.07)" rx="3"/>
+    <line x1="${cxPos}" y1="${pad}" x2="${cxPos}" y2="${H-pad}" stroke="var(--border)" stroke-width="1.2"/>
+    <line x1="${pad}" y1="${cyPos}" x2="${W-pad}" y2="${cyPos}" stroke="var(--border)" stroke-width="1.2"/>
+    ${ql.map(l=>`<text x="${l.x}" y="${l.y}" text-anchor="middle" font-size="8" fill="${l.c}" font-weight="700" opacity=".8">${l.t}</text>`).join('')}
+    <text x="${cxPos-2}" y="${pad+9}" text-anchor="end" font-size="6" fill="var(--green)" opacity=".8">偏多▲</text>
+    <text x="${cxPos-2}" y="${H-pad-2}" text-anchor="end" font-size="6" fill="var(--red)" opacity=".8">偏空▼</text>
+    <text x="${W-pad-2}" y="${cyPos-3}" text-anchor="end" font-size="6" fill="var(--t3)">時機→</text>
+    <text x="${pad+2}" y="${cyPos-3}" font-size="6" fill="var(--t3)">←等待</text>
+    <circle cx="${dotX.toFixed(1)}" cy="${dotY.toFixed(1)}" r="9" fill="${q.color}" opacity=".15"/>
+    <circle cx="${dotX.toFixed(1)}" cy="${dotY.toFixed(1)}" r="5" fill="${q.color}" opacity=".9"/>
+    <text x="${dotX<W/2?dotX+12:dotX-12}" y="${dotY<H/2?dotY+5:dotY-5}"
+      text-anchor="${dotX<W/2?'start':'end'}" font-size="7.5" fill="${q.color}" font-weight="700">
+      方向${q.dirScore>0?'+':''}${q.dirScore}/時機${q.timingScore}
+    </text>
+  </svg>`;
+}
+
 
 /* ── 量價背離警示燈 ── */
 function renderVolPriceDivAlert(ctx){
@@ -5499,13 +5767,10 @@ function renderChipFlow(ctx){
 
   return `
   <div class="sec">🏦 法人籌碼流向 <span class="sec-cnt">外資（外國機構）、投信（本土基金）連續買賣超 — 連續買超代表法人看多，賣超代表看空</span></div>
-  <div class="sg">
-    <div class="sg-icon">ℹ️</div>
-    <div class="sg-body">
-      <strong>法人是誰？</strong> 外資是外國的大型機構投資人（如貝萊德、高盛等），掌握台積電最大的籌碼。投信是台灣本土的基金公司。散戶（你和我）的資金規模遠小於法人，所以跟著法人的方向往往更安全。<br>
-      <strong>怎麼解讀？</strong> <strong class="c-g">連續買超 3 天以上</strong>代表法人持續看好，股價容易有支撐；<strong class="c-r">連續賣超 3 天以上</strong>代表法人在出貨，要小心股價持續下跌。單日買賣超的波動正常，要看「連續性」才有意義。<br>
-      <span class="sg-tip">⚠️ 注意：這裡的法人數據是前一個交易日的，不是即時的</span>
-    </div>
+  <span class="info-wrap" onclick="this.classList.toggle('open')"><button class="info-btn" aria-label="說明">？</button><div class="info-popup"><strong>法人是誰？</strong> 外資是外國的大型機構投資人（如貝萊德、高盛等），掌握台積電最大的籌碼。投信是台灣本土的基金公司。散戶（你和我）的資金規模遠小於法人，所以跟著法人的方向往往更安全。<br> <strong>怎麼解讀？</strong> <strong class="c-g">連續買超 3 天以上</strong>代表法人持續看好，股價容易有支撐；<strong class="c-r">連續賣超 3 天以上</strong>代表法人在出貨，要小心股價持續下跌。單日買賣超的波動正常，要看「連續性」才有意義。<br> <span class="sg-tip">⚠️ 注意：這裡的法人數據是前一個交易日的，不是即時的</span></div></span>
+  <div class="card-conc ${chipStats?.foreignConsec>2?'cc-bull':chipStats?.foreignConsec<-2?'cc-bear':foreign?.foreignNet>0?'cc-bull':foreign?.foreignNet<0?'cc-bear':'cc-neut'}">
+    <span class="cc-label">籌碼結論</span>
+    <span class="cc-text">${chipStats?.foreignConsec>2?'外資<strong>連買 '+chipStats.foreignConsec+' 天</strong>，法人持續看好，籌碼面偏多。':chipStats?.foreignConsec<-2?'外資<strong>連賣 '+Math.abs(chipStats.foreignConsec)+' 天</strong>，法人在出貨，謹慎持股。':foreign?.foreignNet>0?'外資今日買超，短線轉多，持續觀察是否延續。':foreign?.foreignNet<0?'外資今日賣超，短線壓力，留意持股風險。':'外資籌碼中性，無明顯方向。'}</span>
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:14px">
     <div class="ic">
@@ -5540,24 +5805,53 @@ function renderChipFlow(ctx){
 
 /* ── 優化 4：台積電 vs 0050 相對強弱 ── */
 function renderRS(ctx){
-  const rs = App._rs0050;
-  if(!rs) return '';
-  const { ratio, tsmc30, etf30 } = rs;
-  const rsColor = ratio > 1.02 ? 'var(--green)' : ratio < 0.98 ? 'var(--red)' : 'var(--yellow)';
-  const rsLabel = ratio > 1.05 ? '🚀 台積電顯著跑贏大盤'
-                : ratio > 1.02 ? '📈 台積電小幅跑贏大盤'
-                : ratio > 0.98 ? '➖ 走勢接近大盤'
-                : ratio > 0.95 ? '📉 台積電略遜大盤'
-                : '⚠️ 台積電顯著弱於大盤';
+  const rsCtx = ctx.rsCtx;
+  if(!rsCtx || !rsCtx.mainRS) return '';
+  const { rs5, rs20, rs60, mainRS, rsTrend, rsStrength } = rsCtx;
+  const rsVal  = mainRS.rs;
+  const rsColor = rsStrength==='strong' ? 'var(--green)' : rsStrength==='outperform' ? 'var(--green2)'
+                : rsStrength==='inline'  ? 'var(--yellow)' : 'var(--red)';
+  const rsLabelMap = {
+    strong:      '🚀 顯著跑贏大盤（法人主動加碼訊號）',
+    outperform:  '📈 小幅跑贏大盤（資金偏好台積電）',
+    inline:      '➖ 走勢與大盤相近（無特定偏好）',
+    underperform:'📉 跑輸大盤（資金流出台積電）',
+    unknown:     '— 資料不足'
+  };
+  const rsMain = rsLabelMap[rsStrength] || '—';
+  const trendIcon = rsTrend==='improving' ? '↗ 相對強度改善中' : rsTrend==='weakening' ? '↘ 相對強度轉弱中' : '→ 穩定';
+  const trendColor = rsTrend==='improving' ? 'var(--green)' : rsTrend==='weakening' ? 'var(--red)' : 'var(--t2)';
+
+  const periodCard = (label, data) => {
+    if(!data || data.rs == null) return `<div class="rs-period"><div class="rsp-label">${label}</div><div class="rsp-val c-t3">—</div></div>`;
+    const c = data.rs > 1.05 ? 'c-g' : data.rs < 0.95 ? 'c-r' : 'c-y';
+    return `<div class="rs-period">
+      <div class="rsp-label">${label}</div>
+      <div class="rsp-val ${c}">RS ${data.rs.toFixed(2)}</div>
+      <div class="rsp-sub">TSM ${data.tRet>=0?'+':''}${data.tRet.toFixed(1)}% / 大盤 ${data.eRet>=0?'+':''}${data.eRet.toFixed(1)}%</div>
+    </div>`;
+  };
+
   return `
-  <div class="ic" style="margin-bottom:10px">
-    <div class="nm">📊 相對強弱（vs 0050 ETF，近30日）</div>
-    <div class="vl" style="color:${rsColor}">${(ratio * 100 - 100).toFixed(2)}%</div>
-    <div class="dt">
-      台積電 30日漲跌：${tsmc30 >= 0 ? '+' : ''}${tsmc30.toFixed(2)}%<br>
-      0050 ETF 30日漲跌：${etf30 >= 0 ? '+' : ''}${etf30.toFixed(2)}%<br>
-      <strong style="color:${rsColor}">${rsLabel}</strong><br>
-      <span style="font-size:.68rem;color:var(--t3)">RS > 1 = 個股比 ETF 強，是法人主動買進的訊號</span>
+  <div class="sec">📡 相對強度（RS）— 台積電 vs 大盤
+    <span class="sec-cnt">RS > 1 = 跑贏大盤，代表資金主動買入；RS < 1 = 跑輸大盤，資金撤出。選股優先選 RS 強的標的</span>
+  </div>
+  <div class="rs-card">
+    <div class="rs-header">
+      <span class="rs-label">台積電 vs 0050（大盤代理）</span>
+      <span class="rs-badge" style="background:${rsColor}22;color:${rsColor};border:1px solid ${rsColor}66">${rsMain}</span>
+      <span style="font-size:.72rem;color:${trendColor};font-weight:600">${trendIcon}</span>
+    </div>
+    <div class="rs-periods">
+      ${periodCard('近5日', rs5)}
+      ${periodCard('近20日', rs20)}
+      ${periodCard('近60日', rs60)}
+    </div>
+    <div class="rs-interpret" style="border-color:${rsColor}">
+      <strong>如何解讀：</strong>
+      RS > 1.2 = 台積電明顯強於大盤，機構偏好買入，可優先做多。
+      RS < 0.8 = 台積電明顯弱於大盤，資金流出，停利或減碼。
+      近期趨勢（5日 vs 20日 RS 比較）判斷動能是否持續。
     </div>
   </div>`;
 }
@@ -6239,13 +6533,10 @@ function renderMTF(ctx){
   };
   return `
   <div class="sec" id="anchor-mtf">🔭 多週期共振分析 <span class="sec-cnt">短中長線方向是否一致？三個時框都看漲才是最強買進訊號，方向分歧則暫緩操作</span></div>
-  <div class="sg">
-    <div class="sg-icon">ℹ️</div>
-    <div class="sg-body">
-      <strong>為什麼要看三個時框？</strong> 不同的時間框架代表不同的投資人在操作：日線是短線客（幾天到幾週），週線是波段客（幾週到幾個月），月線是長線投資人（幾個月以上）。三者方向一致時，代表所有類型的投資人都在同一方向，訊號最強也最可靠。<br>
-      <strong>怎麼用？</strong> 三線都偏多 → 可以積極做多；三線都偏空 → 避免逆勢買入；日線偏空但週/月線偏多 → 短線回調、中長線仍健康，可等回調後買進；日線偏多但週/月線偏空 → 只是短線反彈，謹慎追漲。<br>
-      <span class="sg-tip">📌 新手建議：優先讓月線和週線方向支持你的操作方向，再用日線找進場時機</span>
-    </div>
+  <span class="info-wrap" onclick="this.classList.toggle('open')"><button class="info-btn" aria-label="說明">？</button><div class="info-popup"><strong>為什麼要看三個時框？</strong> 不同的時間框架代表不同的投資人在操作：日線是短線客（幾天到幾週），週線是波段客（幾週到幾個月），月線是長線投資人（幾個月以上）。三者方向一致時，代表所有類型的投資人都在同一方向，訊號最強也最可靠。<br> <strong>怎麼用？</strong> 三線都偏多 → 可以積極做多；三線都偏空 → 避免逆勢買入；日線偏空但週/月線偏多 → 短線回調、中長線仍健康，可等回調後買進；日線偏多但週/月線偏空 → 只是短線反彈，謹慎追漲。<br> <span class="sg-tip">📌 新手建議：優先讓月線和週線方向支持你的操作方向，再用日線找進場時機</span></div></span>
+  <div class="card-conc ${mtfRes.score>=1?'cc-bull':mtfRes.score<=-1?'cc-bear':'cc-neut'}">
+    <span class="cc-label">時框結論</span>
+    <span class="cc-text">${mtfRes.label}　${mtfRes.advice}</span>
   </div>
   <div class="mtf-grid">
     ${tf('日線（短期）', mtfResult.daily)}
@@ -6370,16 +6661,7 @@ function renderDuKDResonance(ctx){
 
   return `
   <div class="sec">🎯 杜金龍 KD 共振 <span class="sec-cnt">日·週·月三個時框同時發出 KD 黃金交叉 → 杜老師最強進場訊號，三線共振才出手</span></div>
-  <div class="sg">
-    <div class="sg-icon">ℹ️</div>
-    <div class="sg-body">
-      <strong>什麼是杜金龍KD共振？</strong> 台股知名老師杜金龍提出的最強進場邏輯：當日線、週線、月線的 KD 指標同時出現黃金交叉（K 由下穿越 D），代表短中長期的買進動能全面共振，是歷史上台積電最高勝率的進場訊號之一。<br>
-      <strong>盤中 vs 收盤後的差異：</strong>
-      <strong class="c-g">週線和月線 KD</strong> 盤中非常穩定，可信度高。
-      <strong class="c-y">日線 KD</strong> 盤中會隨股價波動，可能出現「假交叉」——看到金叉但下午拉回又變回死叉。<strong>建議等收盤後再確認日線 KD 金叉是否成立</strong>，再行動。<br>
-      <span class="sg-tip">📌 最佳進場時機：三線都顯示黃金交叉，且 K 值在低檔（建議 50 以下）形成</span>
-    </div>
-  </div>
+  <span class="info-wrap" onclick="this.classList.toggle('open')"><button class="info-btn" aria-label="說明">？</button><div class="info-popup"><strong>什麼是杜金龍KD共振？</strong> 台股知名老師杜金龍提出的最強進場邏輯：當日線、週線、月線的 KD 指標同時出現黃金交叉（K 由下穿越 D），代表短中長期的買進動能全面共振，是歷史上台積電最高勝率的進場訊號之一。<br> <strong>盤中 vs 收盤後的差異：</strong> <strong class="c-g">週線和月線 KD</strong> 盤中非常穩定，可信度高。 <strong class="c-y">日線 KD</strong> 盤中會隨股價波動，可能出現「假交叉」——看到金叉但下午拉回又變回死叉。<strong>建議等收盤後再確認日線 KD 金叉是否成立</strong>，再行動。<br> <span class="sg-tip">📌 最佳進場時機：三線都顯示黃金交叉，且 K 值在低檔（建議 50 以下）形成</span></div></span>
   <div class="du-kd-grid">
     ${kdCard('📅 日線 KD（短期）', cK, cD, dailyBull)}
     ${kdCard('📆 週線 KD（中期）', wK, wD, weeklyBull)}
@@ -6493,16 +6775,18 @@ function renderDuForeignStreak(ctx){
 function renderPosCalc(ctx){
   const { last, cATR } = ctx;
   const set = Journal.state.settings;
-  // 預設用最後收盤價 + 當前 ATR 試算
+  // 使用自訂進場價（若有）；否則預設用最新收盤價
+  const entryPrice = (set.entryPrice && set.entryPrice > 0) ? set.entryPrice : last;
   const result = Position.calc({
-    entryPrice: last, atr: cATR,
+    entryPrice, atr: cATR,
     totalCapital: set.totalCapital, riskPct: set.riskPct,
     atrStopMult: set.atrStopMult, rrRatio: set.rrRatio
   });
   if(!result) return '';
-  // 計算台積電1張的金額與ATR風險
-  const lotValue = last * 1000;
+  // 計算台積電1張的金額與ATR風險（使用 entryPrice，可能是自訂或收盤價）
+  const lotValue = entryPrice * 1000;
   const atrRisk = cATR ? Math.round(cATR * 1000) : null;
+  const isCustomPrice = set.entryPrice && set.entryPrice > 0 && Math.abs(set.entryPrice - last) > 0.5;
   return `
   <div class="sec" id="anchor-poscalc">💰 部位計算機 <span class="sec-cnt">輸入資金和進場價，自動算出應買幾張、停損設哪裡、目標獲利多少 — 嚴守停損是長期獲利的關鍵</span></div>
   <!-- 風險意識提示卡 -->
@@ -6511,7 +6795,7 @@ function renderPosCalc(ctx){
     <div>
       <div style="font-weight:700;font-size:.85rem;color:var(--yellow);margin-bottom:5px">投資風險提醒 — 新手必讀</div>
       <div style="font-size:.78rem;color:var(--t2);line-height:1.7">
-        台積電現價 <strong class="c-t1">${F.int(last)} 元</strong>，買 1 張需要約 <strong class="c-t1">${(lotValue/10000).toFixed(0)} 萬元</strong>。
+        ${isCustomPrice ? \`自訂進場價 <strong class="c-t1">\${F.int(entryPrice)} 元</strong>（現價 \${F.int(last)} 元）\` : \`台積電現價 <strong class="c-t1">\${F.int(last)} 元</strong>\`}，買 1 張需要約 <strong class="c-t1">${(lotValue/10000).toFixed(0)} 萬元</strong>。
         ${atrRisk ? `依目前市場波動（ATR），<strong class="c-y">1 張每天平均波動約 ${atrRisk.toLocaleString()} 元</strong>，這是正常的上下震盪，設停損時要考慮這個幅度。` : ''}
         <br>
         ✅ <em>每次交易虧損不超過總資金的 2%</em>，才能在連續錯誤中保住本金。請確認停損位置後再下單。
@@ -6538,8 +6822,8 @@ function renderPosCalc(ctx){
         </div>
         <div class="pf-row">
           <label>進場價</label>
-          <input type="number" id="pc-entry" value="${F.int(last)}" step="1">
-          <span class="c-t2" style="font-size:0.6875rem">元</span>
+          <input type="number" id="pc-entry" value="${F.int(entryPrice)}" step="1" placeholder="${F.int(last)}">
+          <span class="c-t2" style="font-size:0.6875rem">元${isCustomPrice ? ' <span style="color:var(--purple);font-size:.65rem;margin-left:2px">✏️ 自訂中</span>' : ''}</span>
         </div>
         <div class="pf-row">
           <label>停損 ATR×</label>
@@ -6563,6 +6847,7 @@ function renderPosCalc(ctx){
         </div>
         <div class="pf-row">
           <button class="btn btn-sm" style="margin-left:auto" onclick="App.recalcPos()">↻ 重新計算 + 儲存</button>
+          <button class="btn btn-sm btn-ghost" onclick="App.resetEntryPrice()" title="將進場價重設為最新收盤價">↺ 用現價</button>
         </div>
       </div>
       <div>
@@ -7434,7 +7719,39 @@ let App = {
     // ── ADX 市場情境 ──
     const cADX = I.adx[n-1], cDiP = I.diPlus[n-1], cDiM = I.diMinus[n-1];
     const adxRegime = cADX >= 25 ? 'trend' : cADX >= 18 ? 'weak' : 'range';
-    const adxCtx = { cADX, cDiP, cDiM, adxRegime };
+    // adxRegime 說明：trend=趨勢行情(ADX≥25)，weak=弱趨勢(18-25)，range=震盪盤(ADX<18)
+    // 趨勢行情：動能指標更可靠，震盪指標KD/RSI超買賣可能持續不反轉
+    // 震盪行情：KD/RSI超買賣更可靠，趨勢追蹤訊號易假突破
+    const adxInterpretation = adxRegime === 'trend'
+      ? (cDiP > cDiM ? '上升趨勢中（追強不追弱）' : '下降趨勢中（避免逢低接刀）')
+      : adxRegime === 'weak' ? '弱趨勢或方向轉換中（訊號混雜，降低倉位）'
+      : '震盪整理（高拋低接，設緊停損）';
+    const adxCtx = { cADX, cDiP, cDiM, adxRegime, adxInterpretation };
+
+    // ── 相對強度 RS（台積電 vs 大盤 0050 代理）──
+    let rsCtx = null;
+    if(this.twii?.closes && this.twii.closes.length >= 5){
+      const etfC = this.twii.closes;
+      const tsmcC = I.closes;
+      const rsCalc = (p) => {
+        if(tsmcC.length <= p || etfC.length <= p) return null;
+        const tsmcRet = (tsmcC[tsmcC.length-1] / tsmcC[tsmcC.length-1-p] - 1) * 100;
+        const etfRet  = (etfC[etfC.length-1]   / etfC[etfC.length-1-p]   - 1) * 100;
+        const rs = etfRet !== 0 ? tsmcRet / etfRet : null;
+        return { tsmcRet, etfRet, rs };
+      };
+      const rs5  = rsCalc(5);
+      const rs20 = rsCalc(20);
+      const rs60 = rsCalc(Math.min(60, etfC.length-1, tsmcC.length-1));
+      // RS > 1 = 台積電跑贏大盤；RS < 1 = 跑輸大盤
+      const rsMain = rs20 || rs5;
+      const rsTrend = rs20 && rs5
+        ? (rs5.rs != null && rs20.rs != null
+            ? (rs5.rs > rs20.rs ? 'improving' : rs5.rs < rs20.rs ? 'weakening' : 'stable')
+            : 'unknown')
+        : 'unknown';
+      rsCtx = { rs5, rs20, rs60, rsMain, rsTrend };
+    }
 
     // ── 偵測背離 ──
     const divRSI = Div.detect(I.closes, I.rsi, 30);
@@ -7470,10 +7787,11 @@ let App = {
     const dirRatio = dirResult.ratio;
     const sm = sentMeta(dirResult.weighted, dirResult.max);
 
-    // ── 進出場評分 ──
+    // ── 進出場評分（整合法人籌碼 layer4）──
     const ES = Score.entry({
       closes: I.closes, ma20: I.ma20, K: I.K, pK, cRSI, cPSY,
-      cHist, pHist, cBoll, cVol, cVolMA: cVolMA||1, chg, dirRatio
+      cHist, pHist, cBoll, cVol, cVolMA: cVolMA||1, chg, dirRatio,
+      chipStats  // ✦ 法人籌碼方向修正
     });
     const AM = actionMeta(ES.total, dirRatio);
 
@@ -7505,7 +7823,9 @@ let App = {
       _soxAdj: soxAdj,
       _sox: sox?.value
     } : null;
-    const conf = Predict.confidence(prob, dirRatio, cVol/(cVolMA||1));
+    const conf = Predict.confidence(prob, dirRatio, cVol/(cVolMA||1), { cATR, cATRMean });
+    // ── 四象限（方向 × 時機）──
+    const quadrant = Score.quadrant({ dirRatio, cK, cRSI, cPSY, cBoll, last, cATR, cATRMean, ES });
     // ── 回測 ──
     const dirSignalsArr = new Array(n).fill(null);
     for(let i = 60; i < n; i++) dirSignalsArr[i] = this.signalsAt(i);
@@ -7540,6 +7860,7 @@ let App = {
       prob, cone, conf, backtest,
       mtfResult, mtfRes,
       adxCtx, todaySpecial, chipStats,
+      rsCtx, quadrant,
       rows: this.rows
     };
 
@@ -7575,6 +7896,12 @@ let App = {
     const rsiVal = ctx.cRSI != null ? Math.round(ctx.cRSI) : '--';
     const rsiClass = ctx.cRSI > 65 ? 'bear' : ctx.cRSI < 35 ? 'bull' : 'neut';
     const kdClass = ctx.cK > 70 ? 'bear' : ctx.cK < 30 ? 'bull' : 'neut';
+    // RS chip for mobile sig-bar
+    const rsChip = ctx.rsCtx?.mainRS?.rs != null ? (() => {
+      const rs = ctx.rsCtx.mainRS.rs;
+      const c = rs > 1.05 ? 'bull' : rs < 0.95 ? 'bear' : 'neut';
+      return `<span class="sb-chip ${c}">RS ${rs.toFixed(1)}</span>`;
+    })() : '';
 
     document.getElementById('app').innerHTML =
       // ── 手機訊號摘要列（桌面隱藏）──
@@ -7585,6 +7912,7 @@ let App = {
         <span class="sb-chip ${sigChipClass}"><span class="sb-score">${esScore}</span> ${sigLabel}</span>
         <span class="sb-chip ${kdClass}">K:${kdVal}</span>
         <span class="sb-chip ${rsiClass}">RSI:${rsiVal}</span>
+        ${rsChip}
       </div>` +
 
       // ── Header（桌面完整版）──
@@ -7615,62 +7943,65 @@ let App = {
       // ══════════════════════════════════════════════════
       `<div id="mob-pages-wrap"><div id="mob-pages">` +
 
-      // ════════════════════════
-      // 📌 PAGE 0：今日訊號
-      // ════════════════════════
+      // ════════════════════════════════════════
+      // 📌 PAGE 0：今日結論（操作訊號優先）
+      // ════════════════════════════════════════
       `<section class="mob-page" id="mob-page-0" data-page="0">` +
       renderOneLiner(ctx) +
-      renderDecisionGuide() +
-      `<div class="beg-only"><details class="guide-collapsible">
-        <summary>🗺️ 新手學習工具 &amp; 看盤引導</summary>
-        <div class="guide-collapsible-body">
-          ${renderLearningPath()}
-          ${renderBeginnerFlow()}
-        </div>
-      </details></div>` +
-      renderDailySummary(ctx) +
-      renderLearnCard(ctx) +
-      renderEventsBanner() +
       renderGroupHeader('A','🚦','今日操作結論',
         '一眼判斷今天該買進、觀望還是賣出 — 系統自動統整所有指標給出操作建議',
         '每次載入更新','live') +
       renderSignalLight(ctx) +
       renderAlertPanel(ctx) +
+      renderDecisionGuide() +
+      renderDailySummary(ctx) +
+      renderEventsBanner() +
+      `<div class="beg-only"><details class="guide-collapsible">
+        <summary>🗺️ 新手學習工具 &amp; 看盤引導</summary>
+        <div class="guide-collapsible-body">
+          ${renderLearningPath()}
+          ${renderBeginnerFlow()}
+          ${renderLearnCard(ctx)}
+        </div>
+      </details></div>` +
       `</section>` +
 
-      // ════════════════════════
-      // 📡 PAGE 1：盤中追蹤
-      // ════════════════════════
+      // ════════════════════════════════════════
+      // 🌐 PAGE 1：市場環境 & 技術分析
+      // ════════════════════════════════════════
       `<section class="mob-page" id="mob-page-1" data-page="1">` +
-      renderGroupHeader('B','📡','盤中即時追蹤',
-        '交易時間 09:00～13:30 每 60 秒自動更新。盤後顯示收盤後的技術面評估',
-        '60秒更新','live') +
-      renderSessionBar() +
-      renderIntradayCard() +
-      renderIntradayRadar() +
-      renderRealtimeEval() +
-      renderGroupHeader('C','📊','今日技術分析',
+      renderGroupHeader('E','🌐','市場環境判讀',
+        '先看市場是趨勢盤還是震盪盤，策略完全不同 — 再看四象限確認方向與時機是否同時到位',
+        '環境優先','analysis') +
+      renderMarketRegime(ctx) +
+      renderGroupHeader('C','📊','技術指標分析',
         '多項指標綜合研判今日多空方向，走勢圖標記歷史買賣訊號點位',
         '核心判斷','analysis') +
       renderMTF(ctx) +
       renderTopRow(ctx) +
       renderCandlePatterns(ctx) +
       renderVolPriceDivAlert(ctx) +
+      renderGroupHeader('B','📡','盤中即時追蹤',
+        '交易時間 09:00～13:30 每 60 秒自動更新，盤後顯示收盤後評估',
+        '60秒更新','live') +
+      renderSessionBar() +
+      renderIntradayCard() +
+      renderIntradayRadar() +
+      renderRealtimeEval() +
       `</section>` +
 
-      // ════════════════════════
-      // 🎯 PAGE 2：進出場策略
-      // ════════════════════════
+      // ════════════════════════════════════════
+      // 🎯 PAGE 2：進出場策略 & 明日展望
+      // ════════════════════════════════════════
       `<section class="mob-page" id="mob-page-2" data-page="2">` +
-      renderGroupHeader('D','🎯','進出場策略',
-        '根據技術指標告訴你現在適不適合進場，以及建議的分批操作方式',
+      renderGroupHeader('D','🎯','進出場評分與策略',
+        '根據技術指標評分告訴你現在適不適合進場，以及建議的分批操作方式',
         '操作建議','strategy') +
       renderBuySellPanel(ctx) +
-      (()=>{try{return renderSwingPanel(ctx);}catch(e){return '';}})() +
-      `<div class="beg-only">` + renderIndicatorMeaning(ctx) + `</div>` +
       renderConflScore(ctx) +
       renderEntryPanel(ctx) +
       renderDailyBrief(ctx) +
+      (()=>{try{return renderSwingPanel(ctx);}catch(e){return '';}})() +
       renderGroupHeader('F','🔮','明日展望',
         '基於歷史相似走勢（K-NN 演算法）+ ATR 波動率，預估明日可能漲跌區間',
         '預測參考','strategy') +
@@ -7679,16 +8010,18 @@ let App = {
       renderPatternMatch(ctx) +
       `</section>` +
 
-      // ════════════════════════
-      // 💼 PAGE 3：帳戶 & 更多
-      // ════════════════════════
+      // ════════════════════════════════════════
+      // 💼 PAGE 3：籌碼 & 帳戶管理
+      // ════════════════════════════════════════
       `<section class="mob-page" id="mob-page-3" data-page="3">` +
-      renderGroupHeader('E','🌐','市場環境判讀',
-        '趨勢 vs 震盪判斷、ADX 市場情境、美股費半（SOX）領先參考',
-        '環境分析','analysis') +
-      renderMarketRegime(ctx) +
-      `<div class="adv-only">` + renderDuKDResonance(ctx) + `</div>` +
+      renderGroupHeader('I','🏦','法人籌碼 & 相對強度',
+        '外資、投信方向是最重要的籌碼指標；相對強度看台積電是否強於大盤',
+        '籌碼面','analysis') +
+      renderChipFlow(ctx) +
+      renderDuForeignStreak(ctx) +
+      renderRS(ctx) +
       renderMorning(ctx) +
+      `<div class="adv-only">` + renderDuKDResonance(ctx) + `</div>` +
       renderGroupHeader('H','💼','我的操作紀錄',
         '記錄每一筆買賣決策，系統自動計算你的勝率、盈虧比，幫你持續進步',
         '個人化','personal') +
@@ -7702,9 +8035,7 @@ let App = {
       renderAnalysis(ctx) +
       renderIndicators(ctx) +
       renderMA(ctx) +
-      renderDuForeignStreak(ctx) +
-      renderChipFlow(ctx) +
-      renderRS(ctx) +
+      `<div class="beg-only">` + renderIndicatorMeaning(ctx) + `</div>` +
       renderSOXCorr(ctx) +
       renderFundamentals() +
       (()=>{try{return renderFundaPanel(ctx);}catch(e){return '';}})() +
@@ -7733,16 +8064,16 @@ let App = {
        <nav class="mob-tab-nav" id="mob-tab-nav" aria-label="分頁導覽">
          <div class="mob-tab-inner">
            <button class="mob-tab-btn mt-active" data-page="0" onclick="MobPages.goto(0)">
-             <span class="mt-icon">🏠</span><span class="mt-label">今日</span>
+             <span class="mt-icon">🚦</span><span class="mt-label">結論</span>
            </button>
            <button class="mob-tab-btn" data-page="1" onclick="MobPages.goto(1)">
-             <span class="mt-icon">📡</span><span class="mt-label">追蹤</span>
+             <span class="mt-icon">🌐</span><span class="mt-label">市場</span>
            </button>
            <button class="mob-tab-btn" data-page="2" onclick="MobPages.goto(2)">
              <span class="mt-icon">🎯</span><span class="mt-label">策略</span>
            </button>
            <button class="mob-tab-btn" data-page="3" onclick="MobPages.goto(3)">
-             <span class="mt-icon">💼</span><span class="mt-label">帳戶</span>
+             <span class="mt-icon">🏦</span><span class="mt-label">籌碼</span>
            </button>
          </div>
        </nav>
@@ -7892,8 +8223,14 @@ let App = {
       totalCapital: vals['pc-cap'],
       riskPct:      vals['pc-risk'],
       atrStopMult:  vals['pc-atrx'],
-      rrRatio:      vals['pc-rr']
+      rrRatio:      vals['pc-rr'],
+      entryPrice:   vals['pc-entry']   // 儲存自訂進場價
     });
+    this.render();
+  },
+  resetEntryPrice(){
+    // 清除自訂進場價，回到最新收盤價
+    Journal.updateSettings({ entryPrice: 0 });
     this.render();
   },
   scrollToPosCalc(){
@@ -10898,15 +11235,7 @@ function renderSignalLight(ctx){
       <span class="sl-score-badge ${cls}">${emoji} ${signal}</span>
     </div>
     ${conflictHtml}
-    <div class="sg">
-      <div class="sg-icon">ℹ️</div>
-      <div class="sg-body">
-        <strong>這個面板在看什麼？</strong> 用 8 個基本條件（KD、RSI、PSY、MACD 等）快速計算現在有幾個「買進條件」和幾個「賣出條件」被觸發，給出方向感。
-        適合：快速掌握今天整體偏多還是偏空。<br>
-        <strong>怎麼用？</strong> 買進條件觸發越多（≥5）代表多頭訊號越強；賣出條件觸發越多（≥5）代表空頭壓力越大。兩邊都少（各<3）代表市場無明顯方向，等待為宜。<br>
-        <span class="sg-tip">⭐ 主要操作依據請看下方「買賣訊號總覽」的加權分數，更精確</span>
-      </div>
-    </div>
+    <span class="info-wrap" onclick="this.classList.toggle('open')"><button class="info-btn" aria-label="說明">？</button><div class="info-popup"><strong>這個面板在看什麼？</strong> 用 8 個基本條件（KD、RSI、PSY、MACD 等）快速計算現在有幾個「買進條件」和幾個「賣出條件」被觸發，給出方向感。 適合：快速掌握今天整體偏多還是偏空。<br> <strong>怎麼用？</strong> 買進條件觸發越多（≥5）代表多頭訊號越強；賣出條件觸發越多（≥5）代表空頭壓力越大。兩邊都少（各<3）代表市場無明顯方向，等待為宜。<br> <span class="sg-tip">⭐ 主要操作依據請看下方「買賣訊號總覽」的加權分數，更精確</span></div></span>
     <div class="sl-main">
       <div class="sl-bars">
         <div class="sl-bar-row">
