@@ -2021,6 +2021,55 @@ body.light .zone-header{background:linear-gradient(135deg,rgba(59,130,246,.06),r
 .info-wrap.open .info-popup,.info-wrap:focus-within .info-popup{opacity:1;pointer-events:auto}
 @media(max-width:600px){.info-popup{width:240px;left:auto;right:0}}
 
+/* ═══════════════════════════════════════════════════
+   手機排版修正補丁  (≤700 / ≤480 / ≤380)
+   ═══════════════════════════════════════════════════ */
+
+/* ── 燈號卡標題 ≤700：badge 不與標題搶寬，改換行到右邊 ── */
+@media(max-width:700px){
+  .sl-header{flex-wrap:wrap;row-gap:4px}
+  /* 標題佔滿整行，badge 跟在後面自動換到右側 */
+  .sl-title{flex:1 1 0%;min-width:0;word-break:keep-all}
+  .sl-score-badge{white-space:nowrap;flex-shrink:0;margin-left:auto}
+  /* zone-header 縮減間距 */
+  .zone-header{gap:10px;padding:10px 14px;margin:18px 0 10px}
+  .zh-letter{width:28px;height:28px;font-size:.78rem;border-radius:6px}
+  .zh-emoji{font-size:1.2rem}
+  /* 防止 emoji 單獨留在行末 */
+  .tab-text,.zh-title,.sec{word-break:keep-all}
+}
+
+/* ── ≤480：進一步精簡，副標題收起 ── */
+@media(max-width:480px){
+  /* 燈號卡副標題「· 快速概覽（8個條件計數）」直接隱藏，節省空間 */
+  .sl-title span{display:none}
+  /* 燈號卡 header：標題左、badge 右，不換行 */
+  .sl-header{flex-wrap:nowrap;align-items:center}
+  .sl-title{font-size:.82rem}
+  .sl-score-badge{font-size:.72rem;padding:3px 8px}
+  /* zone-header：更緊，隱藏 emoji 保留字母 badge */
+  .zone-header{gap:8px;padding:8px 10px;margin:12px 0 7px}
+  .zh-emoji{display:none}
+  /* sec 標題副文字：手機全寬換行 */
+  .sec{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px}
+  .sec-cnt{flex-basis:100%;font-size:.7rem;line-height:1.45;padding-left:0}
+  /* 「今日操作一句話」副標文字：確保換行正確 */
+  .tab-sub{word-break:keep-all;overflow-wrap:break-word;
+           white-space:normal;line-height:1.55}
+  /* mob-sig-bar 晶片：防斷行 */
+  #mob-sig-bar .sb-chip{white-space:nowrap}
+  /* top-action-bar 按鈕區：icon 不換行 */
+  .tab-controls{flex-shrink:0;gap:6px}
+  .tab-cl-btn{min-width:36px;min-height:36px;padding:0;font-size:1rem;border-radius:50%}
+}
+
+/* ── ≤380：極小螢幕再精簡 ── */
+@media(max-width:380px){
+  .sl-score-badge{font-size:.65rem;padding:2px 6px}
+  .zone-header{padding:7px 8px}
+  #mob-sig-bar .sb-chip{font-size:.62rem;padding:2px 6px}
+}
+
 /* ────────── 卡片結論層 card-conc ────────── */
 .card-conc{
   display:flex;align-items:flex-start;gap:10px;
