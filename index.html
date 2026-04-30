@@ -6795,7 +6795,7 @@ function renderPosCalc(ctx){
     <div>
       <div style="font-weight:700;font-size:.85rem;color:var(--yellow);margin-bottom:5px">投資風險提醒 — 新手必讀</div>
       <div style="font-size:.78rem;color:var(--t2);line-height:1.7">
-        ${isCustomPrice ? \`自訂進場價 <strong class="c-t1">\${F.int(entryPrice)} 元</strong>（現價 \${F.int(last)} 元）\` : \`台積電現價 <strong class="c-t1">\${F.int(last)} 元</strong>\`}，買 1 張需要約 <strong class="c-t1">${(lotValue/10000).toFixed(0)} 萬元</strong>。
+        ${isCustomPrice ? `自訂進場價 <strong class="c-t1">${F.int(entryPrice)} 元</strong>（現價 ${F.int(last)} 元）` : `台積電現價 <strong class="c-t1">${F.int(last)} 元</strong>`}，買 1 張需要約 <strong class="c-t1">${(lotValue/10000).toFixed(0)} 萬元</strong>。
         ${atrRisk ? `依目前市場波動（ATR），<strong class="c-y">1 張每天平均波動約 ${atrRisk.toLocaleString()} 元</strong>，這是正常的上下震盪，設停損時要考慮這個幅度。` : ''}
         <br>
         ✅ <em>每次交易虧損不超過總資金的 2%</em>，才能在連續錯誤中保住本金。請確認停損位置後再下單。
