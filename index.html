@@ -4164,6 +4164,9 @@ function renderPredictionPanel(ctx){
     bear: '偏空', strong_bear: '強空頭'
   };
 
+  const confWarnHtml = conf.warns && conf.warns.length
+    ? `<div class="conf-warns">${conf.warns.map(w=>`<div class="conf-warn-item">${w}</div>`).join('')}</div>` : '';
+
   return `
   <div class="sec">🔮 盤後 & 明日預估 <span class="sec-cnt">基於 ${prob.n} 個歷史相似日 + ATR 波動率錐 + 評分回測</span></div>
   <div class="card-conc ${upPct>=55?'cc-bull':upPct<=45?'cc-bear':'cc-neut'}">
@@ -4263,9 +4266,6 @@ function renderPredictionPanel(ctx){
       const bullTarget  = cone ? F.int(cone.bullish)  : F.int(last + ATR * 1.5);
       const bearTarget  = cone ? F.int(cone.bearish)  : F.int(last - ATR * 1.5);
       const dirMain = prob.wUpProb >= 0.52 ? 'bull' : prob.wUpProb <= 0.48 ? 'bear' : 'neut';
-      // ── 強化信心度面板 ──
-      const confWarnHtml = conf.warns && conf.warns.length
-        ? `<div class="conf-warns">${conf.warns.map(w=>`<div class="conf-warn-item">${w}</div>`).join('')}</div>` : '';
       const bollPos = cBoll ? ((last - cBoll.lower) / (cBoll.upper - cBoll.lower)) : 0.5;
       const bollZone = bollPos > 0.8 ? '近上軌（壓力區）' : bollPos < 0.2 ? '近下軌（支撐區）' : '中軌附近（中性區）';
       return `
