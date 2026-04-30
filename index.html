@@ -1486,7 +1486,7 @@ body.light .zone-header{background:linear-gradient(135deg,rgba(59,130,246,.06),r
   .hd{flex-direction:column;align-items:flex-start;gap:8px;padding:10px 12px!important}
   .hd-right{width:100%;justify-content:space-between;gap:8px}
   .price .now{font-size:1.65rem}
-  .live-widget{flex-direction:row;gap:10px;padding:7px 10px;min-width:0;width:100%}
+  /* live-widget 已由 700px 規則隱藏（display:none!important），此處不需顯示 */
   .lw-price{font-size:1.3rem}
 
   /* 頂部橫幅更緊湊 */
@@ -1792,10 +1792,15 @@ body.light .zone-header{background:linear-gradient(135deg,rgba(59,130,246,.06),r
   display:none;
   position:sticky;top:0;z-index:400;
   background:var(--card);border-bottom:1px solid var(--border);
-  padding:7px 12px;gap:8px;align-items:center;flex-wrap:wrap;
+  padding:8px 12px 8px;
+  padding-top:calc(8px + env(safe-area-inset-top,0px));
+  gap:8px;align-items:center;flex-wrap:nowrap;overflow-x:auto;
   font-size:.75rem;
-  box-shadow:0 2px 8px rgba(0,0,0,.18);
+  box-shadow:0 2px 12px rgba(0,0,0,.22);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  scrollbar-width:none;
 }
+#mob-sig-bar::-webkit-scrollbar{display:none}
 #mob-sig-bar .sb-price{font-size:1.15rem;font-weight:800;font-variant-numeric:tabular-nums;margin-right:4px}
 #mob-sig-bar .sb-chg{font-size:.78rem;font-variant-numeric:tabular-nums;font-weight:700}
 #mob-sig-bar .sb-sep{color:var(--border);margin:0 2px}
@@ -1848,16 +1853,22 @@ body.light .zone-header{background:linear-gradient(135deg,rgba(59,130,246,.06),r
   }
   /* 隱藏桌面版 header 的 52 週高低和複雜資訊 */
   .hd-right .price{display:none}
-  /* 精簡 header */
-  .hd{padding:8px 12px;border-radius:10px;margin-bottom:8px}
+  /* 精簡 header — 手機不 sticky，讓 #mob-sig-bar 擔任唯一頂部固定列 */
+  .hd{
+    position:relative!important;
+    padding:8px 12px;border-radius:10px;margin-bottom:8px;
+    backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+    flex-wrap:wrap;gap:6px;
+  }
   .hd-left .name{font-size:1.1rem}
   .hd-left .sub{display:none}
   .auto-refresh{font-size:.65rem;margin-top:2px}
-  /* live-widget 縮小 */
-  .live-widget{padding:6px 12px;min-width:0}
-  .lw-price{font-size:1.5rem}
-  .lw-chg{font-size:.72rem}
-  .lw-meta,.lw-time{display:none}
+  /* 手機：live-widget 已在 #mob-sig-bar 顯示，header 中僅保留操作按鈕 */
+  .live-widget{display:none!important}
+  /* hd-right 只顯示警報鈕 + 重整鈕，按鈕縮小 */
+  .hd-right{gap:6px;flex-wrap:wrap}
+  .hd-right .btn{padding:7px 12px;font-size:.78rem;min-height:36px}
+  .alert-btn{padding:6px 10px;font-size:.75rem}
 
   /* ── 閱讀優化：卡片間距 ── */
   .chart-card,.predict-panel,.analysis-card,
@@ -11867,9 +11878,12 @@ function renderGroupHeader(zone, emoji, title, desc, badgeText='', badgeClass=''
 function scrollToAnchor(id){
   const el = document.getElementById(id);
   if(!el) return;
-  // 量測 sticky header (.hd) 的實際高度，再加 16px 喘息空間
-  const hd = document.querySelector('.hd');
-  const offset = hd ? hd.getBoundingClientRect().height + 16 : 80;
+  // 手機：.hd 不再 sticky，改量測 #mob-sig-bar；桌面：量測 .hd
+  const isMobile = window.innerWidth <= 700;
+  const stickyEl = isMobile
+    ? document.getElementById('mob-sig-bar')
+    : document.querySelector('.hd');
+  const offset = stickyEl ? stickyEl.getBoundingClientRect().height + 12 : 60;
   const top = el.getBoundingClientRect().top + window.scrollY - offset;
   window.scrollTo({ top, behavior: 'smooth' });
 }
